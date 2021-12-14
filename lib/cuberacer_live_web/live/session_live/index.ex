@@ -6,7 +6,8 @@ defmodule CuberacerLiveWeb.SessionLive.Index do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, assign(socket, :sessions, list_sessions())}
+    if connected?(socket), do: Sessions.subscribe()
+    {:ok, fetch(socket)}
   end
 
   @impl true
@@ -32,22 +33,21 @@ defmodule CuberacerLiveWeb.SessionLive.Index do
     |> assign(:session, nil)
   end
 
+  defp fetch(socket) do
+    sessions = Sessions.list_sessions()
+    assign(socket, sessions: sessions)
+  end
+
+  @impl true
+  def handle_info({Sessions, [:session | _], _}, socket) do
+    {:noreply, fetch(socket)}
+  end
+
   @impl true
   def handle_event("delete", %{"id" => id}, socket) do
     session = Sessions.get_session!(id)
     {:ok, _} = Sessions.delete_session(session)
 
-    {:noreply, assign(socket, :sessions, list_sessions())}
-  end
-
-  @impl true
-  def handle_event(other, params, socket) do
-    IO.puts("got event #{inspect(other)} and params #{inspect(params)}")
-
-    {:noreply, socket}
-  end
-
-  defp list_sessions do
-    Sessions.list_sessions()
+    {:noreply, fetch(socket)}
   end
 end

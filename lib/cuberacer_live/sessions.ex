@@ -8,6 +8,16 @@ defmodule CuberacerLive.Sessions do
 
   alias CuberacerLive.Sessions.Session
 
+  @topic inspect(__MODULE__)
+
+  def subscribe do
+    Phoenix.PubSub.subscribe(CuberacerLive.PubSub, @topic)
+  end
+
+  def subscribe(session_id) do
+    Phoenix.PubSub.subscribe(CuberacerLive.PubSub, @topic <> "#{session_id}")
+  end
+
   @doc """
   Returns the list of sessions.
 
@@ -53,6 +63,7 @@ defmodule CuberacerLive.Sessions do
     %Session{}
     |> Session.changeset(attrs)
     |> Repo.insert()
+    |> notify_subscribers([:session, :created])
   end
 
   @doc """
@@ -71,6 +82,7 @@ defmodule CuberacerLive.Sessions do
     session
     |> Session.changeset(attrs)
     |> Repo.update()
+    |> notify_subscribers([:session, :updated])
   end
 
   @doc """
@@ -87,6 +99,7 @@ defmodule CuberacerLive.Sessions do
   """
   def delete_session(%Session{} = session) do
     Repo.delete(session)
+    |> notify_subscribers([:session, :deleted])
   end
 
   @doc """
@@ -101,4 +114,12 @@ defmodule CuberacerLive.Sessions do
   def change_session(%Session{} = session, attrs \\ %{}) do
     Session.changeset(session, attrs)
   end
+
+  defp notify_subscribers({:ok, result}, event) do
+    Phoenix.PubSub.broadcast(CuberacerLive.PubSub, @topic, {__MODULE__, event, result})
+    Phoenix.PubSub.broadcast(CuberacerLive.PubSub, @topic <> "#{result.id}", {__MODULE__, event, result})
+    {:ok, result}
+  end
+
+  defp notify_subscribers({:error, reason}, _event), do: {:error, reason}
 end
