@@ -117,7 +117,13 @@ defmodule CuberacerLive.Sessions do
 
   defp notify_subscribers({:ok, result}, event) do
     Phoenix.PubSub.broadcast(CuberacerLive.PubSub, @topic, {__MODULE__, event, result})
-    Phoenix.PubSub.broadcast(CuberacerLive.PubSub, @topic <> "#{result.id}", {__MODULE__, event, result})
+
+    Phoenix.PubSub.broadcast(
+      CuberacerLive.PubSub,
+      @topic <> "#{result.id}",
+      {__MODULE__, event, result}
+    )
+
     {:ok, result}
   end
 
