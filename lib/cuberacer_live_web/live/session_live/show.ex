@@ -4,7 +4,8 @@ defmodule CuberacerLiveWeb.SessionLive.Show do
   alias CuberacerLive.Sessions
 
   @impl true
-  def mount(_params, _session, socket) do
+  def mount(%{"id" => id}, _session, socket) do
+    if connected?(socket), do: Sessions.subscribe(id)
     {:ok, socket}
   end
 
@@ -18,4 +19,17 @@ defmodule CuberacerLiveWeb.SessionLive.Show do
 
   defp page_title(:show), do: "Show Session"
   defp page_title(:edit), do: "Edit Session"
+
+  @impl true
+  def handle_info({Sessions, [:session, :updated], session}, socket) do
+    {:noreply, assign(socket, session: session)}
+  end
+
+  @impl true
+  def handle_info({Sessions, [:session, :deleted], _session}, socket) do
+    {:noreply,
+      socket
+      |> put_flash(:info, "Session was deleted")
+      |> push_redirect(to: Routes.session_index_path(socket, :index))}
+  end
 end

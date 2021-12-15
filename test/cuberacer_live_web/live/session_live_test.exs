@@ -4,7 +4,9 @@ defmodule CuberacerLiveWeb.SessionLiveTest do
   import Phoenix.LiveViewTest
   import CuberacerLive.SessionsFixtures
 
-  @create_attrs %{name: "some name"}
+  alias CuberacerLive.Sessions
+
+  @create_attrs %{name: "some other name"}
   @update_attrs %{name: "some updated name"}
   @invalid_attrs %{name: nil}
 
@@ -24,7 +26,9 @@ defmodule CuberacerLiveWeb.SessionLiveTest do
     end
 
     test "saves new session", %{conn: conn} do
-      {:ok, index_live, _html} = live(conn, Routes.session_index_path(conn, :index))
+      {:ok, index_live, html} = live(conn, Routes.session_index_path(conn, :index))
+
+      refute html =~ "some other name"
 
       assert index_live |> element("a", "New Session") |> render_click() =~
                "New Session"
@@ -42,7 +46,7 @@ defmodule CuberacerLiveWeb.SessionLiveTest do
         |> follow_redirect(conn, Routes.session_index_path(conn, :index))
 
       assert html =~ "Session created successfully"
-      assert html =~ "some name"
+      assert html =~ "some other name"
     end
 
     test "updates session in listing", %{conn: conn, session: session} do
@@ -72,6 +76,36 @@ defmodule CuberacerLiveWeb.SessionLiveTest do
 
       assert index_live |> element("#session-#{session.id} a", "Delete") |> render_click()
       refute has_element?(index_live, "#session-#{session.id}")
+    end
+
+    test "dsplays new session created elsewhere", %{conn: conn} do
+      {:ok, index_live, html} = live(conn, Routes.session_index_path(conn, :index))
+
+      refute html =~ "some other name"
+
+      {:ok, _session} = Sessions.create_session(@create_attrs)
+
+      assert render(index_live) =~ "some other name"
+    end
+
+    test "displays session updated from elsewhere", %{conn: conn, session: session} do
+      {:ok, index_live, html} = live(conn, Routes.session_index_path(conn, :index))
+
+      refute html =~ "some updated name"
+
+      {:ok, _session} = Sessions.update_session(session, @update_attrs)
+
+      assert render(index_live) =~ "some updated name"
+    end
+
+    test "removes session deleted from elsewhere", %{conn: conn, session: session} do
+      {:ok, index_live, html} = live(conn, Routes.session_index_path(conn, :index))
+
+      assert html =~ session.name
+
+      {:ok, _session} = Sessions.delete_session(session)
+
+      refute render(index_live) =~ session.name
     end
   end
 
@@ -105,6 +139,27 @@ defmodule CuberacerLiveWeb.SessionLiveTest do
 
       assert html =~ "Session updated successfully"
       assert html =~ "some updated name"
+    end
+
+    test "displays session updated from elsewhere", %{conn: conn, session: session} do
+      {:ok, index_live, html} = live(conn, Routes.session_show_path(conn, :show, session))
+
+      refute html =~ "some updated name"
+
+      {:ok, _session} = Sessions.update_session(session, @update_attrs)
+
+      assert render(index_live) =~ "some updated name"
+    end
+
+    test "removes session deleted from elsewhere", %{conn: conn, session: session} do
+      {:ok, index_live, html} = live(conn, Routes.session_show_path(conn, :show, session))
+
+      assert html =~ session.name
+
+      {:ok, _session} = Sessions.delete_session(session)
+
+      flash = assert_redirect index_live, Routes.session_index_path(conn, :index)
+      assert flash["info"] == "Session was deleted"
     end
   end
 end
