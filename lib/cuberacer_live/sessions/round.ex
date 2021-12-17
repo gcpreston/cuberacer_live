@@ -9,8 +9,10 @@ defmodule CuberacerLive.Sessions.Round do
     timestamps()
   end
 
-  @doc false
-  def changeset(round, attrs) do
+  @doc """
+  Changeset for creating a round.
+  """
+  def create_changeset(round, attrs) do
     round
     |> cast(attrs, [:scramble, :session_id])
     |> validate_required([:scramble, :session_id])

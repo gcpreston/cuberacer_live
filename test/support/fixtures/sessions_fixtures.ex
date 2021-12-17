@@ -4,6 +4,9 @@ defmodule CuberacerLive.SessionsFixtures do
   entities via the `CuberacerLive.Sessions` context.
   """
 
+  import CuberacerLive.AccountsFixtures
+  import CuberacerLive.CubingFixtures
+
   @doc """
   Generate a session.
   """
@@ -39,8 +42,8 @@ defmodule CuberacerLive.SessionsFixtures do
   Generate a solve.
   """
   def solve_fixture(attrs \\ %{}) do
-    user = CuberacerLive.AccountsFixtures.user_fixture()
-    penalty = %{id: 1} # TODO: Penalty fixture
+    user = user_fixture()
+    penalty = penalty_fixture()
     round = round_fixture()
 
     {:ok, solve} =

@@ -174,26 +174,8 @@ defmodule CuberacerLive.Sessions do
   """
   def create_round(attrs \\ %{}) do
     %Round{}
-    |> Round.changeset(attrs)
+    |> Round.create_changeset(attrs)
     |> Repo.insert()
-  end
-
-  @doc """
-  Updates a round.
-
-  ## Examples
-
-      iex> update_round(round, %{field: new_value})
-      {:ok, %Round{}}
-
-      iex> update_round(round, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def update_round(%Round{} = round, attrs) do
-    round
-    |> Round.changeset(attrs)
-    |> Repo.update()
   end
 
   @doc """
@@ -212,20 +194,8 @@ defmodule CuberacerLive.Sessions do
     Repo.delete(round)
   end
 
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking round changes.
-
-  ## Examples
-
-      iex> change_round(round)
-      %Ecto.Changeset{data: %Round{}}
-
-  """
-  def change_round(%Round{} = round, attrs \\ %{}) do
-    Round.changeset(round, attrs)
-  end
-
   alias CuberacerLive.Sessions.Solve
+  alias CuberacerLive.Cubing.Penalty
 
   @doc """
   Returns the list of solves.
@@ -270,25 +240,22 @@ defmodule CuberacerLive.Sessions do
   """
   def create_solve(attrs \\ %{}) do
     %Solve{}
-    |> Solve.changeset(attrs)
+    |> Solve.create_changeset(attrs)
     |> Repo.insert()
   end
 
   @doc """
-  Updates a solve.
+  Change the penalty on a solve.
 
   ## Examples
 
-      iex> update_solve(solve, %{field: new_value})
+      iex> change_penalty(solve, %Penalty{})
       {:ok, %Solve{}}
 
-      iex> update_solve(solve, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
   """
-  def update_solve(%Solve{} = solve, attrs) do
+  def change_penalty(%Solve{} = solve, %Penalty{} = penalty) do
     solve
-    |> Solve.changeset(attrs)
+    |> Solve.penalty_changeset(%{penalty_id: penalty.id})
     |> Repo.update()
   end
 
@@ -306,18 +273,5 @@ defmodule CuberacerLive.Sessions do
   """
   def delete_solve(%Solve{} = solve) do
     Repo.delete(solve)
-  end
-
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking solve changes.
-
-  ## Examples
-
-      iex> change_solve(solve)
-      %Ecto.Changeset{data: %Solve{}}
-
-  """
-  def change_solve(%Solve{} = solve, attrs \\ %{}) do
-    Solve.changeset(solve, attrs)
   end
 end

@@ -137,8 +137,6 @@ defmodule CuberacerLive.SessionsTest do
 
     import CuberacerLive.SessionsFixtures
 
-    @invalid_attrs %{scramble: nil}
-
     test "list_rounds/0 returns all rounds" do
       round = round_fixture()
       assert Sessions.list_rounds() == [round]
@@ -150,28 +148,27 @@ defmodule CuberacerLive.SessionsTest do
     end
 
     test "create_round/1 with valid data creates a round" do
-      valid_attrs = %{scramble: "some scramble"}
+      session = session_fixture()
+
+      valid_attrs = %{scramble: "some scramble", session_id: session.id}
 
       assert {:ok, %Round{} = round} = Sessions.create_round(valid_attrs)
       assert round.scramble == "some scramble"
+      assert round.session_id == session.id
     end
 
-    test "create_round/1 with invalid data returns error changeset" do
-      assert {:error, %Ecto.Changeset{}} = Sessions.create_round(@invalid_attrs)
+    test "create_round/1 with no scramble returns error changeset" do
+      session = session_fixture()
+
+      invalid_attrs = %{scramble: nil, session_id: session.id}
+
+      assert {:error, %Ecto.Changeset{}} = Sessions.create_round(invalid_attrs)
     end
 
-    test "update_round/2 with valid data updates the round" do
-      round = round_fixture()
-      update_attrs = %{scramble: "some updated scramble"}
+    test "create_round/1 with no session returns error changeset" do
+      invalid_attrs = %{scramble: "some scramble", session_id: nil}
 
-      assert {:ok, %Round{} = round} = Sessions.update_round(round, update_attrs)
-      assert round.scramble == "some updated scramble"
-    end
-
-    test "update_round/2 with invalid data returns error changeset" do
-      round = round_fixture()
-      assert {:error, %Ecto.Changeset{}} = Sessions.update_round(round, @invalid_attrs)
-      assert round == Sessions.get_round!(round.id)
+      assert {:error, %Ecto.Changeset{}} = Sessions.create_round(invalid_attrs)
     end
 
     test "delete_round/1 deletes the round" do
@@ -179,20 +176,14 @@ defmodule CuberacerLive.SessionsTest do
       assert {:ok, %Round{}} = Sessions.delete_round(round)
       assert_raise Ecto.NoResultsError, fn -> Sessions.get_round!(round.id) end
     end
-
-    test "change_round/1 returns a round changeset" do
-      round = round_fixture()
-      assert %Ecto.Changeset{} = Sessions.change_round(round)
-    end
   end
 
   describe "solves" do
     alias CuberacerLive.Sessions.Solve
 
     import CuberacerLive.AccountsFixtures
+    import CuberacerLive.CubingFixtures
     import CuberacerLive.SessionsFixtures
-
-    @invalid_attrs %{time: nil}
 
     test "list_solves/0 returns all solves" do
       solve = solve_fixture()
@@ -205,39 +196,68 @@ defmodule CuberacerLive.SessionsTest do
     end
 
     test "create_solve/1 with valid data creates a solve" do
-      valid_attrs = %{time: 42}
+      user = user_fixture()
+      penalty = penalty_fixture()
+      round = round_fixture()
+
+      valid_attrs = %{time: 42, user_id: user.id, penalty_id: penalty.id, round_id: round.id}
 
       assert {:ok, %Solve{} = solve} = Sessions.create_solve(valid_attrs)
       assert solve.time == 42
+      assert solve.user_id == user.id
+      assert solve.penalty_id == penalty.id
+      assert solve.round_id == round.id
     end
 
-    test "create_solve/1 with invalid data returns error changeset" do
-      assert {:error, %Ecto.Changeset{}} = Sessions.create_solve(@invalid_attrs)
+    test "create_solve/1 with no time returns error changeset" do
+      user = user_fixture()
+      penalty = penalty_fixture()
+      round = round_fixture()
+
+      invalid_attrs = %{time: nil, user_id: user.id, penalty_id: penalty.id, round_id: round.id}
+
+      assert {:error, %Ecto.Changeset{}} = Sessions.create_solve(invalid_attrs)
     end
 
-    test "update_solve/2 with valid data updates the solve" do
+    test "create_solve/1 with no user returns error changeset" do
+      penalty = penalty_fixture()
+      round = round_fixture()
+
+      invalid_attrs = %{time: nil, user_id: nil, penalty_id: penalty.id, round_id: round.id}
+
+      assert {:error, %Ecto.Changeset{}} = Sessions.create_solve(invalid_attrs)
+    end
+
+    test "create_solve/1 with no penalty returns error changeset" do
+      user = user_fixture()
+      round = round_fixture()
+
+      invalid_attrs = %{time: nil, user_id: user.id, penalty_id: nil, round_id: round.id}
+
+      assert {:error, %Ecto.Changeset{}} = Sessions.create_solve(invalid_attrs)
+    end
+
+    test "create_solve/1 with no round returns error changeset" do
+      user = user_fixture()
+      penalty = penalty_fixture()
+
+      invalid_attrs = %{time: nil, user_id: user.id, penalty_id: penalty.id, round_id: nil}
+
+      assert {:error, %Ecto.Changeset{}} = Sessions.create_solve(invalid_attrs)
+    end
+
+    test "change_penalty/2 with valid data updates the solve" do
       solve = solve_fixture()
-      update_attrs = %{time: 43}
+      penalty = penalty_fixture()
 
-      assert {:ok, %Solve{} = solve} = Sessions.update_solve(solve, update_attrs)
-      assert solve.time == 43
-    end
-
-    test "update_solve/2 with invalid data returns error changeset" do
-      solve = solve_fixture()
-      assert {:error, %Ecto.Changeset{}} = Sessions.update_solve(solve, @invalid_attrs)
-      assert solve == Sessions.get_solve!(solve.id)
+      assert {:ok, %Solve{} = solve} = Sessions.change_penalty(solve, penalty)
+      assert solve.penalty_id == penalty.id
     end
 
     test "delete_solve/1 deletes the solve" do
       solve = solve_fixture()
       assert {:ok, %Solve{}} = Sessions.delete_solve(solve)
       assert_raise Ecto.NoResultsError, fn -> Sessions.get_solve!(solve.id) end
-    end
-
-    test "change_solve/1 returns a solve changeset" do
-      solve = solve_fixture()
-      assert %Ecto.Changeset{} = Sessions.change_solve(solve)
     end
   end
 end
