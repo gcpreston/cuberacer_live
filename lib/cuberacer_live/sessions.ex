@@ -128,4 +128,196 @@ defmodule CuberacerLive.Sessions do
   end
 
   defp notify_subscribers({:error, reason}, _event), do: {:error, reason}
+
+  alias CuberacerLive.Sessions.Round
+
+  @doc """
+  Returns the list of rounds.
+
+  ## Examples
+
+      iex> list_rounds()
+      [%Round{}, ...]
+
+  """
+  def list_rounds() do
+    Repo.all(Round)
+  end
+
+  @doc """
+  Gets a single round.
+
+  Raises `Ecto.NoResultsError` if the Round does not exist.
+
+  ## Examples
+
+      iex> get_round!(123)
+      %Round{}
+
+      iex> get_round!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_round!(id), do: Repo.get!(Round, id)
+
+  @doc """
+  Creates a round.
+
+  ## Examples
+
+      iex> create_round(%{field: value})
+      {:ok, %Round{}}
+
+      iex> create_round(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_round(attrs \\ %{}) do
+    %Round{}
+    |> Round.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Updates a round.
+
+  ## Examples
+
+      iex> update_round(round, %{field: new_value})
+      {:ok, %Round{}}
+
+      iex> update_round(round, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_round(%Round{} = round, attrs) do
+    round
+    |> Round.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes a round.
+
+  ## Examples
+
+      iex> delete_round(round)
+      {:ok, %Round{}}
+
+      iex> delete_round(round)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_round(%Round{} = round) do
+    Repo.delete(round)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking round changes.
+
+  ## Examples
+
+      iex> change_round(round)
+      %Ecto.Changeset{data: %Round{}}
+
+  """
+  def change_round(%Round{} = round, attrs \\ %{}) do
+    Round.changeset(round, attrs)
+  end
+
+  alias CuberacerLive.Sessions.Solve
+
+  @doc """
+  Returns the list of solves.
+
+  ## Examples
+
+      iex> list_solves()
+      [%Solve{}, ...]
+
+  """
+  def list_solves do
+    Repo.all(Solve)
+  end
+
+  @doc """
+  Gets a single solve.
+
+  Raises `Ecto.NoResultsError` if the Solve does not exist.
+
+  ## Examples
+
+      iex> get_solve!(123)
+      %Solve{}
+
+      iex> get_solve!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_solve!(id), do: Repo.get!(Solve, id)
+
+  @doc """
+  Creates a solve.
+
+  ## Examples
+
+      iex> create_solve(%{field: value})
+      {:ok, %Solve{}}
+
+      iex> create_solve(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_solve(attrs \\ %{}) do
+    %Solve{}
+    |> Solve.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Updates a solve.
+
+  ## Examples
+
+      iex> update_solve(solve, %{field: new_value})
+      {:ok, %Solve{}}
+
+      iex> update_solve(solve, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_solve(%Solve{} = solve, attrs) do
+    solve
+    |> Solve.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes a solve.
+
+  ## Examples
+
+      iex> delete_solve(solve)
+      {:ok, %Solve{}}
+
+      iex> delete_solve(solve)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_solve(%Solve{} = solve) do
+    Repo.delete(solve)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking solve changes.
+
+  ## Examples
+
+      iex> change_solve(solve)
+      %Ecto.Changeset{data: %Solve{}}
+
+  """
+  def change_solve(%Solve{} = solve, attrs \\ %{}) do
+    Solve.changeset(solve, attrs)
+  end
 end
