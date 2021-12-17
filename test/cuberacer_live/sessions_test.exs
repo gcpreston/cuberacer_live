@@ -41,7 +41,7 @@ defmodule CuberacerLive.SessionsTest do
 
     test "create_session/1 with invalid data does not broadcast" do
       Sessions.subscribe()
-      Sessions.create_session(@invalid_attrs)
+      {:error, _reason} = Sessions.create_session(@invalid_attrs)
 
       refute_receive {Sessions, _, _}
     end
@@ -82,7 +82,7 @@ defmodule CuberacerLive.SessionsTest do
       session = session_fixture()
       Sessions.subscribe(session.id - 1)
       update_attrs = %{name: "some updated name"}
-      Sessions.update_session(session, update_attrs)
+      {:ok, _session} = Sessions.update_session(session, update_attrs)
 
       refute_receive {Sessions, _, _}
     end
@@ -91,7 +91,7 @@ defmodule CuberacerLive.SessionsTest do
       session = session_fixture()
       Sessions.subscribe()
       Sessions.subscribe(session.id)
-      Sessions.update_session(session, @invalid_attrs)
+      {:error, _reason} = Sessions.update_session(session, @invalid_attrs)
 
       refute_receive {Sessions, _, _}
     end
@@ -171,10 +171,54 @@ defmodule CuberacerLive.SessionsTest do
       assert {:error, %Ecto.Changeset{}} = Sessions.create_round(invalid_attrs)
     end
 
+    test "create_round/1 broadcasts to the session topic" do
+      session = session_fixture()
+      Sessions.subscribe(session.id)
+      valid_attrs = %{scramble: "some scramble", session_id: session.id}
+      {:ok, round} = Sessions.create_round(valid_attrs)
+
+      assert_receive {Sessions, [:round, :created], ^round}
+    end
+
+    test "create_round/1 does not broadcast to the context topic" do
+      session = session_fixture()
+      Sessions.subscribe()
+      valid_attrs = %{scramble: "some scramble", session_id: session.id}
+      {:ok, _round} = Sessions.create_round(valid_attrs)
+
+      refute_receive {Sessions, _, _}
+    end
+
+    test "create_round/1 with invalid data does not broadcast" do
+      session = session_fixture()
+      Sessions.subscribe()
+      Sessions.subscribe(session.id)
+      invalid_attrs = %{scramble: nil, session_id: session.id}
+      {:error, _reason} = Sessions.create_round(invalid_attrs)
+
+      refute_receive {Sessions, _, _}
+    end
+
     test "delete_round/1 deletes the round" do
       round = round_fixture()
       assert {:ok, %Round{}} = Sessions.delete_round(round)
       assert_raise Ecto.NoResultsError, fn -> Sessions.get_round!(round.id) end
+    end
+
+    test "delete_round/1 broadcasts to the session topic" do
+      round = round_fixture()
+      Sessions.subscribe(round.session_id)
+      {:ok, round} = Sessions.delete_round(round)
+
+      assert_receive {Sessions, [:round, :deleted], ^round}
+    end
+
+    test "delete_round/1 does not broadcast to the context topic" do
+      round = round_fixture()
+      Sessions.subscribe()
+      {:ok, _round} = Sessions.delete_round(round)
+
+      refute_receive {Sessions, _, _}
     end
   end
 
@@ -246,6 +290,43 @@ defmodule CuberacerLive.SessionsTest do
       assert {:error, %Ecto.Changeset{}} = Sessions.create_solve(invalid_attrs)
     end
 
+    test "create_solve/1 broadcasts to the session topic" do
+      round = round_fixture()
+      user = user_fixture()
+      penalty = penalty_fixture()
+
+      Sessions.subscribe(round.session_id)
+      valid_attrs = %{time: 42, user_id: user.id, penalty_id: penalty.id, round_id: round.id}
+      {:ok, solve} = Sessions.create_solve(valid_attrs)
+
+      assert_receive {Sessions, [:solve, :created], ^solve}
+    end
+
+    test "create_solve/1 does not broadcast to context topic" do
+      round = round_fixture()
+      user = user_fixture()
+      penalty = penalty_fixture()
+
+      Sessions.subscribe()
+      valid_attrs = %{time: 42, user_id: user.id, penalty_id: penalty.id, round_id: round.id}
+      {:ok, _solve} = Sessions.create_solve(valid_attrs)
+
+      refute_receive {Sessions, _, _}
+    end
+
+    test "create_solve/1 with invalid data does not broadcast" do
+      round = round_fixture()
+      user = user_fixture()
+      penalty = penalty_fixture()
+
+      Sessions.subscribe()
+      Sessions.subscribe(round.session_id)
+      valid_attrs = %{time: nil, user_id: user.id, penalty_id: penalty.id, round_id: round.id}
+      {:error, _reason} = Sessions.create_solve(valid_attrs)
+
+      refute_receive {Sessions, _, _}
+    end
+
     test "change_penalty/2 with valid data updates the solve" do
       solve = solve_fixture()
       penalty = penalty_fixture()
@@ -258,6 +339,22 @@ defmodule CuberacerLive.SessionsTest do
       solve = solve_fixture()
       assert {:ok, %Solve{}} = Sessions.delete_solve(solve)
       assert_raise Ecto.NoResultsError, fn -> Sessions.get_solve!(solve.id) end
+    end
+
+    test "delete_solve/1 broadcasts to the session topic" do
+      solve = solve_fixture() |> Repo.preload(:round)
+      Sessions.subscribe(solve.round.session_id)
+      {:ok, solve} = Sessions.delete_solve(solve)
+
+      assert_receive {Sessions, [:solve, :deleted], ^solve}
+    end
+
+    test "delete_solve/1 does not broadcast to context topic" do
+      solve = solve_fixture()
+      Sessions.subscribe()
+      {:ok, _solve} = Sessions.delete_solve(solve)
+
+      refute_receive {Sessions, _, _}
     end
   end
 end

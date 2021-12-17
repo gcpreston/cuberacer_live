@@ -6,7 +6,8 @@ defmodule CuberacerLive.Sessions do
   import Ecto.Query, warn: false
   alias CuberacerLive.Repo
 
-  alias CuberacerLive.Sessions.Session
+  alias CuberacerLive.Sessions.{Session, Round, Solve}
+  alias CuberacerLive.Cubing.Penalty
 
   @topic inspect(__MODULE__)
 
@@ -115,22 +116,6 @@ defmodule CuberacerLive.Sessions do
     Session.changeset(session, attrs)
   end
 
-  defp notify_subscribers({:ok, result}, event) do
-    Phoenix.PubSub.broadcast(CuberacerLive.PubSub, @topic, {__MODULE__, event, result})
-
-    Phoenix.PubSub.broadcast(
-      CuberacerLive.PubSub,
-      @topic <> "#{result.id}",
-      {__MODULE__, event, result}
-    )
-
-    {:ok, result}
-  end
-
-  defp notify_subscribers({:error, reason}, _event), do: {:error, reason}
-
-  alias CuberacerLive.Sessions.Round
-
   @doc """
   Returns the list of rounds.
 
@@ -140,7 +125,7 @@ defmodule CuberacerLive.Sessions do
       [%Round{}, ...]
 
   """
-  def list_rounds() do
+  def list_rounds do
     Repo.all(Round)
   end
 
@@ -176,6 +161,7 @@ defmodule CuberacerLive.Sessions do
     %Round{}
     |> Round.create_changeset(attrs)
     |> Repo.insert()
+    |> notify_subscribers([:round, :created])
   end
 
   @doc """
@@ -192,10 +178,8 @@ defmodule CuberacerLive.Sessions do
   """
   def delete_round(%Round{} = round) do
     Repo.delete(round)
+    |> notify_subscribers([:round, :deleted])
   end
-
-  alias CuberacerLive.Sessions.Solve
-  alias CuberacerLive.Cubing.Penalty
 
   @doc """
   Returns the list of solves.
@@ -242,6 +226,7 @@ defmodule CuberacerLive.Sessions do
     %Solve{}
     |> Solve.create_changeset(attrs)
     |> Repo.insert()
+    |> notify_subscribers([:solve, :created])
   end
 
   @doc """
@@ -257,6 +242,7 @@ defmodule CuberacerLive.Sessions do
     solve
     |> Solve.penalty_changeset(%{penalty_id: penalty.id})
     |> Repo.update()
+    |> notify_subscribers([:solve, :updated])
   end
 
   @doc """
@@ -273,5 +259,48 @@ defmodule CuberacerLive.Sessions do
   """
   def delete_solve(%Solve{} = solve) do
     Repo.delete(solve)
+    |> notify_subscribers([:solve, :deleted])
   end
+
+  ## Notify subscribers
+  # - on session create/update, notify overall topic as well as session topic
+  # - on round/solve create/update, notify only the session topic
+
+  defp notify_subscribers({:ok, %Session{} = result}, [:session, _action] = event) do
+    Phoenix.PubSub.broadcast(CuberacerLive.PubSub, @topic, {__MODULE__, event, result})
+    Phoenix.PubSub.broadcast(
+      CuberacerLive.PubSub,
+      @topic <> "#{result.id}",
+      {__MODULE__, event, result}
+    )
+
+    {:ok, result}
+  end
+
+  defp notify_subscribers({:ok, %Round{} = result}, [:round, _action] = event) do
+    session_id = result.session_id
+
+    Phoenix.PubSub.broadcast(
+      CuberacerLive.PubSub,
+      @topic <> "#{session_id}",
+      {__MODULE__, event, result}
+    )
+
+    {:ok, result}
+  end
+
+  defp notify_subscribers({:ok, %Solve{} = result}, [:solve, _action] = event) do
+    solve = Repo.preload(result, :round)
+    session_id = solve.round.session_id
+
+    Phoenix.PubSub.broadcast(
+      CuberacerLive.PubSub,
+      @topic <> "#{session_id}",
+      {__MODULE__, event, result}
+    )
+
+    {:ok, result}
+  end
+
+  defp notify_subscribers({:error, reason}, _event), do: {:error, reason}
 end
