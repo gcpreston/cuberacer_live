@@ -28,6 +28,8 @@ defmodule CuberacerLiveWeb.Router do
 
     live "/sessions/:id", SessionLive.Show, :show
     live "/sessions/:id/show/edit", SessionLive.Show, :edit
+
+    live "/lobby", GameLive.Lobby
   end
 
   # Other scopes may use custom stacks.
