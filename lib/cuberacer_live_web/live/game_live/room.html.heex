@@ -25,10 +25,10 @@
 <p><%= @user.email %></p>
 <p>Users present:</p>
 <ul>
-  <%= for user_id <- @present_users do %>
+  <%= for user <- @present_users do %>
     <li>
-      <%= user_id %>
-      <%= if user_id == @user.id do %>
+      <%= user.email %>
+      <%= if user.id == @user.id do %>
         <span> (you)</span>
       <% end %>
     </li>

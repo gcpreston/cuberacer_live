@@ -4,22 +4,16 @@ defmodule CuberacerLiveWeb.GameLive.Room do
   alias CuberacerLive.{Sessions, Cubing, Accounts}
   alias CuberacerLiveWeb.Presence
 
-  defp presence_topic(session_id) do
-    "room:" <> session_id
-  end
-
   @impl true
   def mount(%{"id" => session_id}, %{"user_token" => user_token}, socket) do
     user = user_token && Accounts.get_user_by_session_token(user_token)
-
-    topic = presence_topic(session_id)
-    CuberacerLiveWeb.Endpoint.subscribe(topic)
-    Presence.track(self(), topic, user.id, %{})
 
     socket =
       if user == nil do
         redirect(socket, to: Routes.user_session_path(CuberacerLiveWeb.Endpoint, :new))
       else
+        track_presence(session_id, user.id)
+
         socket
         |> assign(:user, user)
         |> fetch_session(session_id)
@@ -39,6 +33,16 @@ defmodule CuberacerLiveWeb.GameLive.Room do
      |> redirect(to: Routes.user_session_path(CuberacerLiveWeb.Endpoint, :new))}
   end
 
+  defp presence_topic(session_id) do
+    "room:" <> session_id
+  end
+
+  defp track_presence(session_id, user_id) do
+    topic = presence_topic(session_id)
+    CuberacerLiveWeb.Endpoint.subscribe(topic)
+    Presence.track(self(), topic, user_id, %{})
+  end
+
   defp fetch_session(socket, session_id) do
     session = Sessions.get_session!(session_id)
     assign(socket, %{session_id: session_id, session: session})
@@ -56,7 +60,11 @@ defmodule CuberacerLiveWeb.GameLive.Room do
   end
 
   defp fetch_present_users(socket) do
-    present_users = Map.keys(Presence.list(presence_topic(socket.assigns.session_id)))
+    present_users =
+      for {_user_id_str, info} <- Presence.list(presence_topic(socket.assigns.session_id)) do
+        info.user
+      end
+
     assign(socket, :present_users, present_users)
   end
 
