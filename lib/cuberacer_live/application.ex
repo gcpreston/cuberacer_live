@@ -14,6 +14,7 @@ defmodule CuberacerLive.Application do
       CuberacerLiveWeb.Telemetry,
       # Start the PubSub system
       {Phoenix.PubSub, name: CuberacerLive.PubSub},
+      CuberacerLiveWeb.Presence,
       # Start the Endpoint (http/https)
       CuberacerLiveWeb.Endpoint
       # Start a worker by calling: CuberacerLive.Worker.start_link(arg)
