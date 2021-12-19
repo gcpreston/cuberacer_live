@@ -7,6 +7,7 @@ defmodule CuberacerLive.Sessions do
   alias CuberacerLive.Repo
 
   alias CuberacerLive.Sessions.{Session, Round, Solve}
+  alias CuberacerLive.Accounts.User
   alias CuberacerLive.Cubing.Penalty
 
   @topic inspect(__MODULE__)
@@ -130,6 +131,20 @@ defmodule CuberacerLive.Sessions do
   end
 
   @doc """
+  Returns the list of rounds in a session.
+
+  ## Examples
+
+      iex> list_rounds_of_session(%Session{})
+      [%Round{}, ...]
+
+  """
+  def list_rounds_of_session(%Session{} = session) do
+    query = from r in Round, where: r.session_id == ^session.id
+    Repo.all(query)
+  end
+
+  @doc """
   Gets a single round.
 
   Raises `Ecto.NoResultsError` if the Round does not exist.
@@ -146,7 +161,21 @@ defmodule CuberacerLive.Sessions do
   def get_round!(id), do: Repo.get!(Round, id)
 
   @doc """
-  Creates a round.
+  Get the most recent round of a session.
+  """
+  def get_current_round(%Session{} = session) do
+    query =
+      Ecto.Query.from(r in Round,
+        where: r.session_id == ^session.id,
+        order_by: [desc: r.inserted_at],
+        limit: 1
+      )
+
+    Repo.one(query)
+  end
+
+  @doc """
+  Creates a round. If a scramble is not provided, generates a random one.
 
   ## Examples
 
@@ -158,6 +187,13 @@ defmodule CuberacerLive.Sessions do
 
   """
   def create_round(attrs \\ %{}) do
+    attrs =
+      if not Map.has_key?(attrs, :scramble) do
+        Map.put(attrs, :scramble, CuberacerLive.Cubing.Utils.generate_scramble())
+      else
+        attrs
+      end
+
     %Round{}
     |> Round.create_changeset(attrs)
     |> Repo.insert()
@@ -195,6 +231,24 @@ defmodule CuberacerLive.Sessions do
   end
 
   @doc """
+  Returns the list of solves in a session.
+
+  ## Examples
+
+      iex> list_solves_of_session(%Session{})
+      [%Solve{}, ...]
+
+  """
+  def list_solves_of_session(%Session{} = session) do
+    query =
+      from s in Solve,
+        join: r in assoc(s, :round),
+        where: r.session_id == ^session.id
+
+    Repo.all(query)
+  end
+
+  @doc """
   Gets a single solve.
 
   Raises `Ecto.NoResultsError` if the Solve does not exist.
@@ -223,6 +277,21 @@ defmodule CuberacerLive.Sessions do
 
   """
   def create_solve(attrs \\ %{}) do
+    %Solve{}
+    |> Solve.create_changeset(attrs)
+    |> Repo.insert()
+    |> notify_subscribers([:solve, :created])
+  end
+
+  @doc """
+  Submit a solve for a user.
+
+  Adds the solve to the current round of the given session.
+  """
+  def create_solve(%Session{} = session, %User{} = user, time, %Penalty{} = penalty) do
+    round = get_current_round(session)
+    attrs = %{user_id: user.id, time: time, penalty_id: penalty.id, round_id: round.id}
+
     %Solve{}
     |> Solve.create_changeset(attrs)
     |> Repo.insert()
@@ -268,6 +337,7 @@ defmodule CuberacerLive.Sessions do
 
   defp notify_subscribers({:ok, %Session{} = result}, [:session, _action] = event) do
     Phoenix.PubSub.broadcast(CuberacerLive.PubSub, @topic, {__MODULE__, event, result})
+
     Phoenix.PubSub.broadcast(
       CuberacerLive.PubSub,
       @topic <> "#{result.id}",
