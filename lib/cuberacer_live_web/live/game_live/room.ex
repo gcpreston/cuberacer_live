@@ -14,8 +14,10 @@ defmodule CuberacerLiveWeb.GameLive.Room do
       if user == nil do
         redirect(socket, to: Routes.user_session_path(@endpoint, :new))
       else
-        track_presence(session_id, user.id)
-        Sessions.subscribe(session_id)
+        if connected?(socket) do
+          track_presence(session_id, user.id)
+          Sessions.subscribe(session_id)
+        end
 
         socket
         |> assign(:user, user)
@@ -81,8 +83,8 @@ defmodule CuberacerLiveWeb.GameLive.Room do
   def handle_event("new-solve", %{"time" => _time}, socket) do
     Sessions.create_solve(
       socket.assigns.session,
-      socket.assigns.user, # time,
-      :rand.uniform(100),
+      socket.assigns.user,
+      :rand.uniform(100), # time,
       Cubing.get_penalty("OK")
     )
 
