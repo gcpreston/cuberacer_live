@@ -17,6 +17,8 @@ defmodule CuberacerLiveWeb.ConnCase do
 
   use ExUnit.CaseTemplate
 
+  @presence_shutdown_timer_ms 100
+
   using do
     quote do
       # Import conveniences for testing with connections
@@ -39,7 +41,7 @@ defmodule CuberacerLiveWeb.ConnCase do
       # Ensure Presence processes have shut down before test process exits
       # https://github.com/phoenixframework/phoenix/issues/3619
       on_exit(fn ->
-        :timer.sleep(1)
+        :timer.sleep(@presence_shutdown_timer_ms)
         for pid <- CuberacerLiveWeb.Presence.fetchers_pids() do
           ref = Process.monitor(pid)
           assert_receive {:DOWN, ^ref, _, _, _}, 1000
