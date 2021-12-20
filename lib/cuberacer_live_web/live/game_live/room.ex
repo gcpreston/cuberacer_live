@@ -13,6 +13,7 @@ defmodule CuberacerLiveWeb.GameLive.Room do
         redirect(socket, to: Routes.user_session_path(CuberacerLiveWeb.Endpoint, :new))
       else
         track_presence(session_id, user.id)
+        Sessions.subscribe(session_id)
 
         socket
         |> assign(:user, user)
@@ -50,8 +51,7 @@ defmodule CuberacerLiveWeb.GameLive.Room do
 
   defp fetch_rounds(socket) do
     rounds = Sessions.list_rounds_of_session(socket.assigns.session)
-    current_round = Sessions.get_current_round(socket.assigns.session)
-    assign(socket, %{current_round_id: current_round.id, rounds: rounds})
+    assign(socket, rounds: rounds)
   end
 
   defp fetch_solves(socket) do
@@ -70,21 +70,21 @@ defmodule CuberacerLiveWeb.GameLive.Room do
 
   @impl true
   def handle_event("new-round", _value, socket) do
-    {:ok, round} = Sessions.create_round(%{session_id: socket.assigns.session_id})
-    {:noreply, assign(socket, %{rounds: [round], current_round_id: round.id})}
+    Sessions.create_round(%{session_id: socket.assigns.session_id})
+
+    {:noreply, socket}
   end
 
   @impl true
   def handle_event("new-solve", %{"time" => _time}, socket) do
-    {:ok, solve} =
-      Sessions.create_solve(
-        socket.assigns.session,
-        socket.assigns.user,
-        :rand.uniform(100), # time,
-        Cubing.get_penalty("OK")
-      )
+    Sessions.create_solve(
+      socket.assigns.session,
+      socket.assigns.user, # time,
+      :rand.uniform(100),
+      Cubing.get_penalty("OK")
+    )
 
-    {:noreply, assign(socket, :solves, [solve])}
+    {:noreply, socket}
   end
 
   def handle_info(%Phoenix.Socket.Broadcast{event: "presence_diff"}, socket) do
