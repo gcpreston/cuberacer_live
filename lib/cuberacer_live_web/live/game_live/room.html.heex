@@ -18,9 +18,9 @@
   <% end %>
 </div>
 
-<button phx-click="new-round">New round</button>
+<button id="new-round-button" phx-click="new-round">New round</button>
 
-<button phx-click="new-solve" phx-value-time={42}>New solve</button>
+<button id="new-solve-button" phx-click="new-solve" phx-value-time={42}>New solve</button>
 
 <p><%= @user.email %></p>
 <p>Users present:</p>

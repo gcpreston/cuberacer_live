@@ -80,11 +80,11 @@ defmodule CuberacerLiveWeb.GameLive.Room do
   end
 
   @impl true
-  def handle_event("new-solve", %{"time" => _time}, socket) do
+  def handle_event("new-solve", %{"time" => time}, socket) do
     Sessions.create_solve(
       socket.assigns.session,
       socket.assigns.user,
-      :rand.uniform(100), # time,
+      time,
       Cubing.get_penalty("OK")
     )
 
