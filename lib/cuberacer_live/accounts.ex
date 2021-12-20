@@ -60,6 +60,27 @@ defmodule CuberacerLive.Accounts do
   """
   def get_user!(id), do: Repo.get!(User, id)
 
+  @doc """
+  Get a map of user IDs to user struct for the user IDs in `ids`.
+
+  If an item of `ids` is not a valid user ID, a corresponding key
+  will not be in the returned map.
+
+  ## Examples
+
+      iex> get_users_map([1, 2, 3])
+      %{1: %User{}, 2: %User{}, 3: %User{}}
+
+  """
+  def get_users_map(ids) do
+    query =
+      from u in User,
+        where: u.id in ^ids,
+        select: {u.id, u}
+
+    query |> Repo.all() |> Enum.into(%{})
+  end
+
   ## User registration
 
   @doc """

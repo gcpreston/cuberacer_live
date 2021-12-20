@@ -1,0 +1,36 @@
+<h1><%= @session.name %></h1>
+
+<h2>Round events</h2>
+<div id="round-events" phx-update="append">
+  <%= for round <- @rounds do %>
+    <p id={"round#{round.id}"}>
+      <span><%= round.scramble %></span>
+    </p>
+  <% end %>
+</div>
+
+<h2>Solve events</h2>
+<div id="solve-events" phx-update="append">
+  <%= for solve <- @solves do %>
+    <p id={"solve#{solve.id}"}>
+      <span><%= solve.user_id %></span>: <span><%= solve.time %></span> (<span><%= solve.penalty.name %></span>)
+    </p>
+  <% end %>
+</div>
+
+<button id="new-round-button" phx-click="new-round">New round</button>
+
+<button id="new-solve-button" phx-click="new-solve" phx-value-time={42}>New solve</button>
+
+<p><%= @user.email %></p>
+<p>Users present:</p>
+<ul>
+  <%= for user <- @present_users do %>
+    <li>
+      <%= user.email %>
+      <%= if user.id == @user.id do %>
+        <span> (you)</span>
+      <% end %>
+    </li>
+  <% end %>
+</ul>
