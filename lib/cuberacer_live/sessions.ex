@@ -162,16 +162,18 @@ defmodule CuberacerLive.Sessions do
 
   @doc """
   Get the most recent round of a session.
+
+  Raises `Ecto.NoResultsError` if the session has no rounds.
   """
   def get_current_round(%Session{} = session) do
     query =
-      Ecto.Query.from(r in Round,
+      from(r in Round,
         where: r.session_id == ^session.id,
         order_by: [desc: r.inserted_at],
         limit: 1
       )
 
-    Repo.one(query)
+    Repo.one!(query)
   end
 
   @doc """
