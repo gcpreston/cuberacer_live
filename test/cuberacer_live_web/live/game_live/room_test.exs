@@ -8,6 +8,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
   import CuberacerLive.SessionsFixtures
   import CuberacerLive.CubingFixtures
 
+  alias CuberacerLive.Repo
   alias CuberacerLive.Sessions
   alias CuberacerLive.Sessions.Solve
 
@@ -18,6 +19,9 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
 
   defp create_session(_) do
     session = session_fixture()
+    # TODO: Each session should have a first round by default, so this doesn't have to happen.
+    _round = round_fixture(%{session_id: session.id})
+
     %{session: session}
   end
 
@@ -30,7 +34,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
     %{conn: log_in_user(conn, user)}
   end
 
-  setup [:create_user, :create_session]
+  setup [:create_user, :create_session, :create_penalty]
 
   describe "mount" do
     test "redirects if no user token", %{conn: conn, session: session} do
@@ -57,7 +61,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
   end
 
   describe "click events" do
-    setup [:authenticate, :create_penalty]
+    setup [:authenticate]
 
     test "new-round creates a new round", %{conn: conn, session: session} do
       {:ok, view, _html} = live(conn, Routes.game_room_path(conn, :show, session.id))
@@ -74,9 +78,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       assert render(view) =~ newest_round.scramble
     end
 
-    test "new-solve creates a new solve", %{conn: conn, session: session} do
-      # TODO: Each session should have a first round by default, so this doesn't have to happen.
-      Sessions.create_round(%{session_id: session.id})
+    test "new-solve creates a new solve", %{conn: conn, session: session, user: user} do
       {:ok, view, _html} = live(conn, Routes.game_room_path(conn, :show, session.id))
 
       num_solves_before = Enum.count(Sessions.list_solves_of_session(session))
@@ -93,11 +95,45 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
           order_by: [desc: s.inserted_at],
           limit: 1
 
-      newest_solve = CuberacerLive.Repo.one(newest_solve_query)
+      newest_solve = Repo.one(newest_solve_query) |> Repo.preload(:penalty)
 
       assert num_solves_after == num_solves_before + 1
       assert newest_solve.time == 42
-      assert render(view) =~ Integer.to_string(newest_solve.time)
+
+      assert render(view) =~
+               "<span>#{user.id}</span>: <span>#{newest_solve.time}</span> (<span>#{newest_solve.penalty.name}</span>)"
+    end
+  end
+
+  describe "Sessions events" do
+    setup [:authenticate]
+
+    test "reacts to round created", %{conn: conn, session: session} do
+      {:ok, view, _html} = live(conn, Routes.game_room_path(conn, :show, session.id))
+
+      num_rounds_before = Enum.count(Sessions.list_rounds_of_session(session))
+
+      Sessions.create_round(%{session_id: session.id, scramble: "some scramble"})
+
+      num_rounds_after = Enum.count(Sessions.list_rounds_of_session(session))
+
+      assert num_rounds_after == num_rounds_before + 1
+      assert render(view) =~ "some scramble"
+    end
+
+    test "reacts to solve created", %{conn: conn, session: session, user: user, penalty: penalty} do
+      {:ok, view, _html} = live(conn, Routes.game_room_path(conn, :show, session.id))
+
+      num_solves_before = Enum.count(Sessions.list_solves_of_session(session))
+
+      Sessions.create_solve(session, user, 42, penalty)
+
+      num_solves_after = Enum.count(Sessions.list_solves_of_session(session))
+
+      assert num_solves_after == num_solves_before + 1
+
+      assert render(view) =~
+               "<span>#{user.id}</span>: <span>42</span> (<span>OK</span>)"
     end
   end
 end
