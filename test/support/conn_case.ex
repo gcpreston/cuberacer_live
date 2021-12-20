@@ -34,6 +34,19 @@ defmodule CuberacerLiveWeb.ConnCase do
   setup tags do
     pid = Ecto.Adapters.SQL.Sandbox.start_owner!(CuberacerLive.Repo, shared: not tags[:async])
     on_exit(fn -> Ecto.Adapters.SQL.Sandbox.stop_owner(pid) end)
+
+    if tags[:ensure_presence_shutdown] do
+      # Ensure Presence processes have shut down before test process exits
+      # https://github.com/phoenixframework/phoenix/issues/3619
+      on_exit(fn ->
+        :timer.sleep(1)
+        for pid <- CuberacerLiveWeb.Presence.fetchers_pids() do
+          ref = Process.monitor(pid)
+          assert_receive {:DOWN, ^ref, _, _, _}, 1000
+        end
+      end)
+    end
+
     {:ok, conn: Phoenix.ConnTest.build_conn()}
   end
 
