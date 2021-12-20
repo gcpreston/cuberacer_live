@@ -4,13 +4,15 @@ defmodule CuberacerLiveWeb.GameLive.Room do
   alias CuberacerLive.{Sessions, Cubing, Accounts}
   alias CuberacerLiveWeb.Presence
 
+  @endpoint CuberacerLiveWeb.Endpoint
+
   @impl true
   def mount(%{"id" => session_id}, %{"user_token" => user_token}, socket) do
     user = user_token && Accounts.get_user_by_session_token(user_token)
 
     socket =
       if user == nil do
-        redirect(socket, to: Routes.user_session_path(CuberacerLiveWeb.Endpoint, :new))
+        redirect(socket, to: Routes.user_session_path(@endpoint, :new))
       else
         track_presence(session_id, user.id)
         Sessions.subscribe(session_id)
@@ -31,7 +33,7 @@ defmodule CuberacerLiveWeb.GameLive.Room do
     # TODO: How to make it redirect to room after login instead of /?
     {:ok,
      socket
-     |> redirect(to: Routes.user_session_path(CuberacerLiveWeb.Endpoint, :new))}
+     |> redirect(to: Routes.user_session_path(@endpoint, :new))}
   end
 
   defp presence_topic(session_id) do
@@ -101,7 +103,7 @@ defmodule CuberacerLiveWeb.GameLive.Room do
     {:noreply,
      socket
      |> put_flash(:info, "Session was deleted")
-     |> push_redirect(to: Routes.live_path(socket, CuberacerLiveWeb.GameLive.Lobby))}
+     |> push_redirect(to: Routes.game_lobby_path(socket, :index))}
   end
 
   @impl true
