@@ -2,6 +2,7 @@ defmodule CuberacerLiveWeb.GameLive.Lobby do
   use CuberacerLiveWeb, :live_view
 
   alias CuberacerLive.Sessions
+
   @impl true
   def render(assigns) do
     ~H"""
