@@ -58,6 +58,16 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       assert {:ok, _view, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
       assert html =~ session.name
     end
+
+    test "displays existing data on load", %{conn: conn, session: session, user: user} do
+      conn = log_in_user(conn, user)
+      round = round_fixture(%{session_id: session.id})
+      solve = solve_fixture(%{user_id: user.id, round_id: round.id}) |> Repo.preload([:penalty])
+
+      assert {:ok, _view, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
+      assert html =~ round.scramble
+      assert html =~ "<span>#{user.email}</span>: <span>#{solve.time}</span> (<span>#{solve.penalty.name}</span>)"
+    end
   end
 
   describe "click events" do
@@ -101,7 +111,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       assert newest_solve.time == 42
 
       assert render(view) =~
-               "<span>#{user.id}</span>: <span>#{newest_solve.time}</span> (<span>#{newest_solve.penalty.name}</span>)"
+               "<span>#{user.email}</span>: <span>#{newest_solve.time}</span> (<span>#{newest_solve.penalty.name}</span>)"
     end
   end
 
@@ -133,7 +143,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       assert num_solves_after == num_solves_before + 1
 
       assert render(view) =~
-               "<span>#{user.id}</span>: <span>42</span> (<span>OK</span>)"
+               "<span>#{user.email}</span>: <span>42</span> (<span>OK</span>)"
     end
   end
 end

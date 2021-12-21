@@ -13,7 +13,7 @@
 <div id="solve-events" phx-update="append">
   <%= for solve <- @solves do %>
     <p id={"solve#{solve.id}"}>
-      <span><%= solve.user_id %></span>: <span><%= solve.time %></span> (<span><%= solve.penalty.name %></span>)
+      <span><%= solve.user.email %></span>: <span><%= solve.time %></span> (<span><%= solve.penalty.name %></span>)
     </p>
   <% end %>
 </div>

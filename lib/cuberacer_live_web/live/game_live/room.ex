@@ -2,6 +2,7 @@ defmodule CuberacerLiveWeb.GameLive.Room do
   use CuberacerLiveWeb, :live_view
 
   alias CuberacerLive.{Sessions, Cubing, Accounts}
+  alias CuberacerLive.Sessions.Solve
   alias CuberacerLiveWeb.Presence
 
   @endpoint CuberacerLiveWeb.Endpoint
@@ -59,7 +60,9 @@ defmodule CuberacerLiveWeb.GameLive.Room do
   end
 
   defp fetch_solves(socket) do
-    solves = Sessions.list_solves_of_session(socket.assigns.session)
+    solves =
+      Sessions.list_solves_of_session(socket.assigns.session)
+      |> Enum.map(&preload_solve/1)
     assign(socket, :solves, solves)
   end
 
@@ -70,6 +73,10 @@ defmodule CuberacerLiveWeb.GameLive.Room do
       end
 
     assign(socket, :present_users, present_users)
+  end
+
+  defp preload_solve(%Solve{} = solve) do
+    CuberacerLive.Repo.preload(solve, [:user, :penalty])
   end
 
   @impl true
@@ -115,6 +122,11 @@ defmodule CuberacerLiveWeb.GameLive.Room do
 
   @impl true
   def handle_info({Sessions, [:solve, :created], solve}, socket) do
-    {:noreply, assign(socket, solves: [solve])}
+    # TODO: I don't like having a Repo call in this file, and would like to
+    # have preload options in the context instead, but not sure what the best
+    # way to specify preloads would be in this case where we aren't explicitly
+    # fetching the solve... having a preload wrapper in the context seems
+    # like a solution just for show
+    {:noreply, assign(socket, solves: [preload_solve(solve)])}
   end
 end
