@@ -18,6 +18,7 @@ defmodule CuberacerLive.Sessions.Solve do
     solve
     |> cast(attrs, [:time, :user_id, :penalty_id, :round_id])
     |> validate_required([:time, :user_id, :penalty_id, :round_id])
+    |> unique_constraint(:user_id_round_id, message: "user has already submitted a time for this round")
     |> cast_assoc(:user)
     |> cast_assoc(:penalty)
     |> cast_assoc(:round)
