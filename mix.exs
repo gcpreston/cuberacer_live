@@ -5,7 +5,7 @@ defmodule CuberacerLive.MixProject do
     [
       app: :cuberacer_live,
       version: "0.1.0",
-      elixir: "~> 1.12",
+      elixir: "~> 1.13",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: [:gettext] ++ Mix.compilers(),
       start_permanent: Mix.env() == :prod,
@@ -34,7 +34,7 @@ defmodule CuberacerLive.MixProject do
   defp deps do
     [
       {:argon2_elixir, "~> 2.0"},
-      {:phoenix, "~> 1.6.4"},
+      {:phoenix, "~> 1.6.5"},
       {:phoenix_ecto, "~> 4.4"},
       {:ecto_sql, "~> 3.6"},
       {:postgrex, ">= 0.0.0"},
