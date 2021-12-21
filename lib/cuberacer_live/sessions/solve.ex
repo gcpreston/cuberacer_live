@@ -8,6 +8,8 @@ defmodule CuberacerLive.Sessions.Solve do
     belongs_to :penalty, CuberacerLive.Cubing.Penalty
     belongs_to :round, CuberacerLive.Sessions.Round
 
+    has_one :session, through: [:round, :session]
+
     timestamps()
   end
 

@@ -362,13 +362,12 @@ defmodule CuberacerLive.Sessions do
   end
 
   defp notify_subscribers({:ok, %Solve{} = result}, [:solve, _action] = event) do
-    solve = Repo.preload(result, [:round, :penalty])
-    session_id = solve.round.session_id
+    preloaded_solve = Repo.preload(result, :session)
 
     Phoenix.PubSub.broadcast(
       CuberacerLive.PubSub,
-      @topic <> "#{session_id}",
-      {__MODULE__, event, solve}
+      @topic <> "#{preloaded_solve.session.id}",
+      {__MODULE__, event, result}
     )
 
     {:ok, result}

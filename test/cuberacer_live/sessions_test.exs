@@ -315,7 +315,6 @@ defmodule CuberacerLive.SessionsTest do
       Sessions.subscribe(round.session_id)
       valid_attrs = %{time: 42, user_id: user.id, penalty_id: penalty.id, round_id: round.id}
       {:ok, solve} = Sessions.create_solve(valid_attrs)
-      solve = Repo.preload(solve, [:round, :penalty])
 
       assert_receive {Sessions, [:solve, :created], ^solve}
     end
@@ -363,7 +362,6 @@ defmodule CuberacerLive.SessionsTest do
       solve = solve_fixture() |> Repo.preload(:round)
       Sessions.subscribe(solve.round.session_id)
       {:ok, solve} = Sessions.delete_solve(solve)
-      solve = Repo.preload(solve, [:round, :penalty])
 
       assert_receive {Sessions, [:solve, :deleted], ^solve}
     end
