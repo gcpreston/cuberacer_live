@@ -239,6 +239,8 @@ defmodule CuberacerLive.SessionsTest do
       assert Sessions.get_solve!(solve.id) == solve
     end
 
+    # TODO: create_solve/4 tests, get rid of create_solve/1?
+
     test "create_solve/1 with valid data creates a solve" do
       user = user_fixture()
       penalty = penalty_fixture()
@@ -290,6 +292,21 @@ defmodule CuberacerLive.SessionsTest do
       assert {:error, %Ecto.Changeset{}} = Sessions.create_solve(invalid_attrs)
     end
 
+    test "create_solve/1 does not allow one user to submit multiple solves in a round" do
+      user = user_fixture()
+      penalty = penalty_fixture()
+      round = round_fixture()
+
+      valid_attrs = %{time: 42, user_id: user.id, penalty_id: penalty.id, round_id: round.id}
+
+      assert {:ok, _} = Sessions.create_solve(valid_attrs)
+
+      assert {:error, %Ecto.Changeset{errors: [user_id_round_id: {message, _info}]}} =
+               Sessions.create_solve(valid_attrs)
+
+      assert message == "user has already submitted a time for this round"
+    end
+
     test "create_solve/1 broadcasts to the session topic" do
       round = round_fixture()
       user = user_fixture()
@@ -298,6 +315,7 @@ defmodule CuberacerLive.SessionsTest do
       Sessions.subscribe(round.session_id)
       valid_attrs = %{time: 42, user_id: user.id, penalty_id: penalty.id, round_id: round.id}
       {:ok, solve} = Sessions.create_solve(valid_attrs)
+      solve = Repo.preload(solve, [:round, :penalty])
 
       assert_receive {Sessions, [:solve, :created], ^solve}
     end
@@ -345,6 +363,7 @@ defmodule CuberacerLive.SessionsTest do
       solve = solve_fixture() |> Repo.preload(:round)
       Sessions.subscribe(solve.round.session_id)
       {:ok, solve} = Sessions.delete_solve(solve)
+      solve = Repo.preload(solve, [:round, :penalty])
 
       assert_receive {Sessions, [:solve, :deleted], ^solve}
     end
