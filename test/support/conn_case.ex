@@ -25,6 +25,7 @@ defmodule CuberacerLiveWeb.ConnCase do
       import Plug.Conn
       import Phoenix.ConnTest
       import CuberacerLiveWeb.ConnCase
+      import AssertHTML
 
       alias CuberacerLiveWeb.Router.Helpers, as: Routes
 

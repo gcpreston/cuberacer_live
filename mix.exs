@@ -34,6 +34,7 @@ defmodule CuberacerLive.MixProject do
   defp deps do
     [
       {:argon2_elixir, "~> 2.0"},
+      {:assert_html, "~> 0.1.2", only: :test},
       {:phoenix, "~> 1.6.5"},
       {:phoenix_ecto, "~> 4.4"},
       {:ecto_sql, "~> 3.6"},
