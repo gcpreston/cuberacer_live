@@ -3,6 +3,7 @@ defmodule CuberacerLiveWeb.GameLive.Room do
 
   alias CuberacerLive.{Sessions, Cubing, Accounts}
   alias CuberacerLive.Sessions.Solve
+  alias CuberacerLive.Accounts.User
   alias CuberacerLiveWeb.Presence
 
   @endpoint CuberacerLiveWeb.Endpoint
@@ -23,9 +24,9 @@ defmodule CuberacerLiveWeb.GameLive.Room do
         socket
         |> assign(:user, user)
         |> fetch_session(session_id)
+        |> fetch_present_users()
         |> fetch_rounds()
         |> fetch_solves()
-        |> fetch_present_users()
       end
 
     {:ok, socket, temporary_assigns: [rounds: [], solves: []]}
@@ -63,6 +64,7 @@ defmodule CuberacerLiveWeb.GameLive.Room do
     solves =
       Sessions.list_solves_of_session(socket.assigns.session)
       |> Enum.map(&preload_solve/1)
+
     assign(socket, :solves, solves)
   end
 
@@ -77,6 +79,10 @@ defmodule CuberacerLiveWeb.GameLive.Room do
 
   defp preload_solve(%Solve{} = solve) do
     CuberacerLive.Repo.preload(solve, [:user, :penalty])
+  end
+
+  defp solves_for(%User{} = user, solves) do
+    Enum.filter(solves, &(&1.user_id == user.id))
   end
 
   @impl true
@@ -99,7 +105,7 @@ defmodule CuberacerLiveWeb.GameLive.Room do
   end
 
   def handle_info(%Phoenix.Socket.Broadcast{event: "presence_diff"}, socket) do
-    {:noreply, fetch_present_users(socket)}
+    {:noreply, socket |> fetch_present_users() |> fetch_solves()}
   end
 
   @impl true
