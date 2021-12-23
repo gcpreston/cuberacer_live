@@ -61,6 +61,19 @@ config :cuberacer_live, CuberacerLiveWeb.Endpoint,
       ~r"lib/cuberacer_live_web/(live|views)/.*(ex)$",
       ~r"lib/cuberacer_live_web/templates/.*(eex)$"
     ]
+  ],
+  watchers: [
+    # Start the esbuild watcher by calling Esbuild.install_and_run(:default, args)
+    # https://sergiotapia.com/phoenix-160-liveview-esbuild-tailwind-jit-alpinejs-a-brief-tutorial
+    esbuild: {Esbuild, :install_and_run, [:default, ~w(--sourcemap=inline --watch)]},
+    npx: [
+      "tailwindcss",
+      "--input=css/app.css",
+      "--output=../priv/static/assets/app.css",
+      "--postcss",
+      "--watch",
+      cd: Path.expand("../assets", __DIR__)
+    ]
   ]
 
 # Do not include metadata nor timestamps in development logs
