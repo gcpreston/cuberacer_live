@@ -24,7 +24,7 @@ defmodule CuberacerLiveWeb.GameLive.Lobby do
 
           <td>
             <span>
-             <%= live_redirect "Join", to: Routes.game_room_path(@socket, :show, session.id) %>
+              <%= live_redirect "Join", to: Routes.game_room_path(@socket, :show, session.id) %>
             </span>
           </td>
         </tr>
