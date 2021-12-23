@@ -8,8 +8,8 @@ defmodule CuberacerLiveWeb.UserRegistrationControllerTest do
       conn = get(conn, Routes.user_registration_path(conn, :new))
       response = html_response(conn, 200)
       assert response =~ "<h1>Register</h1>"
+      assert response =~ "Register</button>"
       assert response =~ "Log in</a>"
-      assert response =~ "Register</a>"
     end
 
     test "redirects if already logged in", %{conn: conn} do
