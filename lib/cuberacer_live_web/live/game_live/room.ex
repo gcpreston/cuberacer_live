@@ -1,9 +1,11 @@
 defmodule CuberacerLiveWeb.GameLive.Room do
   use CuberacerLiveWeb, :live_view
 
+  import CuberacerLive.Repo, only: [preload: 2]
+
   alias CuberacerLive.{Sessions, Cubing, Accounts}
-  alias CuberacerLive.Sessions.Solve
   alias CuberacerLive.Accounts.User
+  alias CuberacerLive.Sessions.Round
   alias CuberacerLiveWeb.Presence
 
   @endpoint CuberacerLiveWeb.Endpoint
@@ -22,14 +24,13 @@ defmodule CuberacerLiveWeb.GameLive.Room do
         end
 
         socket
-        |> assign(:user, user)
+        |> assign(:current_user, user)
         |> fetch_session(session_id)
         |> fetch_present_users()
         |> fetch_rounds()
-        |> fetch_solves()
       end
 
-    {:ok, socket, temporary_assigns: [rounds: [], solves: []]}
+    {:ok, socket, temporary_assigns: [rounds: []]}
   end
 
   @impl true
@@ -56,16 +57,8 @@ defmodule CuberacerLiveWeb.GameLive.Room do
   end
 
   defp fetch_rounds(socket) do
-    rounds = Sessions.list_rounds_of_session(socket.assigns.session)
+    rounds = Sessions.list_rounds_of_session(socket.assigns.session, [:solves])
     assign(socket, rounds: rounds)
-  end
-
-  defp fetch_solves(socket) do
-    solves =
-      Sessions.list_solves_of_session(socket.assigns.session)
-      |> Enum.map(&preload_solve/1)
-
-    assign(socket, :solves, solves)
   end
 
   defp fetch_present_users(socket) do
@@ -77,12 +70,8 @@ defmodule CuberacerLiveWeb.GameLive.Room do
     assign(socket, :present_users, present_users)
   end
 
-  defp preload_solve(%Solve{} = solve) do
-    CuberacerLive.Repo.preload(solve, [:user, :penalty])
-  end
-
-  defp solves_for(%User{} = user, solves) do
-    Enum.filter(solves, &(&1.user_id == user.id))
+  defp user_solve_for_round(%User{} = user, %Round{} = round) do
+    Enum.find(round.solves, fn solve -> solve.user_id == user.id end)
   end
 
   @impl true
@@ -96,7 +85,7 @@ defmodule CuberacerLiveWeb.GameLive.Room do
   def handle_event("new-solve", %{"time" => time}, socket) do
     Sessions.create_solve(
       socket.assigns.session,
-      socket.assigns.user,
+      socket.assigns.current_user,
       time,
       Cubing.get_penalty("OK")
     )
@@ -104,8 +93,9 @@ defmodule CuberacerLiveWeb.GameLive.Room do
     {:noreply, socket}
   end
 
+  @impl true
   def handle_info(%Phoenix.Socket.Broadcast{event: "presence_diff"}, socket) do
-    {:noreply, socket |> fetch_present_users() |> fetch_solves()}
+    {:noreply, socket |> fetch_present_users() |> fetch_rounds()}
   end
 
   @impl true
@@ -121,18 +111,22 @@ defmodule CuberacerLiveWeb.GameLive.Room do
      |> push_redirect(to: Routes.game_lobby_path(socket, :index))}
   end
 
+  # TODO: I don't like having a Repo call in this file, and would like to
+  # have preload options in the context instead, but not sure what the best
+  # way to specify preloads would be in this case where we aren't explicitly
+  # fetching the solve... having a preload wrapper in the context seems
+  # like a solution just for show
+
   @impl true
   def handle_info({Sessions, [:round, :created], round}, socket) do
-    {:noreply, assign(socket, rounds: [round])}
+    round = preload(round, :solves)
+    {:noreply, update(socket, :rounds, fn rounds -> [round | rounds] end)}
   end
 
   @impl true
   def handle_info({Sessions, [:solve, :created], solve}, socket) do
-    # TODO: I don't like having a Repo call in this file, and would like to
-    # have preload options in the context instead, but not sure what the best
-    # way to specify preloads would be in this case where we aren't explicitly
-    # fetching the solve... having a preload wrapper in the context seems
-    # like a solution just for show
-    {:noreply, assign(socket, solves: [preload_solve(solve)])}
+    solve = preload(solve, :round)
+    round = preload(solve.round, :solves)
+    {:noreply, update(socket, :rounds, fn rounds -> [round | rounds] end)}
   end
 end
