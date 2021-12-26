@@ -373,5 +373,25 @@ defmodule CuberacerLive.SessionsTest do
 
       refute_receive {Sessions, _, _}
     end
+
+    test "display_solve/1 OK" do
+      solve = solve_fixture(time: 12340)
+
+      assert Sessions.display_solve(solve) == "12.340"
+    end
+
+    test "display_solve/1 +2" do
+      penalty = penalty_fixture(name: "+2")
+      solve = solve_fixture(time: 12340, penalty_id: penalty.id)
+
+      assert Sessions.display_solve(solve) == "14.340+"
+    end
+
+    test "display_solve/1 DNF" do
+      penalty = penalty_fixture(name: "DNF")
+      solve = solve_fixture(time: 12340, penalty_id: penalty.id)
+
+      assert Sessions.display_solve(solve) == "DNF"
+    end
   end
 end

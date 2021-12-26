@@ -333,6 +333,41 @@ defmodule CuberacerLive.Sessions do
     |> notify_subscribers([:solve, :deleted])
   end
 
+  @doc """
+  Return a string of a solve time in seconds and penalty.
+
+  Accepts `nil` as well, returning a placeholder value.
+
+  ## Examples
+
+      iex> display_solve(ok_solve)
+      "12.345"
+
+      iex> display_solve(plus2_solve)
+      "14.345+"
+
+      iex> display_solve(dnf_solve)
+      "DNF"
+
+      iex> display_solve(nil)
+      "--"
+
+  """
+  def display_solve(solve) do
+    # TODO: Figure how to do this without preloading
+    case Repo.preload(solve, :penalty) do
+      nil -> "--"
+      %Solve{penalty: %Penalty{name: "OK"}} -> ms_to_sec_str(solve.time)
+      %Solve{penalty: %Penalty{name: "+2"}} -> ms_to_sec_str(solve.time + 2000) <> "+"
+      %Solve{penalty: %Penalty{name: "DNF"}} -> "DNF"
+    end
+  end
+
+  defp ms_to_sec_str(ms) do
+    ms / 1000
+    |> :erlang.float_to_binary([decimals: 3])
+  end
+
   ## Notify subscribers
   # - on session create/update, notify overall topic as well as session topic
   # - on round/solve create/update, notify only the session topic
