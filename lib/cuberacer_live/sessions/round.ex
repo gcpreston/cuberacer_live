@@ -6,6 +6,8 @@ defmodule CuberacerLive.Sessions.Round do
     field :scramble, :string
     belongs_to :session, CuberacerLive.Sessions.Session
 
+    has_many :solves, CuberacerLive.Sessions.Solve
+
     timestamps()
   end
 

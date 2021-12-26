@@ -69,9 +69,8 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       solve = solve_fixture(%{user_id: user.id, round_id: round.id}) |> Repo.preload([:penalty])
 
       assert {:ok, _view, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
-      assert html =~ round.scramble
-      assert html =~ "Solves for #{user.email}"
-      assert html =~ "#{solve.time} (#{solve.penalty.name})"
+      assert html =~ user.email
+      assert html =~ Sessions.display_solve(solve)
     end
 
     test "does not display solves for user not in room", %{
@@ -88,8 +87,8 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
         |> Repo.preload([:penalty])
 
       assert {:ok, _view, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
-      assert html =~ "Solves for #{user.email}"
-      refute html =~ "Solves for #{other_user.email}"
+      assert html =~ user.email
+      refute html =~ other_user.email
     end
   end
 
@@ -97,18 +96,19 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
     setup [:authenticate]
 
     test "new-round creates a new round", %{conn: conn, session: session} do
-      {:ok, view, _html} = live(conn, Routes.game_room_path(conn, :show, session.id))
+      {:ok, view, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
 
       num_rounds_before = Enum.count(Sessions.list_rounds_of_session(session))
+
+      assert_html html, "tr.t_round-row", count: num_rounds_before
 
       view
       |> render_click("new-round")
 
       num_rounds_after = Enum.count(Sessions.list_rounds_of_session(session))
-      newest_round = Sessions.get_current_round(session)
 
       assert num_rounds_after == num_rounds_before + 1
-      assert render(view) =~ newest_round.scramble
+      assert_html render(view), "tr.t_round-row", count: num_rounds_after
     end
 
     test "new-solve creates a new solve", %{conn: conn, session: session} do
@@ -132,7 +132,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
 
       assert num_solves_after == num_solves_before + 1
       assert newest_solve.time == 42
-      assert render(view) =~ "#{newest_solve.time} (#{newest_solve.penalty.name})"
+      assert render(view) =~ Sessions.display_solve(newest_solve)
     end
   end
 
@@ -140,16 +140,18 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
     setup [:authenticate]
 
     test "reacts to round created", %{conn: conn, session: session} do
-      {:ok, view, _html} = live(conn, Routes.game_room_path(conn, :show, session.id))
+      {:ok, view, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
 
       num_rounds_before = Enum.count(Sessions.list_rounds_of_session(session))
+
+      assert_html html, "tr.t_round-row", count: num_rounds_before
 
       Sessions.create_round(%{session_id: session.id, scramble: "some scramble"})
 
       num_rounds_after = Enum.count(Sessions.list_rounds_of_session(session))
 
       assert num_rounds_after == num_rounds_before + 1
-      assert render(view) =~ "some scramble"
+      assert_html render(view), "tr.t_round-row", count: num_rounds_after
     end
 
     test "reacts to solve created", %{conn: conn, session: session, user: user, penalty: penalty} do
@@ -157,49 +159,17 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
 
       num_solves_before = Enum.count(Sessions.list_solves_of_session(session))
 
-      Sessions.create_solve(session, user, 42, penalty)
+      {:ok, solve} = Sessions.create_solve(session, user, 42, penalty)
 
       num_solves_after = Enum.count(Sessions.list_solves_of_session(session))
 
       assert num_solves_after == num_solves_before + 1
-      assert render(view) =~ "42 (OK)"
+      assert render(view) =~ Sessions.display_solve(solve)
     end
   end
 
   describe "Presence events" do
     setup [:authenticate]
-
-    test "shows and updates list of present users", %{conn: conn, session: session, user: user} do
-      other_user = user_fixture()
-      other_conn = Phoenix.ConnTest.build_conn() |> log_in_user(other_user)
-
-      {:ok, view, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
-
-      html
-      |> assert_html("li[class='present-user']", count: 1)
-      |> assert_html("li:first-child.present-user span:first-child", text: user.email)
-      |> assert_html("li:first-child.present-user span:nth-child(2)", text: "(you)")
-
-      refute html =~ other_user.email
-
-      {:ok, other_view, other_html} =
-        live(other_conn, Routes.game_room_path(other_conn, :show, session.id))
-
-      other_html
-      |> assert_html("li[class='present-user']", count: 2)
-      |> assert_html("li:first-child.present-user span", text: user.email)
-      |> assert_html("li:nth-child(2).present-user span:first-child", text: other_user.email)
-      |> assert_html("li:nth-child(2).present-user span:nth-child(2)", text: "(you)")
-
-      assert_html(render(view), "li:nth-child(2).present-user span", text: other_user.email)
-
-      other_session = session_fixture()
-      live_redirect(other_view, to: "/#{other_session.id}")
-
-      render(view)
-      |> assert_html("li[class='present-user']", count: 1)
-      |> refute_html("li:nth-child(2).present-user span", text: other_user.email)
-    end
 
     test "shows times for user on join", %{
       conn: conn,
@@ -210,7 +180,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       other_user = user_fixture()
       other_conn = Phoenix.ConnTest.build_conn() |> log_in_user(other_user)
 
-      solve_fixture(%{
+      solve = solve_fixture(%{
         round_id: round.id,
         user_id: other_user.id,
         time: 43,
@@ -219,13 +189,13 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
 
       {:ok, view, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
 
-      refute html =~ "Solves for #{other_user.email}"
+      refute html =~ other_user.email
 
       live(other_conn, Routes.game_room_path(other_conn, :show, session.id))
 
       html = render(view)
-      assert html =~ "Solves for #{other_user.email}"
-      assert html =~ "43 (OK)"
+      assert html =~ other_user.email
+      assert html =~ Sessions.display_solve(solve)
     end
 
     test "hides times for user on leave", %{
@@ -237,7 +207,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       other_user = user_fixture()
       other_conn = Phoenix.ConnTest.build_conn() |> log_in_user(other_user)
 
-      solve_fixture(%{
+      solve = solve_fixture(%{
         round_id: round.id,
         user_id: other_user.id,
         time: 43,
@@ -249,13 +219,13 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
 
       {:ok, view, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
 
-      assert html =~ "Solves for #{other_user.email}"
-      assert html =~ "43 (OK)"
+      assert html =~ other_user.email
+      assert html =~ Sessions.display_solve(solve)
 
       other_session = session_fixture()
       live_redirect(other_view, to: "/#{other_session.id}")
 
-      refute render(view) =~ "Solves for #{other_user.email}"
+      refute render(view) =~ other_user.email
     end
   end
 end

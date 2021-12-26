@@ -132,15 +132,19 @@ defmodule CuberacerLive.Sessions do
 
   @doc """
   Returns the list of rounds in a session.
+  Allows passing a list of fields to preload.
 
   ## Examples
 
       iex> list_rounds_of_session(%Session{})
       [%Round{}, ...]
 
+      iex> list_rounds_of_session(%Session{}, [:solves])
+      [%Round{solves: [%Solve{}, ...]}, ...]
+
   """
-  def list_rounds_of_session(%Session{} = session) do
-    query = from r in Round, where: r.session_id == ^session.id
+  def list_rounds_of_session(%Session{} = session, preloads \\ []) do
+    query = from r in Round, where: r.session_id == ^session.id, preload: ^preloads
     Repo.all(query)
   end
 
@@ -331,6 +335,41 @@ defmodule CuberacerLive.Sessions do
   def delete_solve(%Solve{} = solve) do
     Repo.delete(solve)
     |> notify_subscribers([:solve, :deleted])
+  end
+
+  @doc """
+  Return a string of a solve time in seconds and penalty.
+
+  Accepts `nil` as well, returning a placeholder value.
+
+  ## Examples
+
+      iex> display_solve(ok_solve)
+      "12.345"
+
+      iex> display_solve(plus2_solve)
+      "14.345+"
+
+      iex> display_solve(dnf_solve)
+      "DNF"
+
+      iex> display_solve(nil)
+      "--"
+
+  """
+  def display_solve(solve) do
+    # TODO: Figure how to do this without preloading
+    case Repo.preload(solve, :penalty) do
+      nil -> "--"
+      %Solve{penalty: %Penalty{name: "OK"}} -> ms_to_sec_str(solve.time)
+      %Solve{penalty: %Penalty{name: "+2"}} -> ms_to_sec_str(solve.time + 2000) <> "+"
+      %Solve{penalty: %Penalty{name: "DNF"}} -> "DNF"
+    end
+  end
+
+  defp ms_to_sec_str(ms) do
+    ms / 1000
+    |> :erlang.float_to_binary([decimals: 3])
   end
 
   ## Notify subscribers
