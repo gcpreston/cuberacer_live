@@ -23,7 +23,7 @@
           </thead>
           <tbody id="times-table-body" class="bg-white divide-y divide-gray-200" phx-update="append">
             <%= for round <- @rounds do %>
-              <tr id={"round-#{round.id}"}>
+              <tr id={"round-#{round.id}"} class="t_round-row">
                 <%= for user <- @present_users do %>
                   <td id={"round-#{round.id}-solve-user-#{user.id}"} class="px-6 py-4 whitespace-nowrap">
                     <div class="ml-4">
