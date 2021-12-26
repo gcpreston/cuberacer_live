@@ -6,6 +6,8 @@ defmodule CuberacerLive.Sessions.Session do
     field :name, :string
     field :host_id, :id
 
+    has_many :rounds, CuberacerLive.Sessions.Round
+
     timestamps()
   end
 
