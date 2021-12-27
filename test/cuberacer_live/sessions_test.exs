@@ -266,14 +266,19 @@ defmodule CuberacerLive.SessionsTest do
     import CuberacerLive.CubingFixtures
     import CuberacerLive.SessionsFixtures
 
+    # NOTE: Solve results must be preloaded with :round to be checked against
+    #   fixture structs. This is because the fixture gets preloaded with :round
+    #   in notify_subscribers, and it seems preferrable to assert on the object
+    #   than just the solve ID when possible.
+
     test "list_solves/0 returns all solves" do
       solve = solve_fixture()
-      assert Sessions.list_solves() == [solve]
+      assert Enum.map(Sessions.list_solves(), &Repo.preload(&1, :round)) == [solve]
     end
 
     test "get_solve!/1 returns the solve with given id" do
       solve = solve_fixture()
-      assert Sessions.get_solve!(solve.id) == solve
+      assert Sessions.get_solve!(solve.id) |> Repo.preload(:round) == solve
     end
 
     test "get_current_solve/2 gets the solve of the current round" do
@@ -288,7 +293,7 @@ defmodule CuberacerLive.SessionsTest do
       round2 = round_fixture(session_id: session.id)
       solve3 = solve_fixture(round_id: round2.id, user_id: user1.id)
 
-      assert Sessions.get_current_solve(session, user1) == solve3
+      assert Sessions.get_current_solve(session, user1) |> Repo.preload(:round) == solve3
       assert Sessions.get_current_solve(session, user2) == nil
     end
 
