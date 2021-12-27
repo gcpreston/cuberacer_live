@@ -92,7 +92,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
     end
   end
 
-  describe "click events" do
+  describe "LiveView events" do
     setup [:authenticate]
 
     test "new-round creates a new round", %{conn: conn, session: session} do
