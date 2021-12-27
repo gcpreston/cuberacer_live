@@ -110,4 +110,12 @@ defmodule CuberacerLive.GameLive.Components do
     </script>
     """
   end
+
+  def penalty_input(assigns) do
+    ~H"""
+    <div id="penalty-input">
+      <button phx-click="penalty-ok">OK</button> | <button phx-click="penalty-plus2">+2</button> | <button phx-click="penalty-dnf">DNF</button>
+    </div>
+    """
+  end
 end
