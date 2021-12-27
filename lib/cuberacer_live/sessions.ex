@@ -173,14 +173,6 @@ defmodule CuberacerLive.Sessions do
   """
   def get_round!(id), do: Repo.get!(Round, id)
 
-  defp current_round_query(session_id) do
-    from(r in Round,
-      where: r.session_id == ^session_id,
-      order_by: [desc: r.id],
-      limit: 1
-    )
-  end
-
   @doc """
   Get the most recent round of a session.
 
@@ -189,6 +181,13 @@ defmodule CuberacerLive.Sessions do
   def get_current_round!(%Session{id: session_id}) do
     query = current_round_query(session_id)
     Repo.one!(query)
+  end
+
+  defp current_round_query(session_id) do
+    from r in Round,
+      where: r.session_id == ^session_id,
+      order_by: [desc: r.id],
+      limit: 1
   end
 
   @doc """
@@ -427,15 +426,15 @@ defmodule CuberacerLive.Sessions do
   end
 
   defp notify_subscribers({:ok, %Solve{} = result}, [:solve, _action] = event) do
-    preloaded_solve = Repo.preload(result, :session)
+    preloaded_solve = Repo.preload(result, :round)
 
     Phoenix.PubSub.broadcast(
       CuberacerLive.PubSub,
-      @topic <> "#{preloaded_solve.session.id}",
-      {__MODULE__, event, result}
+      @topic <> "#{preloaded_solve.round.session_id}",
+      {__MODULE__, event, preloaded_solve}
     )
 
-    {:ok, result}
+    {:ok, preloaded_solve}
   end
 
   defp notify_subscribers({:error, reason}, _event), do: {:error, reason}

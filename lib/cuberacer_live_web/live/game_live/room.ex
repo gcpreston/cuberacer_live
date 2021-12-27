@@ -154,6 +154,9 @@ defmodule CuberacerLiveWeb.GameLive.Room do
 
   @impl true
   def handle_info({Sessions, [:solve, _action_type], solve}, socket) do
+    # The round preload should do nothing because notify_subscribers for solves
+    # already handles it.
+    # It will stay though in order to not rely on that function's implementation.
     solve = preload(solve, :round)
     round = preload(solve.round, :solves)
     {:noreply, update(socket, :rounds, fn rounds -> [round | rounds] end)}
