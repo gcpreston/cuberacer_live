@@ -1,8 +1,10 @@
 <h1 class="text-xl font-bold"><%= @session.name %></h1>
 
-<button id="new-round-button" phx-click="new-round" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">New round</button>
+<div class="my-3">
+  <.timer />
+</div>
 
-<button id="new-solve-button" phx-click="new-solve" phx-value-time={42} class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">New solve</button>
+<button id="new-round-button" phx-click="new-round" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">New round</button>
 
 <div id="times-table" class="flex flex-col my-4">
   <div class="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
