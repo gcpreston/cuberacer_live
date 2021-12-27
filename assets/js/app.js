@@ -36,6 +36,7 @@ let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("
 
 let Hooks = {};
 
+// http://blog.pthompson.org/alpine-js-and-liveview#calling-hook-code_3
 Hooks.Timer = {
   mounted() {
     window.timerHook = this;
