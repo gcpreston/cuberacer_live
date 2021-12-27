@@ -132,19 +132,27 @@ defmodule CuberacerLive.Sessions do
 
   @doc """
   Returns the list of rounds in a session.
-  Allows passing a list of fields to preload.
+  Allows passing :order_by and :preload to query.
 
   ## Examples
 
       iex> list_rounds_of_session(%Session{})
       [%Round{}, ...]
 
-      iex> list_rounds_of_session(%Session{}, [:solves])
+      iex> list_rounds_of_session(%Session{}, order_by: [desc: :inserted_at], preload: :solves)
       [%Round{solves: [%Solve{}, ...]}, ...]
 
   """
-  def list_rounds_of_session(%Session{} = session, preloads \\ []) do
-    query = from r in Round, where: r.session_id == ^session.id, preload: ^preloads
+  def list_rounds_of_session(%Session{} = session, opts \\ []) do
+    order_opt = opts[:order_by] || [asc: :id]
+    preload_opt = opts[:preload] || []
+
+    query =
+      from r in Round,
+        where: r.session_id == ^session.id,
+        order_by: ^order_opt,
+        preload: ^preload_opt
+
     Repo.all(query)
   end
 

@@ -142,6 +142,34 @@ defmodule CuberacerLive.SessionsTest do
       assert Sessions.list_rounds() == [round]
     end
 
+    test "list_rounds_of_session/3 returns all rounds of a session" do
+      session = session_fixture()
+      round1 = round_fixture(session_id: session.id)
+      round2 = round_fixture(session_id: session.id)
+
+      assert Sessions.list_rounds_of_session(session) == [round1, round2]
+    end
+
+    test "list_rounds_of_session/3 ordering" do
+      session = session_fixture()
+      round1 = round_fixture(session_id: session.id)
+      round2 = round_fixture(session_id: session.id)
+
+      assert Enum.map(Sessions.list_rounds_of_session(session, order_by: [desc: :id]), & &1.id) ==
+               [
+                 round2.id,
+                 round1.id
+               ]
+    end
+
+    test "list_rounds_of_session/3 preload" do
+      session = session_fixture()
+      round1 = round_fixture(session_id: session.id) |> Repo.preload(:solves)
+      round2 = round_fixture(session_id: session.id) |> Repo.preload(:solves)
+
+      assert Sessions.list_rounds_of_session(session, preload: :solves) == [round1, round2]
+    end
+
     test "get_round!/1 returns the round with given id" do
       round = round_fixture()
       assert Sessions.get_round!(round.id) == round
