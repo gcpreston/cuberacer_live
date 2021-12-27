@@ -34,7 +34,6 @@ import topbar from "../vendor/topbar";
 
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content");
 
-// https://sergiotapia.com/phoenix-160-liveview-esbuild-tailwind-jit-alpinejs-a-brief-tutorial
 let Hooks = {};
 
 Hooks.Timer = {
