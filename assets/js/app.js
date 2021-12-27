@@ -35,10 +35,20 @@ import topbar from "../vendor/topbar"
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 
 // https://sergiotapia.com/phoenix-160-liveview-esbuild-tailwind-jit-alpinejs-a-brief-tutorial
-let hooks = {};
+let Hooks = {};
+
+Hooks.Timer = {
+  mounted() {
+    window.timerHook = this;
+  },
+  submitTime(time) {
+    this.pushEvent('new-solve', { time });
+  }
+};
+
 let liveSocket = new LiveSocket("/live", Socket, {
   params: { _csrf_token: csrfToken },
-  hooks: hooks,
+  hooks: Hooks,
   dom: {
     onBeforeElUpdated(from, to) {
       if (from._x_dataStack) {

@@ -2,6 +2,7 @@ defmodule CuberacerLiveWeb.GameLive.Room do
   use CuberacerLiveWeb, :live_view
 
   import CuberacerLive.Repo, only: [preload: 2]
+  import CuberacerLive.GameLive.Components
 
   alias CuberacerLive.{Sessions, Cubing, Accounts}
   alias CuberacerLive.Accounts.User
