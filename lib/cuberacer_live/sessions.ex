@@ -172,19 +172,21 @@ defmodule CuberacerLive.Sessions do
   """
   def get_round!(id), do: Repo.get!(Round, id)
 
+  defp current_round_query(session_id) do
+    from(r in Round,
+      where: r.session_id == ^session_id,
+      order_by: [desc: r.id],
+      limit: 1
+    )
+  end
+
   @doc """
   Get the most recent round of a session.
 
   Raises `Ecto.NoResultsError` if the session has no rounds.
   """
-  def get_current_round(%Session{} = session) do
-    query =
-      from(r in Round,
-        where: r.session_id == ^session.id,
-        order_by: [desc: r.inserted_at],
-        limit: 1
-      )
-
+  def get_current_round!(%Session{id: session_id}) do
+    query = current_round_query(session_id)
     Repo.one!(query)
   end
 
@@ -279,6 +281,21 @@ defmodule CuberacerLive.Sessions do
   def get_solve!(id), do: Repo.get!(Solve, id)
 
   @doc """
+  Get a user's solve in the current round of a session.
+
+  Returns `nil` if the user has no solve for the current round.
+  """
+  def get_current_solve(%Session{id: session_id}, %User{id: user_id}) do
+    query =
+      from r in subquery(current_round_query(session_id)),
+        join: s in assoc(r, :solves),
+        where: s.user_id == ^user_id,
+        select: s
+
+    Repo.one(query)
+  end
+
+  @doc """
   Creates a solve.
 
   ## Examples
@@ -303,7 +320,7 @@ defmodule CuberacerLive.Sessions do
   Adds the solve to the current round of the given session.
   """
   def create_solve(%Session{} = session, %User{} = user, time, %Penalty{} = penalty) do
-    round = get_current_round(session)
+    round = get_current_round!(session)
     attrs = %{user_id: user.id, time: time, penalty_id: penalty.id, round_id: round.id}
 
     %Solve{}
@@ -317,13 +334,13 @@ defmodule CuberacerLive.Sessions do
 
   ## Examples
 
-      iex> change_penalty(solve, %Penalty{})
-      {:ok, %Solve{}}
+      iex> change_penalty(solve, %Penalty{id: 123})
+      {:ok, %Solve{penalty_id: 123}}
 
   """
-  def change_penalty(%Solve{} = solve, %Penalty{} = penalty) do
+  def change_penalty(%Solve{} = solve, %Penalty{id: penalty_id}) do
     solve
-    |> Solve.penalty_changeset(%{penalty_id: penalty.id})
+    |> Solve.penalty_changeset(%{penalty_id: penalty_id})
     |> Repo.update()
     |> notify_subscribers([:solve, :updated])
   end
@@ -376,8 +393,8 @@ defmodule CuberacerLive.Sessions do
   end
 
   defp ms_to_sec_str(ms) do
-    ms / 1000
-    |> :erlang.float_to_binary([decimals: 3])
+    (ms / 1000)
+    |> :erlang.float_to_binary(decimals: 3)
   end
 
   ## Notify subscribers

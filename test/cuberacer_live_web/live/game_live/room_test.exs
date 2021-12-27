@@ -26,7 +26,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
   end
 
   defp create_penalty(_) do
-    penalty = penalty_fixture()
+    penalty = penalty_fixture(name: "OK")
     %{penalty: penalty}
   end
 
@@ -100,7 +100,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
 
       num_rounds_before = Enum.count(Sessions.list_rounds_of_session(session))
 
-      assert_html html, "tr.t_round-row", count: num_rounds_before
+      assert_html(html, "tr.t_round-row", count: num_rounds_before)
 
       view
       |> render_click("new-round")
@@ -108,7 +108,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       num_rounds_after = Enum.count(Sessions.list_rounds_of_session(session))
 
       assert num_rounds_after == num_rounds_before + 1
-      assert_html render(view), "tr.t_round-row", count: num_rounds_after
+      assert_html(render(view), "tr.t_round-row", count: num_rounds_after)
     end
 
     test "new-solve creates a new solve", %{conn: conn, session: session} do
@@ -134,6 +134,174 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       assert newest_solve.time == 42
       assert render(view) =~ Sessions.display_solve(newest_solve)
     end
+
+    test "penalty-ok sets an OK penalty for the user's solve in the current round", %{
+      conn: conn1,
+      user: user1,
+      session: session,
+      round: round1,
+    } do
+      plus2_penalty = penalty_fixture(name: "+2")
+      user2 = user_fixture()
+      solve1 = solve_fixture(time: 42, user_id: user1.id, round_id: round1.id)
+
+      round2 = round_fixture(session_id: session.id)
+
+      solve2 =
+        solve_fixture(
+          time: 43,
+          penalty_id: plus2_penalty.id,
+          user_id: user1.id,
+          round_id: round2.id
+        )
+
+      solve3 = solve_fixture(time: 44, user_id: user2.id, round_id: round2.id)
+
+      conn2 = Phoenix.ConnTest.build_conn() |> log_in_user(user2)
+      {:ok, _view2, _html2} = live(conn2, Routes.game_room_path(conn2, :show, session.id))
+      {:ok, view, html} = live(conn1, Routes.game_room_path(conn1, :show, session.id))
+
+      assert html =~ Sessions.display_solve(solve1)
+      assert html =~ Sessions.display_solve(solve2)
+      assert html =~ Sessions.display_solve(solve3)
+
+      render_click(view, "penalty-ok")
+      updated_solve2 = Sessions.get_solve!(solve2.id) |> Repo.preload(:penalty)
+      html = render(view)
+
+      assert updated_solve2.penalty.name == "OK"
+      assert html =~ Sessions.display_solve(updated_solve2)
+      refute html =~ Sessions.display_solve(solve2)
+      assert html =~ Sessions.display_solve(solve1)
+      assert html =~ Sessions.display_solve(solve3)
+    end
+
+    test "penalty-ok does nothing if the user has no solve for the current round", %{
+      conn: conn,
+      user: user,
+      session: session,
+      round: round1
+    } do
+      plus2_penalty = penalty_fixture(name: "+2")
+      solve = solve_fixture(penalty_id: plus2_penalty.id, user_id: user.id, round_id: round1.id)
+      _round2 = round_fixture(session_id: session.id)
+
+      {:ok, view, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
+
+      assert html =~ Sessions.display_solve(solve)
+      assert html =~ Sessions.display_solve(nil)
+
+      render_click(view, "penalty-ok")
+
+      assert html =~ Sessions.display_solve(solve)
+      assert html =~ Sessions.display_solve(nil)
+    end
+
+    test "penalty-plus2 sets a +2 penalty for the user's solve in the current round", %{
+      conn: conn1,
+      user: user1,
+      session: session,
+      round: round1
+    } do
+      penalty_fixture(name: "+2")
+      user2 = user_fixture()
+      solve1 = solve_fixture(time: 42, user_id: user1.id, round_id: round1.id)
+
+      round2 = round_fixture(session_id: session.id)
+      solve2 = solve_fixture(time: 43, user_id: user1.id, round_id: round2.id)
+      solve3 = solve_fixture(time: 44, user_id: user2.id, round_id: round2.id)
+
+      conn2 = Phoenix.ConnTest.build_conn() |> log_in_user(user2)
+      {:ok, _view2, _html2} = live(conn2, Routes.game_room_path(conn2, :show, session.id))
+      {:ok, view, html} = live(conn1, Routes.game_room_path(conn1, :show, session.id))
+
+      assert html =~ Sessions.display_solve(solve1)
+      assert html =~ Sessions.display_solve(solve2)
+      assert html =~ Sessions.display_solve(solve3)
+
+      render_click(view, "penalty-plus2")
+      updated_solve2 = Sessions.get_solve!(solve2.id) |> Repo.preload(:penalty)
+      html = render(view)
+
+      assert updated_solve2.penalty.name == "+2"
+      assert html =~ Sessions.display_solve(updated_solve2)
+      refute html =~ Sessions.display_solve(solve2)
+      assert html =~ Sessions.display_solve(solve1)
+      assert html =~ Sessions.display_solve(solve3)
+    end
+
+    test "penalty-plus2 does nothing if the user has no solve for the current round", %{
+      conn: conn,
+      user: user,
+      session: session,
+      round: round1
+    } do
+      solve = solve_fixture(user_id: user.id, round_id: round1.id)
+      _round2 = round_fixture(session_id: session.id)
+
+      {:ok, view, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
+
+      assert html =~ Sessions.display_solve(solve)
+      assert html =~ Sessions.display_solve(nil)
+
+      render_click(view, "penalty-plus2")
+
+      assert html =~ Sessions.display_solve(solve)
+      assert html =~ Sessions.display_solve(nil)
+    end
+
+    test "penalty-dnf sets a DNF penalty for the user's solve in the current round", %{
+      conn: conn1,
+      user: user1,
+      session: session,
+      round: round1
+    } do
+      penalty_fixture(name: "DNF")
+      user2 = user_fixture()
+      solve1 = solve_fixture(time: 42, user_id: user1.id, round_id: round1.id)
+
+      round2 = round_fixture(session_id: session.id)
+      solve2 = solve_fixture(time: 43, user_id: user1.id, round_id: round2.id)
+      solve3 = solve_fixture(time: 44, user_id: user2.id, round_id: round2.id)
+
+      conn2 = Phoenix.ConnTest.build_conn() |> log_in_user(user2)
+      {:ok, _view2, _html2} = live(conn2, Routes.game_room_path(conn2, :show, session.id))
+      {:ok, view, html} = live(conn1, Routes.game_room_path(conn1, :show, session.id))
+
+      assert html =~ Sessions.display_solve(solve1)
+      assert html =~ Sessions.display_solve(solve2)
+      assert html =~ Sessions.display_solve(solve3)
+
+      render_click(view, "penalty-dnf")
+      updated_solve2 = Sessions.get_solve!(solve2.id) |> Repo.preload(:penalty)
+      html = render(view)
+
+      assert updated_solve2.penalty.name == "DNF"
+      assert html =~ Sessions.display_solve(updated_solve2)
+      refute html =~ Sessions.display_solve(solve2)
+      assert html =~ Sessions.display_solve(solve1)
+      assert html =~ Sessions.display_solve(solve3)
+    end
+
+    test "penalty-dnf does nothing if the user has no solve for the current round", %{
+      conn: conn,
+      user: user,
+      session: session,
+      round: round1
+    } do
+      solve = solve_fixture(user_id: user.id, round_id: round1.id)
+      _round2 = round_fixture(session_id: session.id)
+
+      {:ok, view, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
+
+      assert html =~ Sessions.display_solve(solve)
+      assert html =~ Sessions.display_solve(nil)
+
+      render_click(view, "penalty-dnf")
+
+      assert html =~ Sessions.display_solve(solve)
+      assert html =~ Sessions.display_solve(nil)
+    end
   end
 
   describe "Sessions events" do
@@ -144,14 +312,14 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
 
       num_rounds_before = Enum.count(Sessions.list_rounds_of_session(session))
 
-      assert_html html, "tr.t_round-row", count: num_rounds_before
+      assert_html(html, "tr.t_round-row", count: num_rounds_before)
 
       Sessions.create_round(%{session_id: session.id, scramble: "some scramble"})
 
       num_rounds_after = Enum.count(Sessions.list_rounds_of_session(session))
 
       assert num_rounds_after == num_rounds_before + 1
-      assert_html render(view), "tr.t_round-row", count: num_rounds_after
+      assert_html(render(view), "tr.t_round-row", count: num_rounds_after)
     end
 
     test "reacts to solve created", %{conn: conn, session: session, user: user, penalty: penalty} do
@@ -180,12 +348,13 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       other_user = user_fixture()
       other_conn = Phoenix.ConnTest.build_conn() |> log_in_user(other_user)
 
-      solve = solve_fixture(%{
-        round_id: round.id,
-        user_id: other_user.id,
-        time: 43,
-        penalty_id: penalty.id
-      })
+      solve =
+        solve_fixture(%{
+          round_id: round.id,
+          user_id: other_user.id,
+          time: 43,
+          penalty_id: penalty.id
+        })
 
       {:ok, view, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
 
@@ -207,12 +376,13 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       other_user = user_fixture()
       other_conn = Phoenix.ConnTest.build_conn() |> log_in_user(other_user)
 
-      solve = solve_fixture(%{
-        round_id: round.id,
-        user_id: other_user.id,
-        time: 43,
-        penalty_id: penalty.id
-      })
+      solve =
+        solve_fixture(%{
+          round_id: round.id,
+          user_id: other_user.id,
+          time: 43,
+          penalty_id: penalty.id
+        })
 
       {:ok, other_view, _other_html} =
         live(other_conn, Routes.game_room_path(other_conn, :show, session.id))

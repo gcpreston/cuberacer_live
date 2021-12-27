@@ -43,7 +43,7 @@ defmodule CuberacerLive.SessionsFixtures do
   """
   def solve_fixture(attrs \\ %{}) do
     user = user_fixture()
-    penalty = penalty_fixture()
+    penalty = CuberacerLive.Cubing.get_penalty("OK") || penalty_fixture()
     round = round_fixture()
 
     {:ok, solve} =

@@ -100,6 +100,33 @@ defmodule CuberacerLiveWeb.GameLive.Room do
   end
 
   @impl true
+  def handle_event("penalty-ok", _value, socket) do
+    if solve = Sessions.get_current_solve(socket.assigns.session, socket.assigns.current_user) do
+      Sessions.change_penalty(solve, Cubing.get_penalty("OK"))
+    end
+
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("penalty-plus2", _value, socket) do
+    if solve = Sessions.get_current_solve(socket.assigns.session, socket.assigns.current_user) do
+      Sessions.change_penalty(solve, Cubing.get_penalty("+2"))
+    end
+
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("penalty-dnf", _value, socket) do
+    if solve = Sessions.get_current_solve(socket.assigns.session, socket.assigns.current_user) do
+      Sessions.change_penalty(solve, Cubing.get_penalty("DNF"))
+    end
+
+    {:noreply, socket}
+  end
+
+  @impl true
   def handle_info(%Phoenix.Socket.Broadcast{event: "presence_diff"}, socket) do
     {:noreply, socket |> fetch_present_users() |> fetch_rounds()}
   end
@@ -130,7 +157,7 @@ defmodule CuberacerLiveWeb.GameLive.Room do
   end
 
   @impl true
-  def handle_info({Sessions, [:solve, :created], solve}, socket) do
+  def handle_info({Sessions, [:solve, _action_type], solve}, socket) do
     solve = preload(solve, :round)
     round = preload(solve.round, :solves)
     {:noreply, update(socket, :rounds, fn rounds -> [round | rounds] end)}
