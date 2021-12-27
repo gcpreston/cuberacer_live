@@ -334,13 +334,13 @@ defmodule CuberacerLive.Sessions do
 
   ## Examples
 
-      iex> change_penalty(solve, %Penalty{})
-      {:ok, %Solve{}}
+      iex> change_penalty(solve, %Penalty{id: 123})
+      {:ok, %Solve{penalty_id: 123}}
 
   """
-  def change_penalty(%Solve{} = solve, %Penalty{} = penalty) do
+  def change_penalty(%Solve{} = solve, %Penalty{id: penalty_id}) do
     solve
-    |> Solve.penalty_changeset(%{penalty_id: penalty.id})
+    |> Solve.penalty_changeset(%{penalty_id: penalty_id})
     |> Repo.update()
     |> notify_subscribers([:solve, :updated])
   end
