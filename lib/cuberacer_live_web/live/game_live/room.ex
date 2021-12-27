@@ -58,11 +58,7 @@ defmodule CuberacerLiveWeb.GameLive.Room do
   end
 
   defp fetch_rounds(socket) do
-    rounds =
-      Sessions.list_rounds_of_session(socket.assigns.session,
-        order_by: [desc: :id],
-        preload: :solves
-      )
+    rounds = Sessions.list_rounds_of_session(socket.assigns.session, :desc)
 
     assign(socket, rounds: rounds)
   end

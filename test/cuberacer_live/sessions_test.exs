@@ -142,32 +142,33 @@ defmodule CuberacerLive.SessionsTest do
       assert Sessions.list_rounds() == [round]
     end
 
-    test "list_rounds_of_session/3 returns all rounds of a session" do
+    test "list_rounds_of_session/3 returns all rounds of a session, preloaded" do
+      session = session_fixture()
+      round1 = round_fixture(session_id: session.id)
+      round2 = round_fixture(session_id: session.id)
+      _solve1 = solve_fixture(round_id: round1.id)
+      _solve2 = solve_fixture(round_id: round1.id)
+      _solve3 = solve_fixture(round_id: round2.id)
+
+      actual_rounds = Sessions.list_rounds_of_session(session)
+      assert Enum.map(actual_rounds, & &1.id) == [round1.id, round2.id]
+
+      Enum.each(actual_rounds, fn round ->
+        assert Ecto.assoc_loaded?(round.solves)
+
+        Enum.each(round.solves, fn solve ->
+          assert Ecto.assoc_loaded?(solve.penalty)
+        end)
+      end)
+    end
+
+    test "list_rounds_of_session/3 descending order" do
       session = session_fixture()
       round1 = round_fixture(session_id: session.id)
       round2 = round_fixture(session_id: session.id)
 
-      assert Sessions.list_rounds_of_session(session) == [round1, round2]
-    end
-
-    test "list_rounds_of_session/3 ordering" do
-      session = session_fixture()
-      round1 = round_fixture(session_id: session.id)
-      round2 = round_fixture(session_id: session.id)
-
-      assert Enum.map(Sessions.list_rounds_of_session(session, order_by: [desc: :id]), & &1.id) ==
-               [
-                 round2.id,
-                 round1.id
-               ]
-    end
-
-    test "list_rounds_of_session/3 preload" do
-      session = session_fixture()
-      round1 = round_fixture(session_id: session.id) |> Repo.preload(:solves)
-      round2 = round_fixture(session_id: session.id) |> Repo.preload(:solves)
-
-      assert Sessions.list_rounds_of_session(session, preload: :solves) == [round1, round2]
+      actual_rounds = Sessions.list_rounds_of_session(session, :desc)
+      assert Enum.map(actual_rounds, & &1.id) == [round2.id, round1.id]
     end
 
     test "get_round!/1 returns the round with given id" do
