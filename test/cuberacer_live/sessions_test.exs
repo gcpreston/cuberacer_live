@@ -175,6 +175,14 @@ defmodule CuberacerLive.SessionsTest do
       assert Sessions.get_round!(round.id) == round
     end
 
+    test "get_current_round/1 gets the current round" do
+      session = session_fixture()
+      _round1 = round_fixture(session_id: session.id)
+      round2 = round_fixture(session_id: session.id)
+
+      assert Sessions.get_current_round!(session) == round2
+    end
+
     test "create_round/1 with valid data creates a round" do
       session = session_fixture()
 
@@ -265,6 +273,22 @@ defmodule CuberacerLive.SessionsTest do
     test "get_solve!/1 returns the solve with given id" do
       solve = solve_fixture()
       assert Sessions.get_solve!(solve.id) == solve
+    end
+
+    test "get_current_solve/2 gets the solve of the current round" do
+      user1 = user_fixture()
+      user2 = user_fixture()
+
+      session = session_fixture()
+      round1 = round_fixture(session_id: session.id)
+      _solve1 = solve_fixture(round_id: round1.id, user_id: user1.id)
+      _solve2 = solve_fixture(round_id: round1.id, user_id: user2.id)
+
+      round2 = round_fixture(session_id: session.id)
+      solve3 = solve_fixture(round_id: round2.id, user_id: user1.id)
+
+      assert Sessions.get_current_solve(session, user1) == solve3
+      assert Sessions.get_current_solve(session, user2) == nil
     end
 
     # TODO: create_solve/4 tests, get rid of create_solve/1?
@@ -380,6 +404,24 @@ defmodule CuberacerLive.SessionsTest do
       assert solve.penalty_id == penalty.id
     end
 
+    test "change_penalty/2 broadcasts to session topic" do
+      penalty = penalty_fixture()
+      solve = solve_fixture() |> Repo.preload(:session)
+      Sessions.subscribe(solve.session.id)
+
+      assert {:ok, solve} = Sessions.change_penalty(solve, penalty)
+      assert_receive {Sessions, [:solve, :updated], ^solve}
+    end
+
+    test "change_penalty/2 does not broadcast to context topic" do
+      penalty = penalty_fixture()
+      solve = solve_fixture()
+      Sessions.subscribe()
+
+      assert {:ok, _solve} = Sessions.change_penalty(solve, penalty)
+      refute_receive {Sessions, _, _}
+    end
+
     test "delete_solve/1 deletes the solve" do
       solve = solve_fixture()
       assert {:ok, %Solve{}} = Sessions.delete_solve(solve)
@@ -387,18 +429,18 @@ defmodule CuberacerLive.SessionsTest do
     end
 
     test "delete_solve/1 broadcasts to the session topic" do
-      solve = solve_fixture() |> Repo.preload(:round)
-      Sessions.subscribe(solve.round.session_id)
-      {:ok, solve} = Sessions.delete_solve(solve)
+      solve = solve_fixture() |> Repo.preload(:session)
+      Sessions.subscribe(solve.session.id)
 
+      assert {:ok, solve} = Sessions.delete_solve(solve)
       assert_receive {Sessions, [:solve, :deleted], ^solve}
     end
 
     test "delete_solve/1 does not broadcast to context topic" do
       solve = solve_fixture()
       Sessions.subscribe()
-      {:ok, _solve} = Sessions.delete_solve(solve)
 
+      assert {:ok, _solve} = Sessions.delete_solve(solve)
       refute_receive {Sessions, _, _}
     end
 
