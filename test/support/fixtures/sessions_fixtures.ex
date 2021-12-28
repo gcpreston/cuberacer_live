@@ -11,10 +11,13 @@ defmodule CuberacerLive.SessionsFixtures do
   Generate a session.
   """
   def session_fixture(attrs \\ %{}) do
+    cube_type = cube_type_fixture()
+
     {:ok, session} =
       attrs
       |> Enum.into(%{
-        name: "some name"
+        name: "some name",
+        cube_type_id: cube_type.id
       })
       |> CuberacerLive.Sessions.create_session()
 

@@ -7,6 +7,7 @@ defmodule CuberacerLive.SessionsTest do
     alias CuberacerLive.Sessions.Session
 
     import CuberacerLive.SessionsFixtures
+    import CuberacerLive.CubingFixtures
 
     @invalid_attrs %{name: nil}
 
@@ -21,19 +22,30 @@ defmodule CuberacerLive.SessionsTest do
     end
 
     test "create_session/1 with valid data creates a session" do
-      valid_attrs = %{name: "some name"}
+      cube_type = cube_type_fixture()
+      valid_attrs = %{name: "some name", cube_type_id: cube_type.id}
 
       assert {:ok, %Session{} = session} = Sessions.create_session(valid_attrs)
       assert session.name == "some name"
     end
 
-    test "create_session/1 with invalid data returns error changeset" do
-      assert {:error, %Ecto.Changeset{}} = Sessions.create_session(@invalid_attrs)
+    test "create_session/1 with no name returns error changeset" do
+      cube_type = cube_type_fixture()
+      invalid_attrs = %{name: nil, cube_type_id: cube_type.id}
+
+      assert {:error, %Ecto.Changeset{}} = Sessions.create_session(invalid_attrs)
+    end
+
+    test "create_session/1 with no cube type error changeset" do
+      invalid_attrs = %{name: "some name", cube_type_id: nil}
+
+      assert {:error, %Ecto.Changeset{}} = Sessions.create_session(invalid_attrs)
     end
 
     test "create_session/1 broadcasts to the context topic" do
+      cube_type = cube_type_fixture()
       Sessions.subscribe()
-      valid_attrs = %{name: "some name"}
+      valid_attrs = %{name: "some name", cube_type_id: cube_type.id}
       {:ok, session} = Sessions.create_session(valid_attrs)
 
       assert_receive {Sessions, [:session, :created], ^session}

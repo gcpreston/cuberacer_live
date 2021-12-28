@@ -5,8 +5,7 @@ defmodule CuberacerLive.Sessions.Session do
   schema "sessions" do
     field :name, :string
     field :host_id, :id
-
-    has_many :rounds, CuberacerLive.Sessions.Round
+    belongs_to :cube_type, CuberacerLive.Cubing.CubeType
 
     timestamps()
   end
@@ -14,7 +13,8 @@ defmodule CuberacerLive.Sessions.Session do
   @doc false
   def changeset(session, attrs) do
     session
-    |> cast(attrs, [:name])
-    |> validate_required([:name])
+    |> cast(attrs, [:name, :cube_type_id])
+    |> validate_required([:name, :cube_type_id])
+    |> cast_assoc(:cube_type)
   end
 end
