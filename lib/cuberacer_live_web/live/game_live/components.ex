@@ -3,16 +3,6 @@ defmodule CuberacerLive.GameLive.Components do
 
   def timer(assigns) do
     ~H"""
-    <div
-      id="timer"
-      x-data="timer()"
-      @keydown.space.window.prevent="handleSpaceDown"
-      @keyup.space.window.prevent="handleSpaceUp"
-      phx-hook="Timer"
-    >
-      <span id="time" x-text="formattedTime" :class="timeColor"></span>
-    </div>
-
     <script>
       const READY_HOLD_TIME_MS = 500;
       const PREPARING_COLOR = 'text-red-500';
@@ -108,6 +98,16 @@ defmodule CuberacerLive.GameLive.Components do
         }
       }
     </script>
+
+    <div
+      id="timer"
+      x-data="timer()"
+      @keydown.space.window.prevent="handleSpaceDown"
+      @keyup.space.window.prevent="handleSpaceUp"
+      phx-hook="Timer"
+    >
+      <span id="time" x-text="formattedTime" :class="timeColor"></span>
+    </div>
     """
   end
 
