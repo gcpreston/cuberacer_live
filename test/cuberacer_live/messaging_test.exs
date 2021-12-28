@@ -42,5 +42,23 @@ defmodule CuberacerLive.MessagingTest do
       user = user_fixture()
       assert {:error, %Ecto.Changeset{}} = Messaging.create_room_message(session, user, nil)
     end
+
+    test "create_room_message/3 broadcasts to the messaging room topic" do
+      session = session_fixture()
+      user = user_fixture()
+      Messaging.subscribe(session.id)
+      {:ok, room_message} = Messaging.create_room_message(session, user, "some message")
+
+      assert_receive {Messaging, [:room_message, :created], ^room_message}
+    end
+
+    test "create_room_message/3 with invalid data does not broadcast" do
+      session = session_fixture()
+      user = user_fixture()
+      Messaging.subscribe(session.id)
+      {:error, _reason} = Messaging.create_room_message(session, user, nil)
+
+      refute_receive {Messaging, _, _}
+    end
   end
 end

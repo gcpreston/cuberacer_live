@@ -10,6 +10,12 @@ defmodule CuberacerLive.Messaging do
   alias CuberacerLive.Sessions.Session
   alias CuberacerLive.Accounts.User
 
+  @topic inspect(__MODULE__)
+
+  def subscribe(session_id) do
+    Phoenix.PubSub.subscribe(CuberacerLive.PubSub, @topic <> "#{session_id}")
+  end
+
   @doc """
   Returns the list of messages for a room.
 
@@ -58,5 +64,18 @@ defmodule CuberacerLive.Messaging do
     %RoomMessage{}
     |> RoomMessage.create_changeset(attrs)
     |> Repo.insert()
+    |> notify_subscribers([:room_message, :created])
   end
+
+  defp notify_subscribers({:ok, %RoomMessage{} = result}, [:room_message, _action] = event) do
+    Phoenix.PubSub.broadcast(
+      CuberacerLive.PubSub,
+      @topic <> "#{result.session_id}",
+      {__MODULE__, event, result}
+    )
+
+    {:ok, result}
+  end
+
+  defp notify_subscribers({:error, reason}, _event), do: {:error, reason}
 end
