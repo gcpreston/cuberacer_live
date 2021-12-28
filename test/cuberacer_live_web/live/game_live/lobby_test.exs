@@ -5,7 +5,7 @@ defmodule CuberacerLive.GameLive.LobbyTest do
   import CuberacerLive.SessionsFixtures
 
   defp create_session(_) do
-    session = session_fixture()
+    session = session_fixture() |> CuberacerLive.Repo.preload(:cube_type)
     %{session: session}
   end
 
@@ -16,5 +16,6 @@ defmodule CuberacerLive.GameLive.LobbyTest do
 
     assert html =~ "Lobby"
     assert html =~ session.name
+    assert html =~ session.cube_type.name
   end
 end

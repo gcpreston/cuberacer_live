@@ -11,8 +11,8 @@ defmodule CuberacerLive.SessionsTest do
 
     @invalid_attrs %{name: nil}
 
-    test "list_sessions/0 returns all sessions" do
-      session = session_fixture()
+    test "list_sessions/0 returns all sessions, preloaded with cube type" do
+      session = session_fixture() |> Repo.preload(:cube_type)
       assert Sessions.list_sessions() == [session]
     end
 
@@ -408,8 +408,8 @@ defmodule CuberacerLive.SessionsTest do
 
       Sessions.subscribe()
       Sessions.subscribe(round.session_id)
-      valid_attrs = %{time: nil, user_id: user.id, penalty_id: penalty.id, round_id: round.id}
-      {:error, _reason} = Sessions.create_solve(valid_attrs)
+      invalid_attrs = %{time: nil, user_id: user.id, penalty_id: penalty.id, round_id: round.id}
+      {:error, _reason} = Sessions.create_solve(invalid_attrs)
 
       refute_receive {Sessions, _, _}
     end

@@ -21,7 +21,7 @@ defmodule CuberacerLive.Sessions do
   end
 
   @doc """
-  Returns the list of sessions.
+  Returns the list of sessions. Preloads :cube_type.
 
   ## Examples
 
@@ -30,7 +30,8 @@ defmodule CuberacerLive.Sessions do
 
   """
   def list_sessions do
-    Repo.all(Session)
+    query = from s in Session, preload: :cube_type
+    Repo.all(query)
   end
 
   @doc """
