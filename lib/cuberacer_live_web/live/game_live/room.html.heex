@@ -7,7 +7,7 @@
 
 <button id="new-round-button" phx-click="new-round" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">New round</button>
 
-<div id="times-table" class="flex flex-col my-4 h-96 overflow-scroll">
+<div id="times-table" class="flex flex-col my-4 h-72 overflow-scroll">
   <div class="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
     <div class="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
       <div class="shadow overflow-hidden border-b border-gray-200 sm:rounded-lg">
@@ -44,3 +44,5 @@
     </div>
   </div>
 </div>
+
+<.chat room_messages={@room_messages} />

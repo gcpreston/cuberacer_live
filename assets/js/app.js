@@ -5,6 +5,8 @@ import "../css/app.css";
 // AlpineJS
 import Alpine from "alpinejs";
 
+Alpine.store('inputFocused', false);
+
 window.Alpine = Alpine;
 Alpine.start();
 
@@ -43,6 +45,15 @@ Hooks.Timer = {
   },
   submitTime(time) {
     this.pushEvent('new-solve', { time });
+  }
+};
+
+Hooks.ChatInput = {
+  mounted() {
+    window.chatInputHook = this;
+  },
+  sendMessage(message) {
+    this.pushEvent('send-message', { message });
   }
 };
 

@@ -7,9 +7,9 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
   import CuberacerLive.AccountsFixtures
   import CuberacerLive.SessionsFixtures
   import CuberacerLive.CubingFixtures
+  import CuberacerLive.MessagingFixtures
 
-  alias CuberacerLive.Repo
-  alias CuberacerLive.Sessions
+  alias CuberacerLive.{Repo, Sessions, Messaging}
   alias CuberacerLive.Sessions.Solve
 
   defp create_user(_) do
@@ -90,6 +90,25 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       assert html =~ user.email
       refute html =~ other_user.email
     end
+
+    test "displays messages in appropriate room", %{conn: conn, session: session1, user: user} do
+      other_user = user_fixture()
+      session2 = session_fixture()
+      message1 = room_message_fixture(session: session1, user: user, message: "some text")
+      message2 = room_message_fixture(session: session1, user: other_user)
+      message3 = room_message_fixture(session: session2, user: user, message: "some other text")
+
+      conn = log_in_user(conn, user)
+
+      assert {:ok, _view, html} = live(conn, Routes.game_room_path(conn, :show, session1.id))
+
+      html
+      |> assert_html(".t_room-message", count: 2)
+
+      assert html =~ Messaging.display_room_message(message1)
+      assert html =~ Messaging.display_room_message(message2)
+      refute html =~ Messaging.display_room_message(message3)
+    end
   end
 
   describe "LiveView events" do
@@ -139,7 +158,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       conn: conn1,
       user: user1,
       session: session,
-      round: round1,
+      round: round1
     } do
       plus2_penalty = penalty_fixture(name: "+2")
       user2 = user_fixture()
@@ -302,6 +321,26 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       assert html =~ Sessions.display_solve(solve)
       assert html =~ Sessions.display_solve(nil)
     end
+
+    test "send-message creates and sends a message", %{conn: conn, user: user, session: session} do
+      {:ok, view, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
+
+      num_messages_before = Enum.count(Messaging.list_room_messages(session))
+
+      html
+      |> assert_html("#chat")
+      |> assert_html("#room-messages")
+      |> refute_html(".t_room-message")
+      |> assert_html("#chat-input")
+
+      render_click(view, "send-message", %{"message" => "hello world"})
+      num_messages_after = Enum.count(Messaging.list_room_messages(session))
+
+      render(view)
+      |> assert_html(".t_room-message", count: 1, text: "#{user.email}: hello world")
+
+      assert num_messages_after == num_messages_before + 1
+    end
   end
 
   describe "Sessions events" do
@@ -333,6 +372,18 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
 
       assert num_solves_after == num_solves_before + 1
       assert render(view) =~ Sessions.display_solve(solve)
+    end
+
+    test "reacts to room message created", %{conn: conn, session: session} do
+      {:ok, view, _html} = live(conn, Routes.game_room_path(conn, :show, session.id))
+
+      room_message = room_message_fixture(session: session)
+
+      render(view)
+      |> assert_html(".t_room-message",
+        count: 1,
+        text: Messaging.display_room_message(room_message)
+      )
     end
   end
 

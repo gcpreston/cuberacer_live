@@ -47,22 +47,26 @@ defmodule CuberacerLive.GameLive.Components do
           },
 
           handleSpaceDown() {
-            if (this.interval) {
-              this.stopTime();
-            } else if (!this.readyTimeout) {
-              this.readyTimeout = setTimeout(() => {
-                this.resetTime();
-                this.ready = true;
-              }, READY_HOLD_TIME_MS);
+            if (!this.$store.inputFocused) {
+              if (this.interval) {
+                this.stopTime();
+              } else if (!this.readyTimeout) {
+                this.readyTimeout = setTimeout(() => {
+                  this.resetTime();
+                  this.ready = true;
+                }, READY_HOLD_TIME_MS);
+              }
             }
           },
 
           handleSpaceUp() {
-            if (this.ready) {
-              this.startTime();
-            } else {
-              clearTimeout(this.readyTimeout);
-              this.readyTimeout = null;
+            if (!this.$store.inputFocused) {
+              if (this.ready) {
+                this.startTime();
+              } else {
+                clearTimeout(this.readyTimeout);
+                this.readyTimeout = null;
+              }
             }
           },
 
@@ -102,8 +106,8 @@ defmodule CuberacerLive.GameLive.Components do
     <div
       id="timer"
       x-data="timer()"
-      @keydown.space.window.prevent="handleSpaceDown"
-      @keyup.space.window.prevent="handleSpaceUp"
+      @keydown.space.window="handleSpaceDown"
+      @keyup.space.window="handleSpaceUp"
       phx-hook="Timer"
     >
       <span id="time" x-text="formattedTime" :class="timeColor"></span>
@@ -115,6 +119,49 @@ defmodule CuberacerLive.GameLive.Components do
     ~H"""
     <div id="penalty-input">
       <button phx-click="penalty-ok">OK</button> | <button phx-click="penalty-plus2">+2</button> | <button phx-click="penalty-dnf">DNF</button>
+    </div>
+    """
+  end
+
+  def chat(assigns) do
+    ~H"""
+    <script>
+      const chat = () => {
+        return {
+          message: '',
+
+          sendMessage() {
+            window.chatInputHook.sendMessage(this.message);
+            this.$nextTick(() => {
+              this.message = '';
+            });
+          }
+        }
+      }
+    </script>
+
+    <div id="chat" class="border" x-data="chat()">
+      <div class="h-44 flex flex-col-reverse overflow-auto">
+        <div id="room-messages">
+          <%= for room_message <- @room_messages do %>
+            <div id={"room-message-#{room_message.id}"} class="h-8 t_room-message">
+              <%= CuberacerLive.Messaging.display_room_message(room_message) %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <input
+        id="chat-input"
+        type="text"
+        class="border"
+        x-model="message"
+        @focus="$store.inputFocused = true"
+        @blur="$store.inputFocused = false"
+        @keydown.enter="sendMessage"
+        phx-hook="ChatInput"
+      />
+      <button @click="sendMessage">Send</button>
     </div>
     """
   end
