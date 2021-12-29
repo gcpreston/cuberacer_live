@@ -106,6 +106,27 @@ defmodule CuberacerLive.Sessions do
   end
 
   @doc """
+  Mark a session as terminated.
+
+  If the session has already been terminated, returns an error from Ecto.
+
+  ## Examples
+
+      iex> terminate_session(session)
+      {:ok, %Session{terminated: true}}
+
+      iex> terminate_session(session)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def terminate_session(%Session{} = session) do
+    session
+    |> Session.changeset(%{terminated: true})
+    |> Repo.update()
+    |> notify_subscribers([:session, :terminated])
+  end
+
+  @doc """
   Returns an `%Ecto.Changeset{}` for tracking session changes.
 
   ## Examples

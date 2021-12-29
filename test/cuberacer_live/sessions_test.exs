@@ -27,6 +27,7 @@ defmodule CuberacerLive.SessionsTest do
 
       assert {:ok, %Session{} = session} = Sessions.create_session(valid_attrs)
       assert session.name == "some name"
+      assert session.terminated == false
     end
 
     test "create_session/1 with no name returns error changeset" do
@@ -135,6 +136,46 @@ defmodule CuberacerLive.SessionsTest do
       Sessions.subscribe(session.id - 1)
       Sessions.delete_session(session)
 
+      refute_receive {Sessions, _, _}
+    end
+
+    test "terminate_session/1 marks a session as terminated" do
+      session = session_fixture()
+
+      refute session.terminated
+      assert {:ok, session} = Sessions.terminate_session(session)
+      assert session.terminated
+    end
+
+    test "terminate_session/1 returns error if session is already terminated" do
+      session = session_fixture(terminated: true)
+
+      assert session.terminated
+      assert {:error, _changeset} = Sessions.terminate_session(session)
+    end
+
+    test "terminate_session/1 broadcasts to context topic" do
+      session = session_fixture()
+      Sessions.subscribe()
+
+      assert {:ok, session} = Sessions.terminate_session(session)
+      assert_receive {Sessions, [:session, :terminated], ^session}
+    end
+
+    test "terminate_session/1 broadcasts to session topic" do
+      session = session_fixture()
+      Sessions.subscribe(session.id)
+
+      assert {:ok, session} = Sessions.terminate_session(session)
+      assert_receive {Sessions, [:session, :terminated], ^session}
+    end
+
+    test "terminate_session/1 does not broadcast if already terminated" do
+      session = session_fixture(terminated: true)
+      Sessions.subscribe()
+      Sessions.subscribe(session.id)
+
+      assert {:error, _} = Sessions.terminate_session(session)
       refute_receive {Sessions, _, _}
     end
 
