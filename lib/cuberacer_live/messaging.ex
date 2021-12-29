@@ -17,7 +17,7 @@ defmodule CuberacerLive.Messaging do
   end
 
   @doc """
-  Returns the list of messages for a room.
+  Returns the list of messages for a room. Preloads `:user`.
 
   ## Examples
 
@@ -26,7 +26,7 @@ defmodule CuberacerLive.Messaging do
 
   """
   def list_room_messages(%Session{id: session_id}) do
-    query = from m in RoomMessage, where: m.session_id == ^session_id
+    query = from m in RoomMessage, where: m.session_id == ^session_id, preload: :user
     Repo.all(query)
   end
 
@@ -65,6 +65,11 @@ defmodule CuberacerLive.Messaging do
     |> RoomMessage.create_changeset(attrs)
     |> Repo.insert()
     |> notify_subscribers([:room_message, :created])
+  end
+
+  def display_room_message(%RoomMessage{} = room_message) do
+    room_message = Repo.preload(room_message, :user)
+    "#{room_message.user.email}: #{room_message.message}"
   end
 
   defp notify_subscribers({:ok, %RoomMessage{} = result}, [:room_message, _action] = event) do

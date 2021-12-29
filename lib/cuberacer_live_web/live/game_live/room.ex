@@ -4,7 +4,7 @@ defmodule CuberacerLiveWeb.GameLive.Room do
   import CuberacerLive.Repo, only: [preload: 2]
   import CuberacerLive.GameLive.Components
 
-  alias CuberacerLive.{Sessions, Cubing, Accounts}
+  alias CuberacerLive.{Sessions, Cubing, Accounts, Messaging}
   alias CuberacerLive.Accounts.User
   alias CuberacerLive.Sessions.Round
   alias CuberacerLiveWeb.Presence
@@ -22,6 +22,7 @@ defmodule CuberacerLiveWeb.GameLive.Room do
         if connected?(socket) do
           track_presence(session_id, user.id)
           Sessions.subscribe(session_id)
+          Messaging.subscribe(session_id)
         end
 
         socket
@@ -29,9 +30,10 @@ defmodule CuberacerLiveWeb.GameLive.Room do
         |> fetch_session(session_id)
         |> fetch_present_users()
         |> fetch_rounds()
+        |> fetch_room_messages()
       end
 
-    {:ok, socket, temporary_assigns: [rounds: []]}
+    {:ok, socket, temporary_assigns: [rounds: [], room_messages: []]}
   end
 
   @impl true
@@ -59,7 +61,6 @@ defmodule CuberacerLiveWeb.GameLive.Room do
 
   defp fetch_rounds(socket) do
     rounds = Sessions.list_rounds_of_session(socket.assigns.session, :desc)
-
     assign(socket, rounds: rounds)
   end
 
@@ -70,6 +71,11 @@ defmodule CuberacerLiveWeb.GameLive.Room do
       end
 
     assign(socket, :present_users, present_users)
+  end
+
+  defp fetch_room_messages(socket) do
+    room_messages = Messaging.list_room_messages(socket.assigns.session)
+    assign(socket, room_messages: room_messages)
   end
 
   defp user_solve_for_round(%User{} = user, %Round{} = round) do
@@ -123,6 +129,18 @@ defmodule CuberacerLiveWeb.GameLive.Room do
   end
 
   @impl true
+  def handle_event("send-message", %{"message" => message}, socket) do
+    Messaging.create_room_message(socket.assigns.session, socket.assigns.current_user, message)
+
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("send-message", _value, socket) do
+    {:noreply, socket}
+  end
+
+  @impl true
   def handle_info(%Phoenix.Socket.Broadcast{event: "presence_diff"}, socket) do
     {:noreply, socket |> fetch_present_users() |> fetch_rounds()}
   end
@@ -160,5 +178,11 @@ defmodule CuberacerLiveWeb.GameLive.Room do
     solve = preload(solve, :round)
     round = preload(solve.round, :solves)
     {:noreply, update(socket, :rounds, fn rounds -> [round | rounds] end)}
+  end
+
+  @impl true
+  def handle_info({Messaging, [:room_message, _], room_message}, socket) do
+    room_message = preload(room_message, :user)
+    {:noreply, update(socket, :room_messages, fn msgs -> [room_message | msgs] end)}
   end
 end
