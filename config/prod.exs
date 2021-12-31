@@ -12,6 +12,8 @@ import Config
 config :cuberacer_live, CuberacerLiveWeb.Endpoint,
   cache_static_manifest: "priv/static/cache_manifest.json"
 
+config :cuberacer_live, :inactive_session_lifetime_ms, 60_000 * 20 # 20 minutes
+
 # Do not print debug messages in production
 config :logger, level: :info
 

@@ -76,6 +76,8 @@ config :cuberacer_live, CuberacerLiveWeb.Endpoint,
     ]
   ]
 
+config :cuberacer_live, :inactive_session_lifetime_ms, 120_000 # 2 minutes
+
 # Do not include metadata nor timestamps in development logs
 config :logger, :console, format: "[$level] $message\n"
 
