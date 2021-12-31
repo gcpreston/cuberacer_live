@@ -106,6 +106,26 @@ defmodule CuberacerLive.Sessions do
   end
 
   @doc """
+  Mark a session as terminated.
+
+  ## Examples
+
+      iex> terminate_session(session)
+      {:ok, %Session{terminated: true}}
+
+  """
+  def terminate_session(%Session{} = session) do
+    case session.terminated do
+      true -> {:ok, session}
+      false ->
+        session
+        |> Session.changeset(%{terminated: true})
+        |> Repo.update()
+        |> notify_subscribers([:session, :terminated])
+    end
+  end
+
+  @doc """
   Returns an `%Ecto.Changeset{}` for tracking session changes.
 
   ## Examples
