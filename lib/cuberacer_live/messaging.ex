@@ -1,6 +1,8 @@
 defmodule CuberacerLive.Messaging do
   @moduledoc """
   The Messaging context.
+
+  Messaging handles the chat features of a room.
   """
 
   import Ecto.Query, warn: false

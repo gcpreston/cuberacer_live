@@ -1,6 +1,11 @@
 defmodule CuberacerLive.Sessions do
   @moduledoc """
   The Sessions context.
+
+  Sessions handles the solving aspect of a room.
+
+  A session consists of rounds, where each round consists of solves.
+  Each user may submit a single solve for a round.
   """
 
   import Ecto.Query, warn: false
