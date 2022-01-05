@@ -1,16 +1,21 @@
 defmodule CuberacerLiveWeb.GameLive.Lobby do
   use CuberacerLiveWeb, :live_view
 
-  alias CuberacerLive.Sessions
+  alias CuberacerLive.Cubing
+  alias CuberacerLive.{RoomCache, RoomServer}
 
   @impl true
   def mount(_params, _session, socket) do
-    if connected?(socket), do: Sessions.subscribe()
+    if connected?(socket) do
+      RoomServer.subscribe()
+      RoomCache.subscribe()
+    end
+
     {:ok, fetch(socket)}
   end
 
   defp fetch(socket) do
-    active_rooms = CuberacerLive.RoomCache.list_active_rooms()
+    active_rooms = RoomCache.list_active_rooms()
     assign(socket, active_rooms: active_rooms)
   end
 
@@ -21,7 +26,11 @@ defmodule CuberacerLiveWeb.GameLive.Lobby do
   end
 
   @impl true
-  def handle_info({Sessions, [:session | _], _}, socket) do
+  def handle_info({RoomServer, _, _}, socket) do
+    {:noreply, fetch(socket)}
+  end
+
+  def handle_info({RoomCache, _, _}, socket) do
     {:noreply, fetch(socket)}
   end
 end
