@@ -204,6 +204,8 @@ defmodule CuberacerLive.SessionsTest do
       assert {:ok, %Round{} = round} = Sessions.create_round(valid_attrs)
       assert round.scramble == "some scramble"
       assert round.session_id == session.id
+
+      assert Sessions.get_round!(round.id) == round
     end
 
     test "create_round/1 with no scramble returns error changeset" do
@@ -323,6 +325,8 @@ defmodule CuberacerLive.SessionsTest do
       assert solve.user_id == user.id
       assert solve.penalty_id == penalty.id
       assert solve.round_id == round.id
+
+      assert Sessions.get_solve!(solve.id) |> Repo.preload(:round) == solve
     end
 
     test "create_solve/1 with no time returns error changeset" do
