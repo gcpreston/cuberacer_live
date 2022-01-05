@@ -10,9 +10,14 @@ defmodule CuberacerLiveWeb.GameLive.Lobby do
   end
 
   defp fetch(socket) do
-    # TODO: for now, every session is active
-    sessions = Sessions.list_sessions()
-    assign(socket, active_sessions: sessions)
+    active_rooms = CuberacerLive.RoomCache.list_active_rooms()
+    assign(socket, active_rooms: active_rooms)
+  end
+
+  @impl true
+  def handle_event("new-room", _value, socket) do
+    RoomCache.create_room(%{name: "lobby session", cube_type_id: Cubing.get_cube_type("3x3").id})
+    {:noreply, socket}
   end
 
   @impl true

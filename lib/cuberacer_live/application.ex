@@ -16,9 +16,11 @@ defmodule CuberacerLive.Application do
       {Phoenix.PubSub, name: CuberacerLive.PubSub},
       CuberacerLiveWeb.Presence,
       # Start the Endpoint (http/https)
-      CuberacerLiveWeb.Endpoint
+      CuberacerLiveWeb.Endpoint,
       # Start a worker by calling: CuberacerLive.Worker.start_link(arg)
       # {CuberacerLive.Worker, arg}
+      CuberacerLive.RoomRegistry,
+      CuberacerLive.RoomCache
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
