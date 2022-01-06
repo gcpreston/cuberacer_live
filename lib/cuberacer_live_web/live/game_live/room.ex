@@ -5,6 +5,7 @@ defmodule CuberacerLiveWeb.GameLive.Room do
   import CuberacerLive.GameLive.Components
 
   alias CuberacerLive.{Sessions, Cubing, Accounts, Messaging}
+  alias CuberacerLive.RoomServer
   alias CuberacerLive.Accounts.User
   alias CuberacerLive.Sessions.Round
   alias CuberacerLiveWeb.Presence
@@ -84,14 +85,13 @@ defmodule CuberacerLiveWeb.GameLive.Room do
 
   @impl true
   def handle_event("new-round", _value, socket) do
-    Sessions.create_round(%{session_id: socket.assigns.session_id})
-
+    RoomServer.create_round(socket.assigns.session)
     {:noreply, socket}
   end
 
   @impl true
   def handle_event("new-solve", %{"time" => time}, socket) do
-    Sessions.create_solve(
+    RoomServer.create_solve(
       socket.assigns.session,
       socket.assigns.current_user,
       time,
@@ -103,35 +103,40 @@ defmodule CuberacerLiveWeb.GameLive.Room do
 
   @impl true
   def handle_event("penalty-ok", _value, socket) do
-    if solve = Sessions.get_current_solve(socket.assigns.session, socket.assigns.current_user) do
-      Sessions.change_penalty(solve, Cubing.get_penalty("OK"))
-    end
+    RoomServer.change_penalty(
+      socket.assigns.session,
+      socket.assigns.current_user,
+      Cubing.get_penalty("OK")
+    )
 
     {:noreply, socket}
   end
 
   @impl true
   def handle_event("penalty-plus2", _value, socket) do
-    if solve = Sessions.get_current_solve(socket.assigns.session, socket.assigns.current_user) do
-      Sessions.change_penalty(solve, Cubing.get_penalty("+2"))
-    end
+    RoomServer.change_penalty(
+      socket.assigns.session,
+      socket.assigns.current_user,
+      Cubing.get_penalty("+2")
+    )
 
     {:noreply, socket}
   end
 
   @impl true
   def handle_event("penalty-dnf", _value, socket) do
-    if solve = Sessions.get_current_solve(socket.assigns.session, socket.assigns.current_user) do
-      Sessions.change_penalty(solve, Cubing.get_penalty("DNF"))
-    end
+    RoomServer.change_penalty(
+      socket.assigns.session,
+      socket.assigns.current_user,
+      Cubing.get_penalty("DNF")
+    )
 
     {:noreply, socket}
   end
 
   @impl true
   def handle_event("send-message", %{"message" => message}, socket) do
-    Messaging.create_room_message(socket.assigns.session, socket.assigns.current_user, message)
-
+    RoomServer.send_message(socket.assigns.session, socket.assigns.current_user, message)
     {:noreply, socket}
   end
 

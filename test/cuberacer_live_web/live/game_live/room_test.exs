@@ -9,7 +9,9 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
   import CuberacerLive.CubingFixtures
   import CuberacerLive.MessagingFixtures
 
-  alias CuberacerLive.{Repo, Sessions, Messaging}
+  alias CuberacerLive.Repo
+  alias CuberacerLive.RoomCache
+  alias CuberacerLive.{Sessions, Messaging}
   alias CuberacerLive.Sessions.Solve
 
   defp create_user(_) do
@@ -17,8 +19,16 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
     %{user: user}
   end
 
-  defp create_session(_) do
-    session = session_fixture()
+  defp create_room(_) do
+    cube_type = cube_type_fixture()
+
+    {:ok, pid, session} =
+      RoomCache.create_room(%{name: "some session", cube_type_id: cube_type.id})
+
+    # TODO: Some kind of room creation helper for tests
+
+    on_exit(fn -> GenServer.stop(pid) end)
+
     # TODO: Each session should have a first round by default, so this doesn't have to happen.
     round = round_fixture(%{session_id: session.id})
 
@@ -34,7 +44,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
     %{conn: log_in_user(conn, user)}
   end
 
-  setup [:create_user, :create_session, :create_penalty]
+  setup [:create_user, :create_room, :create_penalty]
 
   describe "mount" do
     test "redirects if no user token", %{conn: conn, session: session} do
@@ -115,6 +125,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
     setup [:authenticate]
 
     test "new-round creates a new round", %{conn: conn, session: session} do
+      Sessions.subscribe(session.id)
       {:ok, view, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
 
       num_rounds_before = Enum.count(Sessions.list_rounds_of_session(session))
@@ -124,6 +135,8 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       view
       |> render_click("new-round")
 
+      assert_receive {Sessions, [:round, :created], _round}
+
       num_rounds_after = Enum.count(Sessions.list_rounds_of_session(session))
 
       assert num_rounds_after == num_rounds_before + 1
@@ -131,12 +144,15 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
     end
 
     test "new-solve creates a new solve", %{conn: conn, session: session} do
+      Sessions.subscribe(session.id)
       {:ok, view, _html} = live(conn, Routes.game_room_path(conn, :show, session.id))
 
       num_solves_before = Enum.count(Sessions.list_solves_of_session(session))
 
       view
       |> render_click("new-solve", time: 42)
+
+      assert_receive {Sessions, [:solve, :created], _solve}
 
       num_solves_after = Enum.count(Sessions.list_solves_of_session(session))
 
@@ -163,7 +179,6 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       plus2_penalty = penalty_fixture(name: "+2")
       user2 = user_fixture()
       solve1 = solve_fixture(time: 42, user_id: user1.id, round_id: round1.id)
-
       round2 = round_fixture(session_id: session.id)
 
       solve2 =
@@ -175,6 +190,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
         )
 
       solve3 = solve_fixture(time: 44, user_id: user2.id, round_id: round2.id)
+      Sessions.subscribe(session.id)
 
       conn2 = Phoenix.ConnTest.build_conn() |> log_in_user(user2)
       {:ok, _view2, _html2} = live(conn2, Routes.game_room_path(conn2, :show, session.id))
@@ -185,6 +201,9 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       assert html =~ Sessions.display_solve(solve3)
 
       render_click(view, "penalty-ok")
+
+      assert_receive {Sessions, [:solve, :updated], _solve}
+
       updated_solve2 = Sessions.get_solve!(solve2.id) |> Repo.preload(:penalty)
       html = render(view)
 
@@ -204,6 +223,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       plus2_penalty = penalty_fixture(name: "+2")
       solve = solve_fixture(penalty_id: plus2_penalty.id, user_id: user.id, round_id: round1.id)
       _round2 = round_fixture(session_id: session.id)
+      Sessions.subscribe(session.id)
 
       {:ok, view, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
 
@@ -212,6 +232,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
 
       render_click(view, "penalty-ok")
 
+      refute_receive {Sessions, _event, _result}
       assert html =~ Sessions.display_solve(solve)
       assert html =~ Sessions.display_solve(nil)
     end
@@ -229,6 +250,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       round2 = round_fixture(session_id: session.id)
       solve2 = solve_fixture(time: 43, user_id: user1.id, round_id: round2.id)
       solve3 = solve_fixture(time: 44, user_id: user2.id, round_id: round2.id)
+      Sessions.subscribe(session.id)
 
       conn2 = Phoenix.ConnTest.build_conn() |> log_in_user(user2)
       {:ok, _view2, _html2} = live(conn2, Routes.game_room_path(conn2, :show, session.id))
@@ -239,6 +261,9 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       assert html =~ Sessions.display_solve(solve3)
 
       render_click(view, "penalty-plus2")
+
+      assert_receive {Sessions, [:solve, :updated], _solve}
+
       updated_solve2 = Sessions.get_solve!(solve2.id) |> Repo.preload(:penalty)
       html = render(view)
 
@@ -255,8 +280,10 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       session: session,
       round: round1
     } do
+      penalty_fixture(name: "+2")
       solve = solve_fixture(user_id: user.id, round_id: round1.id)
       _round2 = round_fixture(session_id: session.id)
+      Sessions.subscribe(session.id)
 
       {:ok, view, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
 
@@ -265,6 +292,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
 
       render_click(view, "penalty-plus2")
 
+      refute_receive {Sessions, _event, _result}
       assert html =~ Sessions.display_solve(solve)
       assert html =~ Sessions.display_solve(nil)
     end
@@ -278,6 +306,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       penalty_fixture(name: "DNF")
       user2 = user_fixture()
       solve1 = solve_fixture(time: 42, user_id: user1.id, round_id: round1.id)
+      Sessions.subscribe(session.id)
 
       round2 = round_fixture(session_id: session.id)
       solve2 = solve_fixture(time: 43, user_id: user1.id, round_id: round2.id)
@@ -292,6 +321,9 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       assert html =~ Sessions.display_solve(solve3)
 
       render_click(view, "penalty-dnf")
+
+      assert_receive {Sessions, [:solve, :updated], _solve}
+
       updated_solve2 = Sessions.get_solve!(solve2.id) |> Repo.preload(:penalty)
       html = render(view)
 
@@ -308,8 +340,10 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       session: session,
       round: round1
     } do
+      penalty_fixture(name: "DNF")
       solve = solve_fixture(user_id: user.id, round_id: round1.id)
       _round2 = round_fixture(session_id: session.id)
+      Sessions.subscribe(session.id)
 
       {:ok, view, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
 
@@ -318,13 +352,14 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
 
       render_click(view, "penalty-dnf")
 
+      refute_receive {Sessions, _event, _result}
       assert html =~ Sessions.display_solve(solve)
       assert html =~ Sessions.display_solve(nil)
     end
 
     test "send-message creates and sends a message", %{conn: conn, user: user, session: session} do
+      Messaging.subscribe(session.id)
       {:ok, view, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
-
       num_messages_before = Enum.count(Messaging.list_room_messages(session))
 
       html
@@ -334,6 +369,9 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       |> assert_html("#chat-input")
 
       render_click(view, "send-message", %{"message" => "hello world"})
+
+      assert_receive {Messaging, [:room_message, :created], _room_message}
+
       num_messages_after = Enum.count(Messaging.list_room_messages(session))
 
       render(view)
