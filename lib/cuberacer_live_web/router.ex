@@ -23,6 +23,7 @@ defmodule CuberacerLiveWeb.Router do
     get "/", PageController, :index
 
     live "/lobby", GameLive.Lobby, :index
+    live "/lobby/new", GameLive.Lobby, :new
     live "/room/:id", GameLive.Room, :show
   end
 

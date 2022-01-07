@@ -100,7 +100,7 @@ defmodule CuberacerLive.GameLive.Components do
             }
           }
         }
-      }
+      };
     </script>
 
     <div
@@ -137,7 +137,7 @@ defmodule CuberacerLive.GameLive.Components do
             });
           }
         }
-      }
+      };
     </script>
 
     <div id="chat" class="border" x-data="chat()">
