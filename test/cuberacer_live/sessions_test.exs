@@ -1,5 +1,5 @@
 defmodule CuberacerLive.SessionsTest do
-  use CuberacerLive.DataCase
+  use CuberacerLive.DataCase, async: false
 
   alias CuberacerLive.Sessions
 

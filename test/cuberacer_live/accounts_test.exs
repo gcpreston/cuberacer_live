@@ -1,5 +1,5 @@
 defmodule CuberacerLive.AccountsTest do
-  use CuberacerLive.DataCase
+  use CuberacerLive.DataCase, async: true
 
   alias CuberacerLive.Accounts
 

@@ -1,5 +1,5 @@
 defmodule CuberacerLive.MessagingTest do
-  use CuberacerLive.DataCase
+  use CuberacerLive.DataCase, async: true
 
   alias CuberacerLive.Messaging
 
