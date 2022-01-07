@@ -1,3 +1,18 @@
+<%= if @live_action == :new do %>
+  <.modal return_to={Routes.game_lobby_path(@socket, :index)}>
+    <.live_component
+      module={CuberacerLiveWeb.GameLive.CreateRoomForm}
+      id={@session.id || :new}
+      title={@page_title}
+      action={@live_action}
+      session={@session}
+      return_to={Routes.game_lobby_path(@socket, :index)}
+    />
+  </.modal>
+<% end %>
+
+<button><%= live_patch "New Room", to: Routes.game_lobby_path(@socket, :new), id: "t_new-room" %></button>
+
 <div class="flex flex-col my-4">
   <div class="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
     <div class="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
@@ -24,7 +39,7 @@
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
             <%= for session <- @active_sessions do %>
-              <tr>
+              <tr class="t_room">
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div class="ml-4">
                     <div class="text-sm font-medium text-gray-900">
