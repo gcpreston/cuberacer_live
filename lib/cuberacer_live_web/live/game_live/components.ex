@@ -125,22 +125,16 @@ defmodule CuberacerLive.GameLive.Components do
 
   def chat(assigns) do
     ~H"""
-    <script>
-      const chat = () => {
-        return {
-          message: '',
+    <div id="chat" class="border" x-data="{
+      message: '',
 
-          sendMessage() {
-            window.chatInputHook.sendMessage(this.message);
-            this.$nextTick(() => {
-              this.message = '';
-            });
-          }
-        }
-      };
-    </script>
-
-    <div id="chat" class="border" x-data="chat()">
+      sendMessage() {
+        window.chatInputHook.sendMessage(this.message);
+        this.$nextTick(() => {
+          this.message = '';
+        });
+      }
+    }">
       <div class="h-44 flex flex-col-reverse overflow-auto">
         <div id="room-messages">
           <%= for room_message <- @room_messages do %>
