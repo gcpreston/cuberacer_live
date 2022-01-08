@@ -3,8 +3,10 @@
 import "../css/app.css";
 
 // AlpineJS
-import Alpine from "alpinejs";
+import Alpine from 'alpinejs';
+import timer from './timer';
 
+Alpine.data('timer', timer);
 Alpine.store('inputFocused', false);
 
 window.Alpine = Alpine;
