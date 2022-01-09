@@ -325,7 +325,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       assert html =~ Sessions.display_solve(nil)
     end
 
-    test "send-message creates and sends a message", %{conn: conn, user: user, session: session} do
+    test "send-message creates and sends messages", %{conn: conn, user: user, session: session} do
       {:ok, view, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
 
       num_messages_before = Enum.count(Messaging.list_room_messages(session))
@@ -343,6 +343,12 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       |> assert_html(".t_room-message", count: 1, text: "#{user.email}: hello world")
 
       assert num_messages_after == num_messages_before + 1
+
+      render_click(view, "send-message", %{"message" => "second message"})
+
+      render(view)
+      |> assert_html(".t_room-message", count: 2)
+      |> assert_html(".t_room-message:nth-child(2)", text: "#{user.email}: second message")
     end
   end
 

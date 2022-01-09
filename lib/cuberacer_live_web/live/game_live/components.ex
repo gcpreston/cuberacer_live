@@ -36,7 +36,7 @@ defmodule CuberacerLive.GameLive.Components do
       }
     }">
       <div class="h-44 flex flex-col-reverse overflow-auto">
-        <div id="room-messages">
+        <div id="room-messages" phx-update="append">
           <%= for room_message <- @room_messages do %>
             <div id={"room-message-#{room_message.id}"} class="h-8 t_room-message">
               <%= CuberacerLive.Messaging.display_room_message(room_message) %>
@@ -50,9 +50,9 @@ defmodule CuberacerLive.GameLive.Components do
         type="text"
         class="border"
         x-model="message"
-        @focus="$store.inputFocused = true"
-        @blur="$store.inputFocused = false"
-        @keydown.enter="sendMessage"
+        x-on:focus="$store.inputFocused = true"
+        x-on:blur="$store.inputFocused = false"
+        x-on:keydown.enter="sendMessage"
         phx-hook="ChatInput"
       />
       <button @click="sendMessage">Send</button>
