@@ -1,6 +1,7 @@
 <h1 class="text-xl font-bold"><%= @session.name %></h1>
 
 <div class="my-3">
+  <span class="t_scramble"><%= current_scramble(@rounds) %></span>
   <.timer />
   <.penalty_input />
 </div>

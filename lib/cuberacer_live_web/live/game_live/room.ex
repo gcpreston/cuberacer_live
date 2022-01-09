@@ -185,4 +185,11 @@ defmodule CuberacerLiveWeb.GameLive.Room do
     room_message = preload(room_message, :user)
     {:noreply, update(socket, :room_messages, fn msgs -> [room_message | msgs] end)}
   end
+
+  defp current_scramble(rounds) do
+    case rounds do
+      [current | _rest] -> current.scramble
+      _ -> nil
+    end
+  end
 end
