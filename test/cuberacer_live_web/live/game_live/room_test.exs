@@ -127,7 +127,10 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       num_rounds_after = Enum.count(Sessions.list_rounds_of_session(session))
 
       assert num_rounds_after == num_rounds_before + 1
-      assert_html(render(view), "tr.t_round-row", count: num_rounds_after)
+
+      render(view)
+      |> assert_html("tr.t_round-row", count: num_rounds_after)
+      |> assert_html(".t_scramble", count: 1)
     end
 
     test "new-solve creates a new solve", %{conn: conn, session: session} do
@@ -353,12 +356,15 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
 
       assert_html(html, "tr.t_round-row", count: num_rounds_before)
 
-      Sessions.create_round(%{session_id: session.id, scramble: "some scramble"})
+      {:ok, round} = Sessions.create_round(%{session_id: session.id, scramble: "some scramble"})
 
       num_rounds_after = Enum.count(Sessions.list_rounds_of_session(session))
 
       assert num_rounds_after == num_rounds_before + 1
-      assert_html(render(view), "tr.t_round-row", count: num_rounds_after)
+
+      render(view)
+      |> assert_html("tr.t_round-row", count: num_rounds_after)
+      |> assert_html(".t_scramble", text: round.scramble)
     end
 
     test "reacts to solve created", %{conn: conn, session: session, user: user, penalty: penalty} do
