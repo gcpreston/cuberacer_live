@@ -206,7 +206,7 @@ defmodule CuberacerLive.Sessions do
   def create_round(attrs \\ %{}) do
     attrs =
       if not Map.has_key?(attrs, :scramble) do
-        Map.put(attrs, :scramble, CuberacerLive.Cubing.Utils.generate_scramble())
+        Map.put(attrs, :scramble, Whisk.scramble("3x3"))
       else
         attrs
       end
