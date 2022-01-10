@@ -78,7 +78,7 @@ defmodule CuberacerLive.MessagingTest do
       room_message = room_message_fixture() |> Repo.preload(:user)
 
       assert Messaging.display_room_message(room_message) ==
-               "#{room_message.user.email}: #{room_message.message}"
+               "#{room_message.user.username}: #{room_message.message}"
     end
   end
 end
