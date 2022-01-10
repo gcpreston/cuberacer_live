@@ -5,8 +5,6 @@ defmodule CuberacerLiveWeb.GameLive.Room do
   import CuberacerLive.GameLive.Components
 
   alias CuberacerLive.{Sessions, Cubing, Accounts, Messaging}
-  alias CuberacerLive.Accounts.User
-  alias CuberacerLive.Sessions.Round
   alias CuberacerLiveWeb.Presence
 
   @endpoint CuberacerLiveWeb.Endpoint
@@ -76,10 +74,6 @@ defmodule CuberacerLiveWeb.GameLive.Room do
   defp fetch_room_messages(socket) do
     room_messages = Messaging.list_room_messages(socket.assigns.session)
     assign(socket, room_messages: room_messages)
-  end
-
-  defp user_solve_for_round(%User{} = user, %Round{} = round) do
-    Enum.find(round.solves, fn solve -> solve.user_id == user.id end)
   end
 
   @impl true

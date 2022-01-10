@@ -5,6 +5,15 @@
 @tailwind components;
 @tailwind utilities;
 
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
+.phx-connected {
+  height: 100%;
+}
+
 /* Alerts and form errors used by phx.new */
 .alert {
   padding: 15px;
