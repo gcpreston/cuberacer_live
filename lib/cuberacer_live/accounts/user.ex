@@ -32,9 +32,18 @@ defmodule CuberacerLive.Accounts.User do
   def registration_changeset(user, attrs, opts \\ []) do
     user
     |> cast(attrs, [:email, :username, :password])
+    |> lower(:email)
+    |> lower(:username)
     |> validate_email()
     |> validate_username()
     |> validate_password(opts)
+  end
+
+  defp lower(changeset, field) do
+    case value = get_field(changeset, field) do
+      nil -> changeset
+      _ -> put_change(changeset, field, String.downcase(value))
+    end
   end
 
   defp validate_email(changeset) do

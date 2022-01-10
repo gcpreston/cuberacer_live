@@ -98,6 +98,16 @@ defmodule CuberacerLive.AccountsTest do
       assert "has already been taken" in errors_on(changeset).username
     end
 
+    test "puts email to lowercase" do
+      {:ok, user} = Accounts.register_user(valid_user_attributes(email: "mULtICASe@example.COM"))
+      assert user.email == "multicase@example.com"
+    end
+
+    test "puts username to lowercase" do
+      {:ok, user} = Accounts.register_user(valid_user_attributes(username: "mULtICASe"))
+      assert user.username == "multicase"
+    end
+
     test "registers users with a hashed password" do
       email = unique_user_email()
       {:ok, user} = Accounts.register_user(valid_user_attributes(email: email))
