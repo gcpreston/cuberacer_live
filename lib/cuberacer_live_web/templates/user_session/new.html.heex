@@ -1,27 +1,37 @@
-<h1>Log in</h1>
+<div class="text-center my-6">
+  <h1 class="text-3xl font-semibold">Log in to Cuberacer</h1>
+</div>
 
-<.form let={f} for={@conn} action={Routes.user_session_path(@conn, :create)} as={:user}>
-  <%= if @error_message do %>
-    <div class="alert alert-danger">
-      <p><%= @error_message %></p>
+<div class="w-96 bg-gray-200 border border-gray-600 rounded-lg p-3 m-auto">
+  <.form let={f} for={@conn} action={Routes.user_session_path(@conn, :create)} as={:user}>
+    <%= if @error_message do %>
+      <div class="alert alert-danger">
+        <p><%= @error_message %></p>
+      </div>
+    <% end %>
+
+    <%= label f, :email %>
+    <%= email_input f, :email, required: true, class: "block w-full rounded-md" %>
+
+    <div class="mt-2">
+      <%= label f, :password %>
+      <%= password_input f, :password, required: true, class: "block mb-1 w-full rounded-md" %>
+      <div class="text-right w-full">
+        <%= link "Forgot password?", to: Routes.user_reset_password_path(@conn, :new), class: "text-sm text-blue-500 hover:underline" %>
+      </div>
     </div>
-  <% end %>
 
-  <%= label f, :email %>
-  <%= email_input f, :email, required: true %>
+    <div>
+      <%= checkbox f, :remember_me %>
+      <%= label f, :remember_me, "Keep me logged in for 60 days" %>
+    </div>
 
-  <%= label f, :password %>
-  <%= password_input f, :password, required: true %>
-
-  <%= label f, :remember_me, "Keep me logged in for 60 days" %>
-  <%= checkbox f, :remember_me %>
-
-  <div>
-    <%= submit "Log in" %>
+    <div class="mt-3">
+      <%= submit "Log in", class: "rounded-lg bg-green-500 hover:bg-green-400 px-2 border border-green-300 w-full" %>
+    </div>
+  </.form>
   </div>
-</.form>
 
-<p>
-  <%= link "Register", to: Routes.user_registration_path(@conn, :new) %> |
-  <%= link "Forgot your password?", to: Routes.user_reset_password_path(@conn, :new) %>
-</p>
+<div class="w-96 mt-4 m-auto text-center">
+  Need an account? <%= link "Register", to: Routes.user_registration_path(@conn, :new), class: "text-blue-500 hover:underline" %>
+</div>
