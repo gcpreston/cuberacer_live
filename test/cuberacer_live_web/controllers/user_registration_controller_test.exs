@@ -7,7 +7,7 @@ defmodule CuberacerLiveWeb.UserRegistrationControllerTest do
     test "renders registration page", %{conn: conn} do
       conn = get(conn, Routes.user_registration_path(conn, :new))
       response = html_response(conn, 200)
-      assert response =~ "<h1>Register</h1>"
+      assert response =~ "Register</h1>"
       assert response =~ "Register</button>"
       assert response =~ "Log in</a>"
     end
@@ -46,7 +46,7 @@ defmodule CuberacerLiveWeb.UserRegistrationControllerTest do
         })
 
       response = html_response(conn, 200)
-      assert response =~ "<h1>Register</h1>"
+      assert response =~ "Register</h1>"
       assert response =~ "must have the @ sign and no spaces"
       assert response =~ "should be at least 12 character"
     end
