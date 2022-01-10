@@ -48,7 +48,7 @@
         <div class="ml-3 relative" x-data="{ dropdownOpen: false }" @mousedown.outside="dropdownOpen = false">
           <div>
             <%= if @current_user do %>
-              <button @mousedown="dropdownOpen = true" type="button" class="bg-gray-800 flex text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white" id="user-menu-button">
+              <button @mousedown="dropdownOpen = !dropdownOpen" type="button" class="bg-gray-800 flex text-sm rounded-full" x-bind:class="dropdownOpen ? 'outline-none ring-2 ring-offset-2 ring-offset-gray-800 ring-white' : ''" id="user-menu-button">
                 <span class="sr-only">Open user menu</span>
                 <img class="h-8 w-8 rounded-full" src={Routes.static_path(@conn, "/images/default-profile.jpeg")} alt="">
               </button>
