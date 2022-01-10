@@ -7,7 +7,7 @@ defmodule CuberacerLive.GameLive.Components do
       id="timer"
       x-data="timer"
       @keydown.space.window="handleSpaceDown"
-      @keyup.space.window="handleSpaceUp"
+      @keyup.space.window.prevent="handleSpaceUp"
       phx-hook="Timer"
     >
       <span id="time" x-text="formattedTime" :class="timeColor"></span>
