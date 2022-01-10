@@ -5,11 +5,21 @@ defmodule CuberacerLive.AccountsFixtures do
   """
 
   def unique_user_email, do: "user#{System.unique_integer()}@example.com"
+
+  def unique_email_and_username do
+    username = "user#{System.unique_integer()}"
+    email = "#{username}@example.com"
+    {email, username}
+  end
+
   def valid_user_password, do: "hello world!"
 
   def valid_user_attributes(attrs \\ %{}) do
+    {email, username} = unique_email_and_username()
+
     Enum.into(attrs, %{
-      email: unique_user_email(),
+      email: email,
+      username: username,
       password: valid_user_password()
     })
   end

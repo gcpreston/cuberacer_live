@@ -4,6 +4,7 @@ defmodule CuberacerLive.Accounts.User do
 
   schema "users" do
     field :email, :string
+    field :username, :string
     field :password, :string, virtual: true, redact: true
     field :hashed_password, :string, redact: true
     field :confirmed_at, :naive_datetime
@@ -30,9 +31,19 @@ defmodule CuberacerLive.Accounts.User do
   """
   def registration_changeset(user, attrs, opts \\ []) do
     user
-    |> cast(attrs, [:email, :password])
+    |> cast(attrs, [:email, :username, :password])
+    |> lower(:email)
+    |> lower(:username)
     |> validate_email()
+    |> validate_username()
     |> validate_password(opts)
+  end
+
+  defp lower(changeset, field) do
+    case value = get_field(changeset, field) do
+      nil -> changeset
+      _ -> put_change(changeset, field, String.downcase(value))
+    end
   end
 
   defp validate_email(changeset) do
@@ -42,6 +53,15 @@ defmodule CuberacerLive.Accounts.User do
     |> validate_length(:email, max: 160)
     |> unsafe_validate_unique(:email, CuberacerLive.Repo)
     |> unique_constraint(:email)
+  end
+
+  defp validate_username(changeset) do
+    changeset
+    |> validate_required([:username])
+    |> validate_format(:username, ~r/^[^\s]+$/, message: "must have no spaces")
+    |> validate_length(:username, max: 25)
+    |> unsafe_validate_unique(:username, CuberacerLive.Repo)
+    |> unique_constraint(:username)
   end
 
   defp validate_password(changeset, opts) do

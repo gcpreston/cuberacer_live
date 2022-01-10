@@ -69,7 +69,7 @@ defmodule CuberacerLive.Messaging do
 
   def display_room_message(%RoomMessage{} = room_message) do
     room_message = Repo.preload(room_message, :user)
-    "#{room_message.user.email}: #{room_message.message}"
+    "#{room_message.user.username}: #{room_message.message}"
   end
 
   defp notify_subscribers({:ok, %RoomMessage{} = result}, [:room_message, _action] = event) do

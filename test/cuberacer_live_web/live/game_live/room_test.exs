@@ -340,7 +340,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       num_messages_after = Enum.count(Messaging.list_room_messages(session))
 
       render(view)
-      |> assert_html(".t_room-message", count: 1, text: "#{user.email}: hello world")
+      |> assert_html(".t_room-message", count: 1, text: "#{user.username}: hello world")
 
       assert num_messages_after == num_messages_before + 1
 
@@ -348,7 +348,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
 
       render(view)
       |> assert_html(".t_room-message", count: 2)
-      |> assert_html(".t_room-message:nth-child(2)", text: "#{user.email}: second message")
+      |> assert_html(".t_room-message:nth-child(2)", text: "#{user.username}: second message")
     end
   end
 
