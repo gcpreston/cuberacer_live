@@ -12,7 +12,8 @@ defmodule CuberacerLiveWeb.UserSessionControllerTest do
       conn = get(conn, Routes.user_session_path(conn, :new))
       response = html_response(conn, 200)
       assert response =~ "Log in to Cuberacer</h1>"
-      assert response =~ "Register</a>"
+      assert response =~ "Log in</button>"
+      assert response =~ "Sign up</a>"
       assert response =~ "Forgot password?</a>"
     end
 
