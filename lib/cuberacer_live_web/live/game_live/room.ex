@@ -180,10 +180,11 @@ defmodule CuberacerLiveWeb.GameLive.Room do
     {:noreply, update(socket, :room_messages, fn msgs -> [room_message | msgs] end)}
   end
 
-  defp current_scramble(rounds) do
-    case rounds do
-      [current | _rest] -> current.scramble
-      _ -> nil
-    end
+  defp current_scramble([current_round | _rest]) do
+    current_round.scramble
+  end
+
+  defp current_scramble([]) do
+    nil
   end
 end

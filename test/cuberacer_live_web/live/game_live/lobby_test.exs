@@ -49,7 +49,8 @@ defmodule CuberacerLive.GameLive.LobbyTest do
       |> assert_html(".t_room-save", count: 1)
     end
 
-    test "create room modal creates a new room", %{conn: conn} do
+    @tag :ensure_presence_shutdown
+    test "create room modal creates a new room with an initial round", %{conn: conn} do
       cube_type = cube_type_fixture()
       {:ok, live, html} = live(conn, Routes.game_lobby_path(conn, :new))
 
@@ -62,9 +63,22 @@ defmodule CuberacerLive.GameLive.LobbyTest do
 
       assert_redirect(live, Routes.game_lobby_path(conn, :index))
 
-      {:ok, _live, html} = follow_redirect(result, conn)
+      {:ok, lobby_live, html} = follow_redirect(result, conn)
 
       assert_html(html, ".t_room", count: 1)
+
+      result =
+        lobby_live
+        |> element(".t_join")
+        |> render_click()
+
+      assert_redirect(lobby_live)
+
+      {:ok, _room_live, html} = follow_redirect(result, conn)
+
+      html
+      |> assert_html(".t_round-row", count: 1)
+      |> assert_html(".t_scramble")
     end
 
     test "displays error messages", %{conn: conn} do
@@ -77,7 +91,10 @@ defmodule CuberacerLive.GameLive.LobbyTest do
         |> render_submit(%{session: %{name: "", cube_type_id: cube_type.id}})
 
       refute_redirected(live, Routes.game_lobby_path(conn, :index))
-      assert_html(html, ~s(.invalid-feedback[phx-feedback-for="session[name]"), text: "can't be blank")
+
+      assert_html(html, ~s(.invalid-feedback[phx-feedback-for="session[name]"),
+        text: "can't be blank"
+      )
     end
 
     test "redirects if user is not logged in" do
