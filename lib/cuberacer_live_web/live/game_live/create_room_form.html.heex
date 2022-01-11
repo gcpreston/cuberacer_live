@@ -1,5 +1,5 @@
 <div>
-  <h2><%= @title %></h2>
+  <h2 class="text-xl"><%= @title %></h2>
 
   <.form
     let={f}
@@ -9,19 +9,19 @@
     phx-change="validate"
     phx-submit="save">
 
-    <div class="t_room-name-input">
+    <div class="t_room-name-input mt-3">
       <%= label f, :name %>
-      <%= text_input f, :name %>
+      <%= text_input f, :name, class: "block mb-1 w-full rounded-md mt-0.5 px-2 py-0.5 outline outline-1 outline-gray-600" %>
       <%= error_tag f, :name %>
     </div>
 
-    <div class="t_room-cube-type-input">
+    <div class="t_room-cube-type-input mt-3">
       <%= label f, :cube_type_id %>
-      <%= select f, :cube_type_id, cube_type_options() %>
+      <%= select f, :cube_type_id, cube_type_options(), class: "block mb-1 w-full rounded-md mt-0.5 px-2 py-0.5 outline outline-1 outline-gray-600" %>
     </div>
 
-    <div class="t_room-save">
-      <%= submit "Save", phx_disable_with: "Saving..." %>
+    <div class="t_room-save mt-4">
+      <%= submit "Save", phx_disable_with: "Saving...", class: "rounded-lg bg-green-400 hover:bg-green-500 active:bg-green-400 border border-green-500 w-full" %>
     </div>
   </.form>
 </div>

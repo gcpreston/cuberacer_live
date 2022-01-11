@@ -6,46 +6,34 @@
 @tailwind utilities;
 
 html, body {
-  height: 100%;
-  overflow: hidden;
+  @apply h-full overflow-hidden;
 }
 
 .phx-connected {
-  height: 100%;
+  @apply h-full;
 }
 
 /* Alerts and form errors used by phx.new */
 .alert {
-  padding: 15px;
-  margin-bottom: 20px;
-  border: 1px solid transparent;
-  border-radius: 4px;
+  @apply p-2 mb-5 border border-transparent rounded-md;
 }
 .alert-info {
-  color: #31708f;
-  background-color: #d9edf7;
-  border-color: #bce8f1;
+  @apply bg-cyan-100 text-cyan-700 border-cyan-200;
 }
 .alert-warning {
-  color: #8a6d3b;
-  background-color: #fcf8e3;
-  border-color: #faebcc;
+  @apply bg-yellow-100 text-yellow-600 border-yellow-200;
 }
 .alert-danger {
-  color: #a94442;
-  background-color: #f2dede;
-  border-color: #ebccd1;
+  @apply bg-red-100 text-red-600 border-red-200;
 }
 .alert p {
-  margin-bottom: 0;
+  @apply mb-0;
 }
 .alert:empty {
-  display: none;
+  @apply hidden;
 }
 .invalid-feedback {
-  color: #a94442;
-  display: block;
-  margin: -1rem 0 2rem;
+  @apply block text-red-600;
 }
 
 /* LiveView specific classes for your customization */
@@ -80,7 +68,7 @@ html, body {
   margin: 15vh auto;
   padding: 20px;
   border: 1px solid #888;
-  width: 80%;
+  width: 40%;
 }
 
 .phx-modal-close {
