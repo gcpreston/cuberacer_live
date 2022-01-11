@@ -11,11 +11,11 @@
     <% end %>
 
     <%= label f, :email %>
-    <%= email_input f, :email, required: true, class: "block w-full rounded-md" %>
+    <%= email_input f, :email, required: true, class: "block w-full rounded-md mt-0.5 px-2 py-0.5" %>
 
-    <div class="mt-2">
+    <div class="mt-3">
       <%= label f, :password %>
-      <%= password_input f, :password, required: true, class: "block mb-1 w-full rounded-md" %>
+      <%= password_input f, :password, required: true, class: "block mb-1 w-full rounded-md mt-0.5 px-2 py-0.5" %>
       <div class="text-right w-full">
         <%= link "Forgot password?", to: Routes.user_reset_password_path(@conn, :new), class: "text-sm text-blue-500 hover:underline" %>
       </div>
@@ -26,8 +26,8 @@
       <%= label f, :remember_me, "Keep me logged in for 60 days" %>
     </div>
 
-    <div class="mt-3">
-      <%= submit "Log in", class: "rounded-lg bg-green-400 hover:bg-green-300 px-2 border border-green-500 w-full" %>
+    <div class="mt-4">
+      <%= submit "Log in", class: "rounded-lg bg-green-400 hover:bg-green-300 border border-green-500 w-full" %>
     </div>
   </.form>
   </div>
