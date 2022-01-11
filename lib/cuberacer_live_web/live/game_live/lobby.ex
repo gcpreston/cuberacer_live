@@ -28,8 +28,7 @@ defmodule CuberacerLiveWeb.GameLive.Lobby do
   end
 
   defp fetch(socket) do
-    # TODO: for now, every session is active
-    sessions = Sessions.list_sessions()
+    sessions = Sessions.list_active_sessions()
     assign(socket, active_sessions: sessions)
   end
 

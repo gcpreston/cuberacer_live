@@ -10,6 +10,9 @@ defmodule CuberacerLive.Sessions do
   alias CuberacerLive.Accounts.User
   alias CuberacerLive.Cubing.{CubeType, Penalty}
 
+  # For now, any session created in the last 2 hours is active. This is
+  # a temporary solution while a more sophisticated one is in the works.
+  @session_active_lifetime_ms 60 * 60 * 2
   @topic inspect(__MODULE__)
 
   def subscribe do
@@ -30,8 +33,40 @@ defmodule CuberacerLive.Sessions do
 
   """
   def list_sessions do
-    query = from s in Session, preload: :cube_type
+    query = from s in Session, order_by: [desc: s.inserted_at], preload: :cube_type
     Repo.all(query)
+  end
+
+  defp active_cutoff do
+    NaiveDateTime.utc_now() |> NaiveDateTime.add(-@session_active_lifetime_ms)
+  end
+
+  @doc """
+  Returns a list of currently active sessions.
+  """
+  def list_active_sessions do
+    cutoff_time = active_cutoff()
+
+    query =
+      from s in Session,
+        where: s.inserted_at > ^cutoff_time,
+        order_by: [desc: s.inserted_at],
+        preload: :cube_type
+
+    Repo.all(query)
+  end
+
+  @doc """
+  Determine if a given session is active.
+  """
+  def session_is_active?(%Session{id: session_id}) do
+    session_is_active?(session_id)
+  end
+
+  def session_is_active?(session_id) do
+    cutoff_time = active_cutoff()
+    query = from s in Session, where: s.inserted_at > ^cutoff_time, where: s.id == ^session_id
+    Repo.exists?(query)
   end
 
   @doc """
@@ -90,8 +125,7 @@ defmodule CuberacerLive.Sessions do
 
   def create_session_and_round(name, cube_type_id) do
     with {:ok, session} <- create_session(%{name: name, cube_type_id: cube_type_id}),
-         {:ok, round} <- create_round(%{session_id: session.id})
-    do
+         {:ok, round} <- create_round(%{session_id: session.id}) do
       {:ok, session, round}
     else
       err -> err

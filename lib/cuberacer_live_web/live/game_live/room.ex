@@ -14,21 +14,28 @@ defmodule CuberacerLiveWeb.GameLive.Room do
     user = user_token && Accounts.get_user_by_session_token(user_token)
 
     socket =
-      if user == nil do
-        redirect(socket, to: Routes.user_session_path(@endpoint, :new))
-      else
-        if connected?(socket) do
-          track_presence(session_id, user.id)
-          Sessions.subscribe(session_id)
-          Messaging.subscribe(session_id)
-        end
+      cond do
+        user == nil ->
+          redirect(socket, to: Routes.user_session_path(@endpoint, :new))
 
-        socket
-        |> assign(:current_user, user)
-        |> fetch_session(session_id)
-        |> fetch_present_users()
-        |> fetch_rounds()
-        |> fetch_room_messages()
+        not Sessions.session_is_active?(session_id) ->
+          socket
+          |> put_flash(:error, "Session is inactive")
+          |> push_redirect(to: Routes.game_lobby_path(socket, :index))
+
+        true ->
+          if connected?(socket) do
+            track_presence(session_id, user.id)
+            Sessions.subscribe(session_id)
+            Messaging.subscribe(session_id)
+          end
+
+          socket
+          |> assign(:current_user, user)
+          |> fetch_session(session_id)
+          |> fetch_present_users()
+          |> fetch_rounds()
+          |> fetch_room_messages()
       end
 
     {:ok, socket, temporary_assigns: [rounds: [], room_messages: []]}
