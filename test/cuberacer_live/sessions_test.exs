@@ -27,6 +27,7 @@ defmodule CuberacerLive.SessionsTest do
 
       assert {:ok, %Session{} = session} = Sessions.create_session(valid_attrs)
       assert session.name == "some name"
+      assert session.cube_type_id == cube_type.id
     end
 
     test "create_session/1 with no name returns error changeset" do
@@ -36,7 +37,7 @@ defmodule CuberacerLive.SessionsTest do
       assert {:error, %Ecto.Changeset{}} = Sessions.create_session(invalid_attrs)
     end
 
-    test "create_session/1 with no cube type error changeset" do
+    test "create_session/1 with no cube type returns error changeset" do
       invalid_attrs = %{name: "some name", cube_type_id: nil}
 
       assert {:error, %Ecto.Changeset{}} = Sessions.create_session(invalid_attrs)
