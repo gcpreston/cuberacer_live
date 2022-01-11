@@ -18,7 +18,7 @@ defmodule CuberacerLiveWeb.UserSessionControllerTest do
 
     test "redirects if already logged in", %{conn: conn, user: user} do
       conn = conn |> log_in_user(user) |> get(Routes.user_session_path(conn, :new))
-      assert redirected_to(conn) == "/"
+      assert redirected_to(conn) == "/lobby"
     end
   end
 
@@ -30,10 +30,10 @@ defmodule CuberacerLiveWeb.UserSessionControllerTest do
         })
 
       assert get_session(conn, :user_token)
-      assert redirected_to(conn) == "/"
+      assert redirected_to(conn) == "/lobby"
 
       # Now do a logged in request and assert on the menu
-      conn = get(conn, "/")
+      conn = get(conn, "/lobby")
       response = html_response(conn, 200)
       assert response =~ user.username
       assert response =~ "Settings</a>"
@@ -51,7 +51,7 @@ defmodule CuberacerLiveWeb.UserSessionControllerTest do
         })
 
       assert conn.resp_cookies["_cuberacer_live_web_user_remember_me"]
-      assert redirected_to(conn) == "/"
+      assert redirected_to(conn) == "/lobby"
     end
 
     test "logs the user in with return to", %{conn: conn, user: user} do
