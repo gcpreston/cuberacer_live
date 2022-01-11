@@ -3,22 +3,22 @@ defmodule CuberacerLiveWeb.UserRegistrationControllerTest do
 
   import CuberacerLive.AccountsFixtures
 
-  describe "GET /users/register" do
+  describe "GET /signup" do
     test "renders registration page", %{conn: conn} do
       conn = get(conn, Routes.user_registration_path(conn, :new))
       response = html_response(conn, 200)
-      assert response =~ "Register</h1>"
-      assert response =~ "Register</button>"
+      assert response =~ "Welcome</h1>"
+      assert response =~ "Sign up</button>"
       assert response =~ "Log in</a>"
     end
 
     test "redirects if already logged in", %{conn: conn} do
       conn = conn |> log_in_user(user_fixture()) |> get(Routes.user_registration_path(conn, :new))
-      assert redirected_to(conn) == "/"
+      assert redirected_to(conn) == "/lobby"
     end
   end
 
-  describe "POST /users/register" do
+  describe "POST /signup" do
     @tag :capture_log
     test "creates account and logs the user in", %{conn: conn} do
       {email, username} = unique_email_and_username()
@@ -29,10 +29,10 @@ defmodule CuberacerLiveWeb.UserRegistrationControllerTest do
         })
 
       assert get_session(conn, :user_token)
-      assert redirected_to(conn) == "/"
+      assert redirected_to(conn) == "/lobby"
 
       # Now do a logged in request and assert on the menu
-      conn = get(conn, "/")
+      conn = get(conn, "/lobby")
       response = html_response(conn, 200)
       assert response =~ username
       assert response =~ "Settings</a>"
@@ -46,7 +46,7 @@ defmodule CuberacerLiveWeb.UserRegistrationControllerTest do
         })
 
       response = html_response(conn, 200)
-      assert response =~ "Register</h1>"
+      assert response =~ "Welcome</h1>"
       assert response =~ "must have the @ sign and no spaces"
       assert response =~ "should be at least 12 character"
     end

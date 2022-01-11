@@ -13,18 +13,18 @@ defmodule CuberacerLiveWeb.Router do
     plug :fetch_current_user
   end
 
-  pipeline :api do
-    plug :accepts, ["json"]
+  pipeline :browser_with_navbar do
+    plug :accepts, ["html"]
+    plug :fetch_session
+    plug :fetch_live_flash
+    plug :put_root_layout, {CuberacerLiveWeb.LayoutView, :root_with_navbar}
+    plug :protect_from_forgery
+    plug :put_secure_browser_headers
+    plug :fetch_current_user
   end
 
-  scope "/", CuberacerLiveWeb do
-    pipe_through :browser
-
-    get "/", PageController, :index
-
-    live "/lobby", GameLive.Lobby, :index
-    live "/lobby/new", GameLive.Lobby, :new
-    live "/room/:id", GameLive.Room, :show
+  pipeline :api do
+    plug :accepts, ["json"]
   end
 
   # Other scopes may use custom stacks.
@@ -66,10 +66,13 @@ defmodule CuberacerLiveWeb.Router do
   scope "/", CuberacerLiveWeb do
     pipe_through [:browser, :redirect_if_user_is_authenticated]
 
-    get "/users/register", UserRegistrationController, :new
-    post "/users/register", UserRegistrationController, :create
-    get "/users/log_in", UserSessionController, :new
-    post "/users/log_in", UserSessionController, :create
+    get "/", PageController, :index
+
+    get "/signup", UserRegistrationController, :new
+    post "/signup", UserRegistrationController, :create
+    get "/login", UserSessionController, :new
+    post "/login", UserSessionController, :create
+
     get "/users/reset_password", UserResetPasswordController, :new
     post "/users/reset_password", UserResetPasswordController, :create
     get "/users/reset_password/:token", UserResetPasswordController, :edit
@@ -77,7 +80,11 @@ defmodule CuberacerLiveWeb.Router do
   end
 
   scope "/", CuberacerLiveWeb do
-    pipe_through [:browser, :require_authenticated_user]
+    pipe_through [:browser_with_navbar, :require_authenticated_user]
+
+    live "/lobby", GameLive.Lobby, :index
+    live "/lobby/new", GameLive.Lobby, :new
+    live "/room/:id", GameLive.Room, :show
 
     get "/users/settings", UserSettingsController, :edit
     put "/users/settings", UserSettingsController, :update
