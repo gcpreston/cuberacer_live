@@ -1,1 +1,8 @@
-<a href="/lobby">Lobby</a>
+<div class="text-center my-40">
+  <h1 class="text-3xl font-bold my-3">Cuberacer</h1>
+  <span>
+    <%= link "Log in", to: Routes.user_session_path(@conn, :new), class: "text-blue-500 hover:underline" %>
+    ·
+    <%= link "Sign up", to: Routes.user_registration_path(@conn, :new), class: "text-blue-500 hover:underline" %>
+  </span>
+</div>
