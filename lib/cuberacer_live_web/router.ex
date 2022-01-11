@@ -73,10 +73,10 @@ defmodule CuberacerLiveWeb.Router do
     get "/login", UserSessionController, :new
     post "/login", UserSessionController, :create
 
-    get "/users/reset_password", UserResetPasswordController, :new
-    post "/users/reset_password", UserResetPasswordController, :create
-    get "/users/reset_password/:token", UserResetPasswordController, :edit
-    put "/users/reset_password/:token", UserResetPasswordController, :update
+    get "/reset_password", UserResetPasswordController, :new
+    post "/reset_password", UserResetPasswordController, :create
+    get "/reset_password/:token", UserResetPasswordController, :edit
+    put "/reset_password/:token", UserResetPasswordController, :update
   end
 
   scope "/", CuberacerLiveWeb do
