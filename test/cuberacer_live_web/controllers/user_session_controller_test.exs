@@ -7,7 +7,7 @@ defmodule CuberacerLiveWeb.UserSessionControllerTest do
     %{user: user_fixture()}
   end
 
-  describe "GET /users/log_in" do
+  describe "GET /login" do
     test "renders log in page", %{conn: conn} do
       conn = get(conn, Routes.user_session_path(conn, :new))
       response = html_response(conn, 200)
@@ -22,7 +22,7 @@ defmodule CuberacerLiveWeb.UserSessionControllerTest do
     end
   end
 
-  describe "POST /users/log_in" do
+  describe "POST /login" do
     test "logs the user in", %{conn: conn, user: user} do
       conn =
         post(conn, Routes.user_session_path(conn, :create), %{
