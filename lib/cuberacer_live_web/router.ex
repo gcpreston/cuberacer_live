@@ -13,16 +13,18 @@ defmodule CuberacerLiveWeb.Router do
     plug :fetch_current_user
   end
 
-  pipeline :api do
-    plug :accepts, ["json"]
+  pipeline :browser_with_navbar do
+    plug :accepts, ["html"]
+    plug :fetch_session
+    plug :fetch_live_flash
+    plug :put_root_layout, {CuberacerLiveWeb.LayoutView, :root_with_navbar}
+    plug :protect_from_forgery
+    plug :put_secure_browser_headers
+    plug :fetch_current_user
   end
 
-  scope "/", CuberacerLiveWeb do
-    pipe_through :browser
-
-    live "/lobby", GameLive.Lobby, :index
-    live "/lobby/new", GameLive.Lobby, :new
-    live "/room/:id", GameLive.Room, :show
+  pipeline :api do
+    plug :accepts, ["json"]
   end
 
   # Other scopes may use custom stacks.
@@ -78,7 +80,7 @@ defmodule CuberacerLiveWeb.Router do
   end
 
   scope "/", CuberacerLiveWeb do
-    pipe_through [:browser, :require_authenticated_user]
+    pipe_through [:browser_with_navbar, :require_authenticated_user]
 
     live "/lobby", GameLive.Lobby, :index
     live "/lobby/new", GameLive.Lobby, :new
