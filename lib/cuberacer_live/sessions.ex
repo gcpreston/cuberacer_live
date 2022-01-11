@@ -8,7 +8,7 @@ defmodule CuberacerLive.Sessions do
 
   alias CuberacerLive.Sessions.{Session, Round, Solve}
   alias CuberacerLive.Accounts.User
-  alias CuberacerLive.Cubing.Penalty
+  alias CuberacerLive.Cubing.{CubeType, Penalty}
 
   @topic inspect(__MODULE__)
 
@@ -67,6 +67,35 @@ defmodule CuberacerLive.Sessions do
     |> Session.changeset(attrs)
     |> Repo.insert()
     |> notify_subscribers([:session, :created])
+  end
+
+  @doc """
+  Creates a session and an initial round.
+
+  ## Examples
+
+      iex> create_session_and_round("my cool sesh", %CubeType{})
+      {:ok, %Session{}, %Round{}}
+
+      iex> create_session_and_round(nil, %CubeType{})
+      {:error, %Ecto.Changeset{}}
+
+      iex> create_session_and_round("my cool sesh", some_cube_type_id)
+      {:ok, %Session{}, %Round{}}
+
+  """
+  def create_session_and_round(name, %CubeType{} = cube_type) do
+    create_session_and_round(name, cube_type.id)
+  end
+
+  def create_session_and_round(name, cube_type_id) do
+    with {:ok, session} <- create_session(%{name: name, cube_type_id: cube_type_id}),
+         {:ok, round} <- create_round(%{session_id: session.id})
+    do
+      {:ok, session, round}
+    else
+      err -> err
+    end
   end
 
   @doc """
