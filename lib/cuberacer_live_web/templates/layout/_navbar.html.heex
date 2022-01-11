@@ -1,4 +1,4 @@
-<nav class="bg-gray-800" x-data="{ mobileMenuOpen: false }">
+<nav class="bg-zinc-800" x-data="{ mobileMenuOpen: false }">
   <div class="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
     <div class="relative flex items-center justify-between h-16">
       <div class="absolute inset-y-0 left-0 flex items-center sm:hidden">
@@ -29,14 +29,11 @@
       </div>
       <div class="flex-1 flex items-center justify-center sm:items-stretch sm:justify-start">
         <div class="flex-shrink-0 flex items-center">
-          <a href={Routes.page_path(@conn, :index)}><img class="block lg:hidden h-8 w-auto" src="https://tailwindui.com/img/logos/workflow-mark-indigo-500.svg" alt="Workflow"></a>
-          <a href={Routes.page_path(@conn, :index)}><img class="hidden lg:block h-8 w-auto" src="https://tailwindui.com/img/logos/workflow-logo-indigo-500-mark-white-text.svg" alt="Workflow"></a>
+          <a href={Routes.game_lobby_path(@conn, :index)} class="block lg:hidden h-8 w-auto"><span class="text-yellow-400 text-3xl">C</span><span class="text-red-600 text-3xl">R</span></a>
+          <a href={Routes.game_lobby_path(@conn, :index)} class="hidden lg:block h-8 w-auto"><span class="text-yellow-400 text-3xl">C</span><span class="text-white">ube</span><span class="text-red-600 text-3xl">R</span><span class="text-white">acer</span></a>
         </div>
         <div class="hidden sm:block sm:ml-6">
           <div class="flex space-x-4">
-            <!-- Current: "bg-gray-900 text-white", Default: "text-gray-300 hover:bg-gray-700 hover:text-white" -->
-            <a href={Routes.game_lobby_path(@conn, :index)} class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium" aria-current="page">Lobby</a>
-
             <%= if function_exported?(Routes, :live_dashboard_path, 2) do %>
               <%= link "LiveDashboard", to: Routes.live_dashboard_path(@conn, :home), class: "text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium" %>
             <% end %>
