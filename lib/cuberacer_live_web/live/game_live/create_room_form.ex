@@ -27,9 +27,9 @@ defmodule CuberacerLiveWeb.GameLive.CreateRoomForm do
     save_session(socket, socket.assigns.action, session_params)
   end
 
-  defp save_session(socket, :new, session_params) do
-    case Sessions.create_session(session_params) do
-      {:ok, _session} ->
+  defp save_session(socket, :new, %{"name" => name, "cube_type_id" => cube_type_id}) do
+    case Sessions.create_session_and_round(name, cube_type_id) do
+      {:ok, _session, _round} ->
         {:noreply,
          socket
          |> put_flash(:info, "Session created successfully")

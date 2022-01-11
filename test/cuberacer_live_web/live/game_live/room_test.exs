@@ -17,9 +17,8 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
     %{user: user}
   end
 
-  defp create_session(_) do
+  defp create_session_and_round(_) do
     session = session_fixture()
-    # TODO: Each session should have a first round by default, so this doesn't have to happen.
     round = round_fixture(%{session_id: session.id})
 
     %{session: session, round: round}
@@ -34,7 +33,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
     %{conn: log_in_user(conn, user)}
   end
 
-  setup [:create_user, :create_session, :create_penalty]
+  setup [:create_user, :create_session_and_round, :create_penalty]
 
   describe "mount" do
     test "redirects if no user token", %{conn: conn, session: session} do

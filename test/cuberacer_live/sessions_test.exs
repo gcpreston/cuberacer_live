@@ -4,7 +4,7 @@ defmodule CuberacerLive.SessionsTest do
   alias CuberacerLive.Sessions
 
   describe "sessions" do
-    alias CuberacerLive.Sessions.Session
+    alias CuberacerLive.Sessions.{Session, Round}
 
     import CuberacerLive.SessionsFixtures
     import CuberacerLive.CubingFixtures
@@ -27,6 +27,7 @@ defmodule CuberacerLive.SessionsTest do
 
       assert {:ok, %Session{} = session} = Sessions.create_session(valid_attrs)
       assert session.name == "some name"
+      assert session.cube_type_id == cube_type.id
     end
 
     test "create_session/1 with no name returns error changeset" do
@@ -36,7 +37,7 @@ defmodule CuberacerLive.SessionsTest do
       assert {:error, %Ecto.Changeset{}} = Sessions.create_session(invalid_attrs)
     end
 
-    test "create_session/1 with no cube type error changeset" do
+    test "create_session/1 with no cube type returns error changeset" do
       invalid_attrs = %{name: "some name", cube_type_id: nil}
 
       assert {:error, %Ecto.Changeset{}} = Sessions.create_session(invalid_attrs)
@@ -54,6 +55,57 @@ defmodule CuberacerLive.SessionsTest do
     test "create_session/1 with invalid data does not broadcast" do
       Sessions.subscribe()
       {:error, _reason} = Sessions.create_session(@invalid_attrs)
+
+      refute_receive {Sessions, _, _}
+    end
+
+    test "create_session_and_round/2 with valid data creates a session and a round" do
+      cube_type = cube_type_fixture()
+
+      assert {:ok, %Session{} = session, %Round{} = round} =
+               Sessions.create_session_and_round("some name", cube_type)
+
+      assert session.name == "some name"
+      assert session.cube_type_id == cube_type.id
+      assert round.session_id == session.id
+    end
+
+    test "create_session_and_round/2 can be passed a cube type ID" do
+      %{id: cube_type_id} = cube_type_fixture()
+
+      assert {:ok, %Session{} = session, %Round{} = round} =
+               Sessions.create_session_and_round("some name", cube_type_id)
+
+      assert session.name == "some name"
+      assert session.cube_type_id == cube_type_id
+      assert round.session_id == session.id
+    end
+
+    test "create_session_and_round/2 with no name returns error changeset" do
+      cube_type = cube_type_fixture()
+
+      assert {:error, %Ecto.Changeset{}} = Sessions.create_session_and_round(nil, cube_type)
+    end
+
+    test "create_session_and_round/2 with no cube type returns error changeset" do
+      assert {:error, %Ecto.Changeset{}} = Sessions.create_session_and_round("some name", nil)
+    end
+
+    test "create_session_and_round/2 broadcasts to the context topic" do
+      cube_type = cube_type_fixture()
+      Sessions.subscribe()
+      {:ok, session, _round} = Sessions.create_session_and_round("some name", cube_type)
+
+      assert_receive {Sessions, [:session, :created], ^session}
+      # NOTE: The round should also be broadcasted, but only to the session topic, which
+      # can't be subscribed to in time because create_session_and_round/2 is synchronous.
+      # This is not relevant to the use case of the function, and there are separate tests
+      # for this functionality of create_round/1, so I'm not concerned about it.
+    end
+
+    test "create_session_and_round/2 with invalid data does not broadcast" do
+      Sessions.subscribe()
+      {:error, _reason} = Sessions.create_session_and_round("some name", nil)
 
       refute_receive {Sessions, _, _}
     end
