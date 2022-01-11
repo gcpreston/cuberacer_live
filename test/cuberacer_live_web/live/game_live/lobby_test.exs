@@ -5,6 +5,8 @@ defmodule CuberacerLive.GameLive.LobbyTest do
   import CuberacerLive.SessionsFixtures
   import CuberacerLive.CubingFixtures
 
+  setup :register_and_log_in_user
+
   describe ":index" do
     test "displays all sessions", %{conn: conn} do
       session = session_fixture() |> CuberacerLive.Repo.preload(:cube_type)
@@ -23,6 +25,12 @@ defmodule CuberacerLive.GameLive.LobbyTest do
       |> render_click()
 
       assert_patch(live, Routes.game_lobby_path(conn, :new))
+    end
+
+    test "redirects if user is not logged in" do
+      conn = build_conn()
+      conn = get(conn, Routes.game_lobby_path(conn, :index))
+      assert redirected_to(conn) == Routes.user_session_path(conn, :new)
     end
   end
 
@@ -70,6 +78,12 @@ defmodule CuberacerLive.GameLive.LobbyTest do
 
       refute_redirected(live, Routes.game_lobby_path(conn, :index))
       assert_html(html, ~s(.invalid-feedback[phx-feedback-for="session[name]"), text: "can't be blank")
+    end
+
+    test "redirects if user is not logged in" do
+      conn = build_conn()
+      conn = get(conn, Routes.game_lobby_path(conn, :new))
+      assert redirected_to(conn) == Routes.user_session_path(conn, :new)
     end
   end
 end
