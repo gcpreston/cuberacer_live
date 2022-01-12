@@ -12,7 +12,7 @@ export default () => ({
   interval: null,
   readyTimeout: null,
   ready: false,
-  submit: false,
+  hasCurrentSolve: null, // shadows assign has_current_solve?
 
   get formattedTime() {
     const secondsVal = Math.floor(this.clock / 1000) % 60;
@@ -44,7 +44,7 @@ export default () => ({
   },
 
   handleSpaceDown() {
-    if (!this.$store.inputFocused) {
+    if (!this.$store.inputFocused && !this.hasCurrentSolve) {
       if (this.interval) {
         this.stopTime();
       } else if (!this.readyTimeout) {
