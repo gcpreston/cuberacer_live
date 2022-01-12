@@ -75,10 +75,7 @@ defmodule CuberacerLive.GameLive.Components do
           <tr>
             <%= for user <- @present_users do %>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                <%= user.email%>
-                <%= if user.id == @current_user.id do %>
-                  <span> (you)</span>
-                <% end %>
+                <%= user.username %>
               </th>
             <% end %>
           </tr>

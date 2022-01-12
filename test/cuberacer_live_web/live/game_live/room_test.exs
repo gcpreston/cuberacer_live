@@ -68,7 +68,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       solve = solve_fixture(%{user_id: user.id, round_id: round.id}) |> Repo.preload([:penalty])
 
       assert {:ok, _view, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
-      assert html =~ user.email
+      assert html =~ user.username
       assert html =~ Sessions.display_solve(solve)
     end
 
@@ -86,8 +86,8 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
         |> Repo.preload([:penalty])
 
       assert {:ok, _view, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
-      assert html =~ user.email
-      refute html =~ other_user.email
+      assert html =~ user.username
+      refute html =~ other_user.username
     end
 
     test "displays messages in appropriate room", %{conn: conn, session: session1, user: user} do
@@ -420,12 +420,12 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
 
       {:ok, view, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
 
-      refute html =~ other_user.email
+      refute html =~ other_user.username
 
       live(other_conn, Routes.game_room_path(other_conn, :show, session.id))
 
       html = render(view)
-      assert html =~ other_user.email
+      assert html =~ other_user.username
       assert html =~ Sessions.display_solve(solve)
     end
 
@@ -451,13 +451,13 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
 
       {:ok, view, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
 
-      assert html =~ other_user.email
+      assert html =~ other_user.username
       assert html =~ Sessions.display_solve(solve)
 
       other_session = session_fixture()
       live_redirect(other_view, to: "/#{other_session.id}")
 
-      refute render(view) =~ other_user.email
+      refute render(view) =~ other_user.username
     end
   end
 end
