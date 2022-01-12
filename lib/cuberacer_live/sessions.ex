@@ -10,9 +10,9 @@ defmodule CuberacerLive.Sessions do
   alias CuberacerLive.Accounts.User
   alias CuberacerLive.Cubing.{CubeType, Penalty}
 
-  # For now, any session created in the last 2 hours is active. This is
+  # For now, any session created in the last 24 hours is active. This is
   # a temporary solution while a more sophisticated one is in the works.
-  @session_active_lifetime_ms 60 * 60 * 2
+  @session_active_lifetime_ms 60 * 60 * 24
   @topic inspect(__MODULE__)
 
   def subscribe do
