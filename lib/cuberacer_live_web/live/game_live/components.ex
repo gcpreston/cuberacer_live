@@ -69,22 +69,22 @@ defmodule CuberacerLive.GameLive.Components do
 
   def times_table(assigns) do
     ~H"""
-    <div id="times-table" class="flex flex-col my-4">
-      <table class="divide-y divide-gray-200">
-        <thead class="bg-gray-50">
+    <div id="times-table" class="flex flex-col">
+      <table class="divide-y divide-gray-200 border-separate">
+        <thead class="bg-gray-50 sticky top-0">
           <tr>
             <%= for user <- @present_users do %>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th scope="col" class="border-y px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 <%= user.username %>
               </th>
             <% end %>
           </tr>
         </thead>
-        <tbody id="times-table-body" class="bg-white divide-y divide-gray-200" phx-update="prepend">
+        <tbody id="times-table-body" class="bg-white" phx-update="prepend">
           <%= for round <- @rounds do %>
             <tr id={"round-#{round.id}"} class="t_round-row">
               <%= for user <- @present_users do %>
-                <td id={"round-#{round.id}-solve-user-#{user.id}"} class="px-6 py-4 whitespace-nowrap">
+                <td id={"round-#{round.id}-solve-user-#{user.id}"} class="border-b px-6 py-4 whitespace-nowrap">
                   <div class="ml-4">
                     <div class="text-sm font-medium text-gray-900">
                       <%= Sessions.display_solve(user_solve_for_round(user, round)) %>
