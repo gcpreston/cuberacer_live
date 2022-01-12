@@ -10,6 +10,7 @@ defmodule CuberacerLive.GameLive.Components do
     <div
       id="timer"
       x-data="timer"
+      x-init={"hasCurrentSolve = #{@has_current_solve?}"}
       @keydown.space.window="handleSpaceDown"
       @keyup.space.window.prevent="handleSpaceUp"
       phx-hook="Timer"

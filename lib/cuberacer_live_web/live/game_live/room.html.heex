@@ -5,7 +5,7 @@
 
       <div class="my-3">
         <span class="t_scramble"><%= current_scramble(@rounds) %></span>
-        <.timer />
+        <.timer has_current_solve?={@has_current_solve?} />
         <.penalty_input />
       </div>
 
