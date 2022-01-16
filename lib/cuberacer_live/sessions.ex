@@ -3,6 +3,14 @@ defmodule CuberacerLive.Sessions do
   The Sessions context.
   """
 
+  ## DATA DEFINITIONS
+
+  # A time is a int, the number of milliseconds a solve took.
+
+  # A stat is a float, a calculation on a set of times.
+
+  ## ----------------
+
   import Ecto.Query, warn: false
 
   alias CuberacerLive.Repo
@@ -457,6 +465,17 @@ defmodule CuberacerLive.Sessions do
       %Solve{penalty: %Penalty{name: "+2"}} -> ms_to_sec_str(solve.time + 2000) <> "+"
       %Solve{penalty: %Penalty{name: "DNF"}} -> "DNF"
     end
+  end
+
+  @doc """
+  Return the string representation of a stat.
+  """
+  def display_stat(:dnf) do
+    "DNF"
+  end
+
+  def display_stat(time) do
+    time |> trunc() |> ms_to_sec_str()
   end
 
   @doc """

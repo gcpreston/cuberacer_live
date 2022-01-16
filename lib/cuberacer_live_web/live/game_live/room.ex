@@ -36,6 +36,7 @@ defmodule CuberacerLiveWeb.GameLive.Room do
           |> fetch_present_users()
           |> fetch_rounds()
           |> fetch_has_current_solve?()
+          |> fetch_stats()
           |> fetch_room_messages()
       end
 
@@ -76,6 +77,12 @@ defmodule CuberacerLiveWeb.GameLive.Room do
     assign(socket, has_current_solve?: has_current_solve?)
   end
 
+  defp fetch_stats(socket) do
+    %{session: session, current_user: user} = socket.assigns
+    stats = Sessions.current_stats(session, user)
+    assign(socket, stats: stats)
+  end
+
   defp fetch_present_users(socket) do
     present_users =
       for {_user_id_str, info} <- Presence.list(presence_topic(socket.assigns.session_id)) do
@@ -106,7 +113,10 @@ defmodule CuberacerLiveWeb.GameLive.Room do
       Cubing.get_penalty("OK")
     )
 
-    {:noreply, assign(socket, :has_current_solve?, true)}
+    {:noreply,
+     socket
+     |> assign(:has_current_solve?, true)
+     |> fetch_stats()}
   end
 
   @impl true

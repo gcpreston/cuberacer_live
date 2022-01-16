@@ -67,36 +67,56 @@ defmodule CuberacerLive.GameLive.Components do
     """
   end
 
+  def stats(assigns) do
+    ~H"""
+    <table class="w-full">
+      <thead class="bg-gray-50">
+        <tr>
+          <th scope="col" class="border-y px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            Stats
+          </th>
+        </tr>
+      </thead>
+      <tbody class="bg-white">
+        <tr>
+          <td class="px-6 whitespace-nowrap">ao5: <span class="t_ao5"><%= Sessions.display_stat(@stats.avg5) %></span></td>
+        </tr>
+        <tr>
+          <td class="px-6 whitespace-nowrap">ao12: <span class="t_ao12"><%= Sessions.display_stat(@stats.avg12) %></span></td>
+        </tr>
+      </tbody>
+    </table>
+    """
+  end
+
   def times_table(assigns) do
     ~H"""
-    <div id="times-table" class="flex flex-col">
-      <table class="divide-y divide-gray-200 border-separate">
-        <thead class="bg-gray-50 sticky top-0">
-          <tr>
+    <table class="w-full border-separate [border-spacing:0]">
+      <thead class="bg-gray-50 sticky top-0">
+        <tr>
+          <%= for user <- @present_users do %>
+            <th scope="col" class="border-y px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <%= user.username %>
+            </th>
+          <% end %>
+        </tr>
+      </thead>
+      <tbody id="times-table-body" class="bg-white" phx-update="prepend">
+        <%= for round <- @rounds do %>
+          <tr id={"round-#{round.id}"} class="t_round-row">
             <%= for user <- @present_users do %>
-              <th scope="col" class="border-y px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                <%= user.username %>
-              </th>
+              <td id={"round-#{round.id}-solve-user-#{user.id}"} class="border-b px-6 py-4 whitespace-nowrap">
+                <div class="ml-4">
+                  <div class="text-sm font-medium text-gray-900">
+                    <%= Sessions.display_solve(user_solve_for_round(user, round)) %>
+                  </div>
+                </div>
+              </td>
             <% end %>
           </tr>
-        </thead>
-        <tbody id="times-table-body" class="bg-white" phx-update="prepend">
-          <%= for round <- @rounds do %>
-            <tr id={"round-#{round.id}"} class="t_round-row">
-              <%= for user <- @present_users do %>
-                <td id={"round-#{round.id}-solve-user-#{user.id}"} class="border-b px-6 py-4 whitespace-nowrap">
-                  <div class="ml-4">
-                    <div class="text-sm font-medium text-gray-900">
-                      <%= Sessions.display_solve(user_solve_for_round(user, round)) %>
-                    </div>
-                  </div>
-                </td>
-              <% end %>
-            </tr>
-          <% end %>
-        </tbody>
-      </table>
-    </div>
+        <% end %>
+      </tbody>
+    </table>
     """
   end
 
