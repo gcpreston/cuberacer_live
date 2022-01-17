@@ -62,7 +62,7 @@ defmodule CuberacerLive.GameLive.Components do
           x-on:keydown.enter="sendMessage"
           phx-hook="ChatInput"
         />
-        <button @click="sendMessage" class="font-medium mr-2 text-cyan-600">Send</button>
+        <button @click="sendMessage" class="font-medium mr-2 text-cyan-600 hover:text-cyan-800">Send</button>
       </div>
     </div>
     """
