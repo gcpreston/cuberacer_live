@@ -120,27 +120,9 @@ defmodule CuberacerLiveWeb.GameLive.Room do
   end
 
   @impl true
-  def handle_event("penalty-ok", _value, socket) do
+  def handle_event("change-penalty", %{"name" => name}, socket) do
     if solve = Sessions.get_current_solve(socket.assigns.session, socket.assigns.current_user) do
-      Sessions.change_penalty(solve, Cubing.get_penalty("OK"))
-    end
-
-    {:noreply, socket}
-  end
-
-  @impl true
-  def handle_event("penalty-plus2", _value, socket) do
-    if solve = Sessions.get_current_solve(socket.assigns.session, socket.assigns.current_user) do
-      Sessions.change_penalty(solve, Cubing.get_penalty("+2"))
-    end
-
-    {:noreply, socket}
-  end
-
-  @impl true
-  def handle_event("penalty-dnf", _value, socket) do
-    if solve = Sessions.get_current_solve(socket.assigns.session, socket.assigns.current_user) do
-      Sessions.change_penalty(solve, Cubing.get_penalty("DNF"))
+      Sessions.change_penalty(solve, Cubing.get_penalty(name))
     end
 
     {:noreply, socket}

@@ -234,7 +234,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       |> assert_html(".t_ao12", text: Sessions.display_stat(stats.ao12))
     end
 
-    test "penalty-ok sets an OK penalty for the user's solve in the current round", %{
+    test "change-penalty OK sets an OK penalty for the user's solve in the current round", %{
       conn: conn1,
       user: user1,
       session: session,
@@ -264,7 +264,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       assert html =~ Sessions.display_solve(solve2)
       assert html =~ Sessions.display_solve(solve3)
 
-      render_click(view, "penalty-ok")
+      render_click(view, "change-penalty", %{"name" => "OK"})
       updated_solve2 = Sessions.get_solve!(solve2.id) |> Repo.preload(:penalty)
       html = render(view)
 
@@ -275,7 +275,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       assert html =~ Sessions.display_solve(solve3)
     end
 
-    test "penalty-ok does nothing if the user has no solve for the current round", %{
+    test "change-penalty OK does nothing if the user has no solve for the current round", %{
       conn: conn,
       user: user,
       session: session,
@@ -290,13 +290,13 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       assert html =~ Sessions.display_solve(solve)
       assert html =~ Sessions.display_solve(nil)
 
-      render_click(view, "penalty-ok")
+      render_click(view, "change-penalty", %{"name" => "OK"})
 
       assert html =~ Sessions.display_solve(solve)
       assert html =~ Sessions.display_solve(nil)
     end
 
-    test "penalty-plus2 sets a +2 penalty for the user's solve in the current round", %{
+    test "change-penalty +2 sets a +2 penalty for the user's solve in the current round", %{
       conn: conn1,
       user: user1,
       session: session,
@@ -318,7 +318,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       assert html =~ Sessions.display_solve(solve2)
       assert html =~ Sessions.display_solve(solve3)
 
-      render_click(view, "penalty-plus2")
+      render_click(view, "change-penalty", %{"name" => "+2"})
       updated_solve2 = Sessions.get_solve!(solve2.id) |> Repo.preload(:penalty)
       html = render(view)
 
@@ -329,7 +329,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       assert html =~ Sessions.display_solve(solve3)
     end
 
-    test "penalty-plus2 does nothing if the user has no solve for the current round", %{
+    test "change-penalty +2 does nothing if the user has no solve for the current round", %{
       conn: conn,
       user: user,
       session: session,
@@ -343,13 +343,13 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       assert html =~ Sessions.display_solve(solve)
       assert html =~ Sessions.display_solve(nil)
 
-      render_click(view, "penalty-plus2")
+      render_click(view, "change-penalty", %{"name" => "+2"})
 
       assert html =~ Sessions.display_solve(solve)
       assert html =~ Sessions.display_solve(nil)
     end
 
-    test "penalty-dnf sets a DNF penalty for the user's solve in the current round", %{
+    test "change-penalty DNF sets a DNF penalty for the user's solve in the current round", %{
       conn: conn1,
       user: user1,
       session: session,
@@ -371,7 +371,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       assert html =~ Sessions.display_solve(solve2)
       assert html =~ Sessions.display_solve(solve3)
 
-      render_click(view, "penalty-dnf")
+      render_click(view, "change-penalty", %{"name" => "DNF"})
       updated_solve2 = Sessions.get_solve!(solve2.id) |> Repo.preload(:penalty)
       html = render(view)
 
@@ -382,7 +382,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       assert html =~ Sessions.display_solve(solve3)
     end
 
-    test "penalty-dnf does nothing if the user has no solve for the current round", %{
+    test "change-penalty DNF does nothing if the user has no solve for the current round", %{
       conn: conn,
       user: user,
       session: session,
@@ -396,7 +396,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       assert html =~ Sessions.display_solve(solve)
       assert html =~ Sessions.display_solve(nil)
 
-      render_click(view, "penalty-dnf")
+      render_click(view, "change-penalty", %{"name" => "DNF"})
 
       assert html =~ Sessions.display_solve(solve)
       assert html =~ Sessions.display_solve(nil)

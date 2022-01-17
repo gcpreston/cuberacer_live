@@ -23,7 +23,7 @@ defmodule CuberacerLive.GameLive.Components do
   def penalty_input(assigns) do
     ~H"""
     <div id="penalty-input">
-      <button phx-click="penalty-ok">OK</button> | <button phx-click="penalty-plus2">+2</button> | <button phx-click="penalty-dnf">DNF</button>
+      <button phx-click="change-penalty" phx-value-name="OK">OK</button> | <button phx-click="change-penalty" phx-value-name="+2">+2</button> | <button phx-click="change-penalty" phx-value-name="DNF">DNF</button>
     </div>
     """
   end
