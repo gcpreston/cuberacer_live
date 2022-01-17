@@ -1,18 +1,19 @@
 <div class="flex flex-row h-full">
   <div class="flex-1 flex flex-col">
     <div class="flex-1 p-4">
-      <h1 class="text-xl font-bold"><%= @session.name %></h1>
+      <h1 class="text-xl font-bold mb-6"><%= @session.name %></h1>
 
-      <div class="my-3">
-        <span class="t_scramble"><%= current_scramble(@rounds) %></span>
-        <.timer has_current_solve?={@has_current_solve?} />
+      <div class="my-3 mx-auto text-center">
+        <div class="text-xl t_scramble"><%= current_scramble(@rounds) %></div>
+        <div class="text-6xl my-4"><.timer has_current_solve?={@has_current_solve?} /></div>
         <.penalty_input />
+
+        <button id="new-round-button" phx-click="new-round" class="px-4 py-2 mt-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium bg-white hover:bg-gray-50">New round</button>
       </div>
 
-      <button id="new-round-button" phx-click="new-round" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">New round</button>
     </div>
 
-    <div class="h-60">
+    <div class="h-64">
       <div class="flex flex-row h-full">
         <div class="border-r">
           <.stats stats={@stats} />
