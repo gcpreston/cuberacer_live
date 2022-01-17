@@ -125,7 +125,7 @@ defmodule CuberacerLiveWeb.GameLive.Room do
       Sessions.change_penalty(solve, Cubing.get_penalty(name))
     end
 
-    {:noreply, socket}
+    {:noreply, socket |> fetch_stats()}
   end
 
   @impl true

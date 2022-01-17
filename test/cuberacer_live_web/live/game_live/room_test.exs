@@ -402,6 +402,27 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       assert html =~ Sessions.display_solve(nil)
     end
 
+    test "change-penalty fetches stats", %{conn: conn, user: user, session: session, round: round1} do
+      penalty_dnf = penalty_fixture(name: "DNF")
+      _solve1 = solve_fixture(user_id: user.id, round_id: round1.id)
+      round2 = round_fixture(session: session)
+      _solve2 = solve_fixture(user_id: user.id, round_id: round2.id)
+      round3 = round_fixture(session: session)
+      _solve3 = solve_fixture(user_id: user.id, round_id: round3.id)
+      round4 = round_fixture(session: session)
+      _solve4 = solve_fixture(user_id: user.id, round_id: round4.id, penalty_id: penalty_dnf.id)
+      round5 = round_fixture(session: session)
+      _solve5 = solve_fixture(user_id: user.id, round_id: round5.id)
+
+      {:ok, view, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
+
+      refute_html(html, ".t_ao5", text: "DNF")
+
+      html = view |> render_click("change-penalty", %{"name" => "DNF"})
+
+      assert_html(html, ".t_ao5", text: "DNF")
+    end
+
     test "send-message creates and sends messages", %{conn: conn, user: user, session: session} do
       {:ok, view, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
 
