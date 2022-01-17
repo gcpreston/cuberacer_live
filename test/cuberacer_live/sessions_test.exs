@@ -100,7 +100,7 @@ defmodule CuberacerLive.SessionsTest do
       # NOTE: The round should also be broadcasted, but only to the session topic, which
       # can't be subscribed to in time because create_session_and_round/2 is synchronous.
       # This is not relevant to the use case of the function, and there are separate tests
-      # for this functionality of create_round/1, so I'm not concerned about it.
+      # for this functionality of create_round/2, so I'm not concerned about it.
     end
 
     test "create_session_and_round/2 with invalid data does not broadcast" do
@@ -208,8 +208,8 @@ defmodule CuberacerLive.SessionsTest do
 
     test "list_rounds_of_session/3 returns all rounds of a session, preloaded" do
       session = session_fixture()
-      round1 = round_fixture(session_id: session.id)
-      round2 = round_fixture(session_id: session.id)
+      round1 = round_fixture(session: session)
+      round2 = round_fixture(session: session)
       _solve1 = solve_fixture(round_id: round1.id)
       _solve2 = solve_fixture(round_id: round1.id)
       _solve3 = solve_fixture(round_id: round2.id)
@@ -228,8 +228,8 @@ defmodule CuberacerLive.SessionsTest do
 
     test "list_rounds_of_session/3 descending order" do
       session = session_fixture()
-      round1 = round_fixture(session_id: session.id)
-      round2 = round_fixture(session_id: session.id)
+      round1 = round_fixture(session: session)
+      round2 = round_fixture(session: session)
 
       actual_rounds = Sessions.list_rounds_of_session(session, :desc)
       assert Enum.map(actual_rounds, & &1.id) == [round2.id, round1.id]
@@ -242,60 +242,55 @@ defmodule CuberacerLive.SessionsTest do
 
     test "get_current_round/1 gets the current round" do
       session = session_fixture()
-      _round1 = round_fixture(session_id: session.id)
-      round2 = round_fixture(session_id: session.id)
+      _round1 = round_fixture(session: session)
+      round2 = round_fixture(session: session)
 
       assert Sessions.get_current_round!(session) == round2
     end
 
-    test "create_round/1 with valid data creates a round" do
+    test "create_round/2 with valid data creates a round" do
       session = session_fixture()
 
-      valid_attrs = %{scramble: "some scramble", session_id: session.id}
-
-      assert {:ok, %Round{} = round} = Sessions.create_round(valid_attrs)
-      assert round.scramble == "some scramble"
+      assert {:ok, %Round{} = round} = Sessions.create_round(session)
+      assert round.scramble != nil
       assert round.session_id == session.id
     end
 
-    test "create_round/1 with no scramble returns error changeset" do
+    test "create_round/2 can be passed a scramble" do
       session = session_fixture()
+      scramble = Whisk.scramble("3x3")
 
-      invalid_attrs = %{scramble: nil, session_id: session.id}
-
-      assert {:error, %Ecto.Changeset{}} = Sessions.create_round(invalid_attrs)
+      assert {:ok, %Round{} = round} = Sessions.create_round(session, scramble)
+      assert round.scramble == scramble
+      assert round.session_id == session.id
     end
 
-    test "create_round/1 with no session returns error changeset" do
-      invalid_attrs = %{scramble: "some scramble", session_id: nil}
-
-      assert {:error, %Ecto.Changeset{}} = Sessions.create_round(invalid_attrs)
+    test "create_round/2 with invalid data returns error changeset" do
+      session = session_fixture()
+      assert {:error, %Ecto.Changeset{}} = Sessions.create_round(session, true)
     end
 
-    test "create_round/1 broadcasts to the session topic" do
+    test "create_round/2 broadcasts to the session topic" do
       session = session_fixture()
       Sessions.subscribe(session.id)
-      valid_attrs = %{scramble: "some scramble", session_id: session.id}
-      {:ok, round} = Sessions.create_round(valid_attrs)
+      {:ok, round} = Sessions.create_round(session)
 
       assert_receive {Sessions, [:round, :created], ^round}
     end
 
-    test "create_round/1 does not broadcast to the context topic" do
+    test "create_round/2 does not broadcast to the context topic" do
       session = session_fixture()
       Sessions.subscribe()
-      valid_attrs = %{scramble: "some scramble", session_id: session.id}
-      {:ok, _round} = Sessions.create_round(valid_attrs)
+      {:ok, _round} = Sessions.create_round(session)
 
       refute_receive {Sessions, _, _}
     end
 
-    test "create_round/1 with invalid data does not broadcast" do
+    test "create_round/2 with invalid data does not broadcast" do
       session = session_fixture()
       Sessions.subscribe()
       Sessions.subscribe(session.id)
-      invalid_attrs = %{scramble: nil, session_id: session.id}
-      {:error, _reason} = Sessions.create_round(invalid_attrs)
+      {:error, _reason} = Sessions.create_round(session, true)
 
       refute_receive {Sessions, _, _}
     end
@@ -350,11 +345,11 @@ defmodule CuberacerLive.SessionsTest do
       user2 = user_fixture()
 
       session = session_fixture()
-      round1 = round_fixture(session_id: session.id)
+      round1 = round_fixture(session: session)
       _solve1 = solve_fixture(round_id: round1.id, user_id: user1.id)
       _solve2 = solve_fixture(round_id: round1.id, user_id: user2.id)
 
-      round2 = round_fixture(session_id: session.id)
+      round2 = round_fixture(session: session)
       solve3 = solve_fixture(round_id: round2.id, user_id: user1.id)
 
       assert Sessions.get_current_solve(session, user1) |> Repo.preload(:round) == solve3
@@ -541,7 +536,7 @@ defmodule CuberacerLive.SessionsTest do
       user2 = user_fixture()
 
       session = session_fixture()
-      round1 = round_fixture(session_id: session.id)
+      round1 = round_fixture(session: session)
 
       assert %{ao5: :dnf, ao12: :dnf} = Sessions.current_stats(session, user1)
       assert %{ao5: :dnf, ao12: :dnf} = Sessions.current_stats(session, user2)
@@ -551,15 +546,15 @@ defmodule CuberacerLive.SessionsTest do
       solve1_1 = solve_fixture(round_id: round1.id, user_id: user1.id, time: 9168)
       solve1_2 = solve_fixture(round_id: round1.id, user_id: user2.id, time: 7842)
 
-      round2 = round_fixture(session_id: session.id)
+      round2 = round_fixture(session: session)
       solve2_1 = solve_fixture(round_id: round2.id, user_id: user1.id, time: 14003)
       solve2_2 = solve_fixture(round_id: round2.id, user_id: user2.id, time: 3153)
 
-      round3 = round_fixture(session_id: session.id)
+      round3 = round_fixture(session: session)
       solve3_1 = solve_fixture(round_id: round3.id, user_id: user1.id, time: 12433)
       solve3_2 = solve_fixture(round_id: round3.id, user_id: user2.id, time: 5099)
 
-      round4 = round_fixture(session_id: session.id)
+      round4 = round_fixture(session: session)
       solve4_2 = solve_fixture(round_id: round4.id, user_id: user2.id, time: 3209)
 
       assert %{ao5: :dnf, ao12: :dnf} = Sessions.current_stats(session, user1)
@@ -567,7 +562,7 @@ defmodule CuberacerLive.SessionsTest do
 
       # Round 5
 
-      round5 = round_fixture(session_id: session.id)
+      round5 = round_fixture(session: session)
 
       assert %{ao5: :dnf} = Sessions.current_stats(session, user2)
 
@@ -584,7 +579,7 @@ defmodule CuberacerLive.SessionsTest do
 
       # Round 6
 
-      round6 = round_fixture(session_id: session.id)
+      round6 = round_fixture(session: session)
       solve6_1 = solve_fixture(round_id: round6.id, user_id: user1.id, time: 14885)
       solve6_2 = solve_fixture(round_id: round6.id, user_id: user2.id, time: 13499)
 
@@ -598,23 +593,23 @@ defmodule CuberacerLive.SessionsTest do
 
       # Rounds 7-11
 
-      round7 = round_fixture(session_id: session.id)
+      round7 = round_fixture(session: session)
       solve7_1 = solve_fixture(round_id: round7.id, user_id: user1.id, time: 17033)
       _solve7_2 = solve_fixture(round_id: round7.id, user_id: user2.id, time: 1296)
 
-      round8 = round_fixture(session_id: session.id)
+      round8 = round_fixture(session: session)
       _solve8_1 = solve_fixture(round_id: round8.id, user_id: user1.id, time: 3283)
       solve8_2 = solve_fixture(round_id: round8.id, user_id: user2.id, time: 12279)
 
-      round9 = round_fixture(session_id: session.id)
+      round9 = round_fixture(session: session)
       solve9_1 = solve_fixture(round_id: round9.id, user_id: user1.id, time: 12043)
       solve9_2 = solve_fixture(round_id: round9.id, user_id: user2.id, time: 16650)
 
-      round10 = round_fixture(session_id: session.id)
+      round10 = round_fixture(session: session)
       solve10_1 = solve_fixture(round_id: round10.id, user_id: user1.id, time: 19722)
       solve10_2 = solve_fixture(round_id: round10.id, user_id: user2.id, time: 19707)
 
-      round11 = round_fixture(session_id: session.id)
+      round11 = round_fixture(session: session)
 
       solve11_1 =
         solve_fixture(
@@ -644,7 +639,7 @@ defmodule CuberacerLive.SessionsTest do
 
       # Round 12
 
-      round12 = round_fixture(session_id: session.id)
+      round12 = round_fixture(session: session)
       solve12_1 = solve_fixture(round_id: round12.id, user_id: user1.id, time: 8484)
       solve12_2 = solve_fixture(round_id: round12.id, user_id: user2.id, time: 11910)
 
@@ -668,7 +663,7 @@ defmodule CuberacerLive.SessionsTest do
 
       # Round 13
 
-      round13 = round_fixture(session_id: session.id)
+      round13 = round_fixture(session: session)
       _solve13_1 = solve_fixture(round_id: round13.id, user_id: user1.id, time: 5705, penalty_id: penalty_dnf.id)
       _solve13_2 = solve_fixture(round_id: round13.id, user_id: user2.id, time: 9661, penalty_id: penalty_dnf.id)
 
