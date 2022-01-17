@@ -32,13 +32,27 @@ defmodule CuberacerLive.SessionsTest do
 
     test "create_session/1 with no name returns error changeset" do
       cube_type = cube_type_fixture()
-      invalid_attrs = %{name: nil, cube_type_id: cube_type.id}
+      invalid_attrs_nil = %{name: nil, cube_type_id: cube_type.id}
+      invalid_attrs_empty = %{name: "", cube_type_id: cube_type.id}
 
-      assert {:error, %Ecto.Changeset{}} = Sessions.create_session(invalid_attrs)
+      assert {:error, %Ecto.Changeset{}} = Sessions.create_session(invalid_attrs_nil)
+      assert {:error, %Ecto.Changeset{}} = Sessions.create_session(invalid_attrs_empty)
     end
 
     test "create_session/1 with no cube type returns error changeset" do
       invalid_attrs = %{name: "some name", cube_type_id: nil}
+
+      assert {:error, %Ecto.Changeset{}} = Sessions.create_session(invalid_attrs)
+    end
+
+    test "create_session/1 with a name too long returns error changeset" do
+      cube_type = cube_type_fixture()
+
+      invalid_attrs = %{
+        name:
+          "some really long name that is longer than a hundred characters because that's just overkill now isn't it",
+        cube_type_id: cube_type.id
+      }
 
       assert {:error, %Ecto.Changeset{}} = Sessions.create_session(invalid_attrs)
     end
@@ -664,8 +678,22 @@ defmodule CuberacerLive.SessionsTest do
       # Round 13
 
       round13 = round_fixture(session: session)
-      _solve13_1 = solve_fixture(round_id: round13.id, user_id: user1.id, time: 5705, penalty_id: penalty_dnf.id)
-      _solve13_2 = solve_fixture(round_id: round13.id, user_id: user2.id, time: 9661, penalty_id: penalty_dnf.id)
+
+      _solve13_1 =
+        solve_fixture(
+          round_id: round13.id,
+          user_id: user1.id,
+          time: 5705,
+          penalty_id: penalty_dnf.id
+        )
+
+      _solve13_2 =
+        solve_fixture(
+          round_id: round13.id,
+          user_id: user2.id,
+          time: 9661,
+          penalty_id: penalty_dnf.id
+        )
 
       user1_stats = Sessions.current_stats(session, user1)
       user2_stats = Sessions.current_stats(session, user2)

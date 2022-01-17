@@ -15,6 +15,7 @@ defmodule CuberacerLive.Sessions.Session do
     session
     |> cast(attrs, [:name, :cube_type_id])
     |> validate_required([:name, :cube_type_id])
+    |> validate_length(:name, max: 100)
     |> cast_assoc(:cube_type)
   end
 end
