@@ -40,7 +40,10 @@
           </div>
         </div>
       </div>
-      <div class="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
+
+      <%= render "_show_love.html", assigns %>
+
+      <div class="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto ml-2 sm:pr-0">
         <!-- Profile dropdown -->
         <div class="ml-3 relative" x-data="{ dropdownOpen: false }" @mousedown.outside="dropdownOpen = false">
           <div>
