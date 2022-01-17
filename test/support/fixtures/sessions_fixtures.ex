@@ -28,15 +28,10 @@ defmodule CuberacerLive.SessionsFixtures do
   Generate a round.
   """
   def round_fixture(attrs \\ %{}) do
-    session = session_fixture()
+    session = attrs[:session] || session_fixture()
+    scramble = attrs[:scramble] || "some scramble"
 
-    {:ok, round} =
-      attrs
-      |> Enum.into(%{
-        scramble: "some scramble",
-        session_id: session.id
-      })
-      |> CuberacerLive.Sessions.create_round()
+    {:ok, round} = CuberacerLive.Sessions.create_round(session, scramble)
 
     round
   end

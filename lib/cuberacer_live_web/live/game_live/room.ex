@@ -62,7 +62,7 @@ defmodule CuberacerLiveWeb.GameLive.Room do
   end
 
   defp fetch_session(socket, session_id) do
-    session = Sessions.get_session!(session_id)
+    session = Sessions.get_session!(session_id) |> preload(:cube_type)
     assign(socket, %{session_id: session_id, session: session})
   end
 
@@ -99,7 +99,7 @@ defmodule CuberacerLiveWeb.GameLive.Room do
 
   @impl true
   def handle_event("new-round", _value, socket) do
-    Sessions.create_round(%{session_id: socket.assigns.session_id})
+    Sessions.create_round(socket.assigns.session)
 
     {:noreply, socket}
   end

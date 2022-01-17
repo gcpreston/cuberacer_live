@@ -19,7 +19,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
 
   defp create_session_and_round(_) do
     session = session_fixture()
-    round = round_fixture(%{session_id: session.id})
+    round = round_fixture(session: session)
 
     %{session: session, round: round}
   end
@@ -172,18 +172,18 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       round: round1
     } do
       _solve1 = solve_fixture(round_id: round1.id, user_id: user.id)
-      round2 = round_fixture(session_id: session.id)
+      round2 = round_fixture(session: session)
       _solve2 = solve_fixture(round_id: round2.id, user_id: user.id)
-      round3 = round_fixture(session_id: session.id)
+      round3 = round_fixture(session: session)
       _solve3 = solve_fixture(round_id: round3.id, user_id: user.id)
-      round4 = round_fixture(session_id: session.id)
+      round4 = round_fixture(session: session)
       _solve4 = solve_fixture(round_id: round4.id, user_id: user.id)
 
       {:ok, live, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
 
       assert_html(html, ".t_ao5", text: "DNF")
 
-      _round5 = round_fixture(session_id: session.id)
+      _round5 = round_fixture(session: session)
 
       assert_html(render(live), ".t_ao5", text: "DNF")
 
@@ -196,17 +196,17 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
 
       assert_html(html, ".t_ao5", text: Sessions.display_stat(stats.ao5))
 
-      round6 = round_fixture(session_id: session.id)
+      round6 = round_fixture(session: session)
       _solve6 = solve_fixture(round_id: round6.id, user_id: user.id)
-      round7 = round_fixture(session_id: session.id)
+      round7 = round_fixture(session: session)
       _solve7 = solve_fixture(round_id: round7.id, user_id: user.id)
-      round8 = round_fixture(session_id: session.id)
+      round8 = round_fixture(session: session)
       _solve8 = solve_fixture(round_id: round8.id, user_id: user.id)
-      round9 = round_fixture(session_id: session.id)
+      round9 = round_fixture(session: session)
       _solve9 = solve_fixture(round_id: round9.id, user_id: user.id)
-      round10 = round_fixture(session_id: session.id)
+      round10 = round_fixture(session: session)
       _solve10 = solve_fixture(round_id: round10.id, user_id: user.id)
-      _round11 = round_fixture(session_id: session.id)
+      _round11 = round_fixture(session: session)
 
       html =
         live
@@ -219,7 +219,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
 
       assert_html(html, ".t_ao12", text: "DNF")
 
-      _round12 = round_fixture(session_id: session.id)
+      _round12 = round_fixture(session: session)
 
       html =
       live
@@ -244,7 +244,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       user2 = user_fixture()
       solve1 = solve_fixture(time: 42, user_id: user1.id, round_id: round1.id)
 
-      round2 = round_fixture(session_id: session.id)
+      round2 = round_fixture(session: session)
 
       solve2 =
         solve_fixture(
@@ -283,7 +283,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
     } do
       plus2_penalty = penalty_fixture(name: "+2")
       solve = solve_fixture(penalty_id: plus2_penalty.id, user_id: user.id, round_id: round1.id)
-      _round2 = round_fixture(session_id: session.id)
+      _round2 = round_fixture(session: session)
 
       {:ok, view, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
 
@@ -306,7 +306,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       user2 = user_fixture()
       solve1 = solve_fixture(time: 42, user_id: user1.id, round_id: round1.id)
 
-      round2 = round_fixture(session_id: session.id)
+      round2 = round_fixture(session: session)
       solve2 = solve_fixture(time: 43, user_id: user1.id, round_id: round2.id)
       solve3 = solve_fixture(time: 44, user_id: user2.id, round_id: round2.id)
 
@@ -336,7 +336,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       round: round1
     } do
       solve = solve_fixture(user_id: user.id, round_id: round1.id)
-      _round2 = round_fixture(session_id: session.id)
+      _round2 = round_fixture(session: session)
 
       {:ok, view, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
 
@@ -359,7 +359,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       user2 = user_fixture()
       solve1 = solve_fixture(time: 42, user_id: user1.id, round_id: round1.id)
 
-      round2 = round_fixture(session_id: session.id)
+      round2 = round_fixture(session: session)
       solve2 = solve_fixture(time: 43, user_id: user1.id, round_id: round2.id)
       solve3 = solve_fixture(time: 44, user_id: user2.id, round_id: round2.id)
 
@@ -389,7 +389,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       round: round1
     } do
       solve = solve_fixture(user_id: user.id, round_id: round1.id)
-      _round2 = round_fixture(session_id: session.id)
+      _round2 = round_fixture(session: session)
 
       {:ok, view, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
 
@@ -439,7 +439,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
 
       assert_html(html, "tr.t_round-row", count: num_rounds_before)
 
-      {:ok, round} = Sessions.create_round(%{session_id: session.id, scramble: "some scramble"})
+      {:ok, round} = Sessions.create_round(session)
 
       num_rounds_after = Enum.count(Sessions.list_rounds_of_session(session))
 

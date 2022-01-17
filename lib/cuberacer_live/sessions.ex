@@ -134,7 +134,7 @@ defmodule CuberacerLive.Sessions do
 
   def create_session_and_round(name, cube_type_id) do
     with {:ok, session} <- create_session(%{name: name, cube_type_id: cube_type_id}),
-         {:ok, round} <- create_round(%{session_id: session.id}) do
+         {:ok, round} <- create_round(session) do
       {:ok, session, round}
     else
       err -> err
@@ -270,20 +270,20 @@ defmodule CuberacerLive.Sessions do
 
   ## Examples
 
-      iex> create_round(%{field: value})
+      iex> create_round(%Session{})
       {:ok, %Round{}}
 
-      iex> create_round(%{field: bad_value})
+      iex> create_round(%Session{}, "R U R' U'")
+      {:ok, %Round{}}
+
+      iex> create_round(%Session{}, true)
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_round(attrs \\ %{}) do
-    attrs =
-      if not Map.has_key?(attrs, :scramble) do
-        Map.put(attrs, :scramble, Whisk.scramble("3x3"))
-      else
-        attrs
-      end
+  def create_round(%Session{} = session, scramble \\ nil) do
+    session = Repo.preload(session, :cube_type)
+    scramble = scramble || Whisk.scramble(session.cube_type.name)
+    attrs = %{session_id: session.id, scramble: scramble}
 
     %Round{}
     |> Round.create_changeset(attrs)
