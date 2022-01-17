@@ -17,7 +17,7 @@ defmodule CuberacerLiveWeb.ConnCase do
 
   use ExUnit.CaseTemplate
 
-  @presence_shutdown_timer_ms 100
+  @presence_shutdown_timer_ms 10
 
   using do
     quote do
