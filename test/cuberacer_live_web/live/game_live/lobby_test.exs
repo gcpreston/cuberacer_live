@@ -41,7 +41,7 @@ defmodule CuberacerLive.GameLive.LobbyTest do
       {:ok, _live, html} = live(conn, Routes.game_lobby_path(conn, :new))
 
       html
-      |> assert_html("h2", text: "New Room")
+      |> assert_html("h2.t_new-room-title", text: "New Room")
       |> assert_html(".t_room-name-input", count: 1)
       |> assert_html(".t_room-cube-type-input", count: 1)
       |> assert_html("option[value=#{cube_type_1.id}", count: 1)
