@@ -54,14 +54,15 @@ defmodule CuberacerLive.GameLive.Components do
         <input
           id="chat-input"
           type="text"
-          class="flex-1 border"
+          class="flex-1 border rounded-xl px-2 py-1 mx-2"
+          placeholder="Chat"
           x-model="message"
           x-on:focus="$store.inputFocused = true"
           x-on:blur="$store.inputFocused = false"
           x-on:keydown.enter="sendMessage"
           phx-hook="ChatInput"
         />
-        <button @click="sendMessage">Send</button>
+        <button @click="sendMessage" class="font-medium mr-2 text-cyan-600">Send</button>
       </div>
     </div>
     """
