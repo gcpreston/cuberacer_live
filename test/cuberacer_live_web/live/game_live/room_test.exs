@@ -192,9 +192,9 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
         |> render_click("new-solve", time: 9876)
 
       stats = Sessions.current_stats(session, user)
-      assert stats.avg5 != :dnf
+      assert stats.ao5 != :dnf
 
-      assert_html(html, ".t_ao5", text: Sessions.display_stat(stats.avg5))
+      assert_html(html, ".t_ao5", text: Sessions.display_stat(stats.ao5))
 
       round6 = round_fixture(session_id: session.id)
       _solve6 = solve_fixture(round_id: round6.id, user_id: user.id)
@@ -211,11 +211,11 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       html =
         live
         |> render_click("new-solve", time: 6789)
-        |> assert_html(".t_ao5", text: Sessions.display_stat(stats.avg5))
+        |> assert_html(".t_ao5", text: Sessions.display_stat(stats.ao5))
 
       stats = Sessions.current_stats(session, user)
-      assert stats.avg5 != :dnf
-      assert stats.avg12 == :dnf
+      assert stats.ao5 != :dnf
+      assert stats.ao12 == :dnf
 
       assert_html(html, ".t_ao12", text: "DNF")
 
@@ -226,12 +226,12 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       |> render_click("new-solve", time: 9012)
 
       stats = Sessions.current_stats(session, user)
-      assert stats.avg5 != :dnf
-      assert stats.avg12 != :dnf
+      assert stats.ao5 != :dnf
+      assert stats.ao12 != :dnf
 
       html
-      |> assert_html(".t_ao5", text: Sessions.display_stat(stats.avg5))
-      |> assert_html(".t_ao12", text: Sessions.display_stat(stats.avg12))
+      |> assert_html(".t_ao5", text: Sessions.display_stat(stats.ao5))
+      |> assert_html(".t_ao12", text: Sessions.display_stat(stats.ao12))
     end
 
     test "penalty-ok sets an OK penalty for the user's solve in the current round", %{

@@ -79,10 +79,10 @@ defmodule CuberacerLive.GameLive.Components do
       </thead>
       <tbody class="bg-white">
         <tr>
-          <td class="px-6 whitespace-nowrap">ao5: <span class="t_ao5"><%= Sessions.display_stat(@stats.avg5) %></span></td>
+          <td class="px-6 whitespace-nowrap">ao5: <span class="t_ao5"><%= Sessions.display_stat(@stats.ao5) %></span></td>
         </tr>
         <tr>
-          <td class="px-6 whitespace-nowrap">ao12: <span class="t_ao12"><%= Sessions.display_stat(@stats.avg12) %></span></td>
+          <td class="px-6 whitespace-nowrap">ao12: <span class="t_ao12"><%= Sessions.display_stat(@stats.ao12) %></span></td>
         </tr>
       </tbody>
     </table>

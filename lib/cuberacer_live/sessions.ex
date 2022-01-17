@@ -527,7 +527,7 @@ defmodule CuberacerLive.Sessions do
 
     times = Enum.map(solves, &actual_time/1)
 
-    %{avg5: Stats.avg_n(times, 5), avg12: Stats.avg_n(times, 12)}
+    %{ao5: Stats.avg_n(times, 5), ao12: Stats.avg_n(times, 12)}
   end
 
   defp ms_to_sec_str(ms) do

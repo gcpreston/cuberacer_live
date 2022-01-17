@@ -534,7 +534,7 @@ defmodule CuberacerLive.SessionsTest do
       assert Sessions.display_solve(solve) == "DNF"
     end
 
-    test "current_stats/2 calculates avg5 and avg12" do
+    test "current_stats/2 calculates ao5 and ao12" do
       penalty_plus2 = penalty_fixture(name: "+2")
       penalty_dnf = penalty_fixture(name: "DNF")
       user1 = user_fixture()
@@ -543,8 +543,8 @@ defmodule CuberacerLive.SessionsTest do
       session = session_fixture()
       round1 = round_fixture(session_id: session.id)
 
-      assert %{avg5: :dnf, avg12: :dnf} = Sessions.current_stats(session, user1)
-      assert %{avg5: :dnf, avg12: :dnf} = Sessions.current_stats(session, user2)
+      assert %{ao5: :dnf, ao12: :dnf} = Sessions.current_stats(session, user1)
+      assert %{ao5: :dnf, ao12: :dnf} = Sessions.current_stats(session, user2)
 
       # Rounds 1-4
 
@@ -562,14 +562,14 @@ defmodule CuberacerLive.SessionsTest do
       round4 = round_fixture(session_id: session.id)
       solve4_2 = solve_fixture(round_id: round4.id, user_id: user2.id, time: 3209)
 
-      assert %{avg5: :dnf, avg12: :dnf} = Sessions.current_stats(session, user1)
-      assert %{avg5: :dnf, avg12: :dnf} = Sessions.current_stats(session, user2)
+      assert %{ao5: :dnf, ao12: :dnf} = Sessions.current_stats(session, user1)
+      assert %{ao5: :dnf, ao12: :dnf} = Sessions.current_stats(session, user2)
 
       # Round 5
 
       round5 = round_fixture(session_id: session.id)
 
-      assert %{avg5: :dnf} = Sessions.current_stats(session, user2)
+      assert %{ao5: :dnf} = Sessions.current_stats(session, user2)
 
       solve5_1 = solve_fixture(round_id: round5.id, user_id: user1.id, time: 17359)
       solve5_2 = solve_fixture(round_id: round5.id, user_id: user2.id, time: 14178)
@@ -577,10 +577,10 @@ defmodule CuberacerLive.SessionsTest do
       user1_stats = Sessions.current_stats(session, user1)
       user2_stats = Sessions.current_stats(session, user2)
 
-      assert user1_stats.avg5 == (solve2_1.time + solve3_1.time + solve5_1.time) / 3
-      assert user2_stats.avg5 == (solve1_2.time + solve3_2.time + solve4_2.time) / 3
-      assert user1_stats.avg12 == :dnf
-      assert user2_stats.avg12 == :dnf
+      assert user1_stats.ao5 == (solve2_1.time + solve3_1.time + solve5_1.time) / 3
+      assert user2_stats.ao5 == (solve1_2.time + solve3_2.time + solve4_2.time) / 3
+      assert user1_stats.ao12 == :dnf
+      assert user2_stats.ao12 == :dnf
 
       # Round 6
 
@@ -591,10 +591,10 @@ defmodule CuberacerLive.SessionsTest do
       user1_stats = Sessions.current_stats(session, user1)
       user2_stats = Sessions.current_stats(session, user2)
 
-      assert user1_stats.avg5 == (solve2_1.time + solve5_1.time + solve6_1.time) / 3
-      assert user2_stats.avg5 == (solve3_2.time + solve4_2.time + solve6_2.time) / 3
-      assert user1_stats.avg12 == :dnf
-      assert user2_stats.avg12 == :dnf
+      assert user1_stats.ao5 == (solve2_1.time + solve5_1.time + solve6_1.time) / 3
+      assert user2_stats.ao5 == (solve3_2.time + solve4_2.time + solve6_2.time) / 3
+      assert user1_stats.ao12 == :dnf
+      assert user2_stats.ao12 == :dnf
 
       # Rounds 7-11
 
@@ -635,12 +635,12 @@ defmodule CuberacerLive.SessionsTest do
       user1_stats = Sessions.current_stats(session, user1)
       user2_stats = Sessions.current_stats(session, user2)
 
-      assert user1_stats.avg5 ==
+      assert user1_stats.ao5 ==
                (solve7_1.time + solve9_1.time + Sessions.actual_time(solve11_1)) / 3
 
-      assert user2_stats.avg5 == (solve8_2.time + solve9_2.time + solve10_2.time) / 3
-      assert user1_stats.avg12 == :dnf
-      assert user2_stats.avg12 == :dnf
+      assert user2_stats.ao5 == (solve8_2.time + solve9_2.time + solve10_2.time) / 3
+      assert user1_stats.ao12 == :dnf
+      assert user2_stats.ao12 == :dnf
 
       # Round 12
 
@@ -651,17 +651,17 @@ defmodule CuberacerLive.SessionsTest do
       user1_stats = Sessions.current_stats(session, user1)
       user2_stats = Sessions.current_stats(session, user2)
 
-      assert user1_stats.avg5 ==
+      assert user1_stats.ao5 ==
                (solve9_1.time + Sessions.actual_time(solve11_1) + solve12_1.time) / 3
 
-      assert user2_stats.avg5 == (solve8_2.time + solve9_2.time + solve10_2.time) / 3
+      assert user2_stats.ao5 == (solve8_2.time + solve9_2.time + solve10_2.time) / 3
 
-      assert user1_stats.avg12 ==
+      assert user1_stats.ao12 ==
                (solve1_1.time + solve2_1.time + solve3_1.time + solve5_1.time +
                   solve6_1.time + solve7_1.time + solve9_1.time + solve10_1.time +
                   Sessions.actual_time(solve11_1) + solve12_1.time) / 10
 
-      assert user2_stats.avg12 ==
+      assert user2_stats.ao12 ==
                (solve1_2.time + solve2_2.time + solve3_2.time + solve4_2.time + solve5_2.time +
                   solve6_2.time + solve8_2.time + solve9_2.time + solve10_2.time + solve12_2.time) /
                  10
@@ -675,10 +675,10 @@ defmodule CuberacerLive.SessionsTest do
       user1_stats = Sessions.current_stats(session, user1)
       user2_stats = Sessions.current_stats(session, user2)
 
-      assert user1_stats.avg5 == (solve9_1.time + solve10_1.time + solve12_1.time) / 3
-      assert user2_stats.avg5 == :dnf
-      assert user1_stats.avg12 == :dnf
-      assert user2_stats.avg12 == :dnf
+      assert user1_stats.ao5 == (solve9_1.time + solve10_1.time + solve12_1.time) / 3
+      assert user2_stats.ao5 == :dnf
+      assert user1_stats.ao12 == :dnf
+      assert user2_stats.ao12 == :dnf
     end
   end
 end
