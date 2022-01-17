@@ -533,5 +533,152 @@ defmodule CuberacerLive.SessionsTest do
 
       assert Sessions.display_solve(solve) == "DNF"
     end
+
+    test "current_stats/2 calculates ao5 and ao12" do
+      penalty_plus2 = penalty_fixture(name: "+2")
+      penalty_dnf = penalty_fixture(name: "DNF")
+      user1 = user_fixture()
+      user2 = user_fixture()
+
+      session = session_fixture()
+      round1 = round_fixture(session_id: session.id)
+
+      assert %{ao5: :dnf, ao12: :dnf} = Sessions.current_stats(session, user1)
+      assert %{ao5: :dnf, ao12: :dnf} = Sessions.current_stats(session, user2)
+
+      # Rounds 1-4
+
+      solve1_1 = solve_fixture(round_id: round1.id, user_id: user1.id, time: 9168)
+      solve1_2 = solve_fixture(round_id: round1.id, user_id: user2.id, time: 7842)
+
+      round2 = round_fixture(session_id: session.id)
+      solve2_1 = solve_fixture(round_id: round2.id, user_id: user1.id, time: 14003)
+      solve2_2 = solve_fixture(round_id: round2.id, user_id: user2.id, time: 3153)
+
+      round3 = round_fixture(session_id: session.id)
+      solve3_1 = solve_fixture(round_id: round3.id, user_id: user1.id, time: 12433)
+      solve3_2 = solve_fixture(round_id: round3.id, user_id: user2.id, time: 5099)
+
+      round4 = round_fixture(session_id: session.id)
+      solve4_2 = solve_fixture(round_id: round4.id, user_id: user2.id, time: 3209)
+
+      assert %{ao5: :dnf, ao12: :dnf} = Sessions.current_stats(session, user1)
+      assert %{ao5: :dnf, ao12: :dnf} = Sessions.current_stats(session, user2)
+
+      # Round 5
+
+      round5 = round_fixture(session_id: session.id)
+
+      assert %{ao5: :dnf} = Sessions.current_stats(session, user2)
+
+      solve5_1 = solve_fixture(round_id: round5.id, user_id: user1.id, time: 17359)
+      solve5_2 = solve_fixture(round_id: round5.id, user_id: user2.id, time: 14178)
+
+      user1_stats = Sessions.current_stats(session, user1)
+      user2_stats = Sessions.current_stats(session, user2)
+
+      assert user1_stats.ao5 == (solve2_1.time + solve3_1.time + solve5_1.time) / 3
+      assert user2_stats.ao5 == (solve1_2.time + solve3_2.time + solve4_2.time) / 3
+      assert user1_stats.ao12 == :dnf
+      assert user2_stats.ao12 == :dnf
+
+      # Round 6
+
+      round6 = round_fixture(session_id: session.id)
+      solve6_1 = solve_fixture(round_id: round6.id, user_id: user1.id, time: 14885)
+      solve6_2 = solve_fixture(round_id: round6.id, user_id: user2.id, time: 13499)
+
+      user1_stats = Sessions.current_stats(session, user1)
+      user2_stats = Sessions.current_stats(session, user2)
+
+      assert user1_stats.ao5 == (solve2_1.time + solve5_1.time + solve6_1.time) / 3
+      assert user2_stats.ao5 == (solve3_2.time + solve4_2.time + solve6_2.time) / 3
+      assert user1_stats.ao12 == :dnf
+      assert user2_stats.ao12 == :dnf
+
+      # Rounds 7-11
+
+      round7 = round_fixture(session_id: session.id)
+      solve7_1 = solve_fixture(round_id: round7.id, user_id: user1.id, time: 17033)
+      _solve7_2 = solve_fixture(round_id: round7.id, user_id: user2.id, time: 1296)
+
+      round8 = round_fixture(session_id: session.id)
+      _solve8_1 = solve_fixture(round_id: round8.id, user_id: user1.id, time: 3283)
+      solve8_2 = solve_fixture(round_id: round8.id, user_id: user2.id, time: 12279)
+
+      round9 = round_fixture(session_id: session.id)
+      solve9_1 = solve_fixture(round_id: round9.id, user_id: user1.id, time: 12043)
+      solve9_2 = solve_fixture(round_id: round9.id, user_id: user2.id, time: 16650)
+
+      round10 = round_fixture(session_id: session.id)
+      solve10_1 = solve_fixture(round_id: round10.id, user_id: user1.id, time: 19722)
+      solve10_2 = solve_fixture(round_id: round10.id, user_id: user2.id, time: 19707)
+
+      round11 = round_fixture(session_id: session.id)
+
+      solve11_1 =
+        solve_fixture(
+          round_id: round11.id,
+          user_id: user1.id,
+          time: 2142,
+          penalty_id: penalty_plus2.id
+        )
+
+      _solve11_2 =
+        solve_fixture(
+          round_id: round11.id,
+          user_id: user2.id,
+          time: 15975,
+          penalty_id: penalty_dnf.id
+        )
+
+      user1_stats = Sessions.current_stats(session, user1)
+      user2_stats = Sessions.current_stats(session, user2)
+
+      assert user1_stats.ao5 ==
+               (solve7_1.time + solve9_1.time + Sessions.actual_time(solve11_1)) / 3
+
+      assert user2_stats.ao5 == (solve8_2.time + solve9_2.time + solve10_2.time) / 3
+      assert user1_stats.ao12 == :dnf
+      assert user2_stats.ao12 == :dnf
+
+      # Round 12
+
+      round12 = round_fixture(session_id: session.id)
+      solve12_1 = solve_fixture(round_id: round12.id, user_id: user1.id, time: 8484)
+      solve12_2 = solve_fixture(round_id: round12.id, user_id: user2.id, time: 11910)
+
+      user1_stats = Sessions.current_stats(session, user1)
+      user2_stats = Sessions.current_stats(session, user2)
+
+      assert user1_stats.ao5 ==
+               (solve9_1.time + Sessions.actual_time(solve11_1) + solve12_1.time) / 3
+
+      assert user2_stats.ao5 == (solve8_2.time + solve9_2.time + solve10_2.time) / 3
+
+      assert user1_stats.ao12 ==
+               (solve1_1.time + solve2_1.time + solve3_1.time + solve5_1.time +
+                  solve6_1.time + solve7_1.time + solve9_1.time + solve10_1.time +
+                  Sessions.actual_time(solve11_1) + solve12_1.time) / 10
+
+      assert user2_stats.ao12 ==
+               (solve1_2.time + solve2_2.time + solve3_2.time + solve4_2.time + solve5_2.time +
+                  solve6_2.time + solve8_2.time + solve9_2.time + solve10_2.time + solve12_2.time) /
+                 10
+
+      # Round 13
+
+      round13 = round_fixture(session_id: session.id)
+      _solve13_1 = solve_fixture(round_id: round13.id, user_id: user1.id, time: 5705, penalty_id: penalty_dnf.id)
+      _solve13_2 = solve_fixture(round_id: round13.id, user_id: user2.id, time: 9661, penalty_id: penalty_dnf.id)
+
+      user1_stats = Sessions.current_stats(session, user1)
+      user2_stats = Sessions.current_stats(session, user2)
+
+      assert user1_stats.ao5 == (solve9_1.time + solve10_1.time + solve12_1.time) / 3
+      assert user2_stats.ao5 == :dnf
+      assert user1_stats.ao12 == :dnf
+      assert user2_stats.ao12 == :dnf
+    end
   end
 end

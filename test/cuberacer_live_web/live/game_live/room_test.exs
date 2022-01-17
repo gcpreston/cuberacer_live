@@ -108,6 +108,15 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       assert html =~ Messaging.display_room_message(message2)
       refute html =~ Messaging.display_room_message(message3)
     end
+
+    test "displays ao5 and ao12", %{conn: conn, session: session, user: user} do
+      conn = log_in_user(conn, user)
+      assert {:ok, _view, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
+
+      html
+      |> assert_html(".t_ao5", count: 1, text: "DNF")
+      |> assert_html(".t_ao12", count: 1, text: "DNF")
+    end
   end
 
   describe "LiveView events" do
@@ -154,6 +163,75 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       assert num_solves_after == num_solves_before + 1
       assert newest_solve.time == 42
       assert render(view) =~ Sessions.display_solve(newest_solve)
+    end
+
+    test "new-solve updates current stats", %{
+      conn: conn,
+      user: user,
+      session: session,
+      round: round1
+    } do
+      _solve1 = solve_fixture(round_id: round1.id, user_id: user.id)
+      round2 = round_fixture(session_id: session.id)
+      _solve2 = solve_fixture(round_id: round2.id, user_id: user.id)
+      round3 = round_fixture(session_id: session.id)
+      _solve3 = solve_fixture(round_id: round3.id, user_id: user.id)
+      round4 = round_fixture(session_id: session.id)
+      _solve4 = solve_fixture(round_id: round4.id, user_id: user.id)
+
+      {:ok, live, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
+
+      assert_html(html, ".t_ao5", text: "DNF")
+
+      _round5 = round_fixture(session_id: session.id)
+
+      assert_html(render(live), ".t_ao5", text: "DNF")
+
+      html =
+        live
+        |> render_click("new-solve", time: 9876)
+
+      stats = Sessions.current_stats(session, user)
+      assert stats.ao5 != :dnf
+
+      assert_html(html, ".t_ao5", text: Sessions.display_stat(stats.ao5))
+
+      round6 = round_fixture(session_id: session.id)
+      _solve6 = solve_fixture(round_id: round6.id, user_id: user.id)
+      round7 = round_fixture(session_id: session.id)
+      _solve7 = solve_fixture(round_id: round7.id, user_id: user.id)
+      round8 = round_fixture(session_id: session.id)
+      _solve8 = solve_fixture(round_id: round8.id, user_id: user.id)
+      round9 = round_fixture(session_id: session.id)
+      _solve9 = solve_fixture(round_id: round9.id, user_id: user.id)
+      round10 = round_fixture(session_id: session.id)
+      _solve10 = solve_fixture(round_id: round10.id, user_id: user.id)
+      _round11 = round_fixture(session_id: session.id)
+
+      html =
+        live
+        |> render_click("new-solve", time: 6789)
+        |> assert_html(".t_ao5", text: Sessions.display_stat(stats.ao5))
+
+      stats = Sessions.current_stats(session, user)
+      assert stats.ao5 != :dnf
+      assert stats.ao12 == :dnf
+
+      assert_html(html, ".t_ao12", text: "DNF")
+
+      _round12 = round_fixture(session_id: session.id)
+
+      html =
+      live
+      |> render_click("new-solve", time: 9012)
+
+      stats = Sessions.current_stats(session, user)
+      assert stats.ao5 != :dnf
+      assert stats.ao12 != :dnf
+
+      html
+      |> assert_html(".t_ao5", text: Sessions.display_stat(stats.ao5))
+      |> assert_html(".t_ao12", text: Sessions.display_stat(stats.ao12))
     end
 
     test "penalty-ok sets an OK penalty for the user's solve in the current round", %{

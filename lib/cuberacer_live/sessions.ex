@@ -3,9 +3,18 @@ defmodule CuberacerLive.Sessions do
   The Sessions context.
   """
 
-  import Ecto.Query, warn: false
-  alias CuberacerLive.Repo
+  ## DATA DEFINITIONS
 
+  # A time is a int, the number of milliseconds a solve took.
+
+  # A stat is a float, a calculation on a set of times.
+
+  ## ----------------
+
+  import Ecto.Query, warn: false
+
+  alias CuberacerLive.Repo
+  alias CuberacerLive.Stats
   alias CuberacerLive.Sessions.{Session, Round, Solve}
   alias CuberacerLive.Accounts.User
   alias CuberacerLive.Cubing.{CubeType, Penalty}
@@ -210,6 +219,8 @@ defmodule CuberacerLive.Sessions do
 
   """
   def list_rounds_of_session(%Session{id: session_id}, order \\ :asc) do
+    # TODO: Didn't remember that this was loading solves and penalties until now. I don't think
+    # this is necessary because of how times_table is implemented.
     query =
       from r in Round,
         where: r.session_id == ^session_id,
@@ -454,6 +465,69 @@ defmodule CuberacerLive.Sessions do
       %Solve{penalty: %Penalty{name: "+2"}} -> ms_to_sec_str(solve.time + 2000) <> "+"
       %Solve{penalty: %Penalty{name: "DNF"}} -> "DNF"
     end
+  end
+
+  @doc """
+  Return the string representation of a stat.
+  """
+  def display_stat(:dnf) do
+    "DNF"
+  end
+
+  def display_stat(time) do
+    time |> trunc() |> ms_to_sec_str()
+  end
+
+  @doc """
+  Get the time of a solve after applying its penalty.
+
+  If the penalty is DNF, or if the solve is `nil`, returns `:dnf`.
+  """
+  def actual_time(%Solve{} = solve) do
+    case Repo.preload(solve, :penalty) do
+      %Solve{penalty: %Penalty{name: "OK"}} -> solve.time
+      %Solve{penalty: %Penalty{name: "+2"}} -> solve.time + 2000
+      %Solve{penalty: %Penalty{name: "DNF"}} -> :dnf
+    end
+  end
+
+  def actual_time(nil) do
+    :dnf
+  end
+
+  @doc """
+  Get stats for a user in a session.
+
+  Stats calculated are:
+  - current average of 5
+  - current average of 12
+  """
+  def current_stats(%Session{id: session_id}, %User{id: user_id}) do
+    query =
+      from r in Round,
+        where: r.session_id == ^session_id,
+        left_join: s in assoc(r, :solves),
+        left_join: p in assoc(s, :penalty),
+        order_by: [desc: r.id],
+        preload: [solves: {s, penalty: p}]
+
+    rounds = Repo.all(query)
+
+    solves =
+      Enum.map(rounds, fn round ->
+        Enum.find(round.solves, fn solve -> solve.user_id == user_id end)
+      end)
+
+    # Don't count the current round if a time isn't submitted yet
+    solves =
+      case solves do
+        [nil | rest] -> rest
+        _ -> solves
+      end
+
+    times = Enum.map(solves, &actual_time/1)
+
+    %{ao5: Stats.avg_n(times, 5), ao12: Stats.avg_n(times, 12)}
   end
 
   defp ms_to_sec_str(ms) do
