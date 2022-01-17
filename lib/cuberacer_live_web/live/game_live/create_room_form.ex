@@ -41,7 +41,9 @@ defmodule CuberacerLiveWeb.GameLive.CreateRoomForm do
   end
 
   defp cube_type_options do
-    cube_types = Cubing.list_cube_types()
+    cube_types =
+      Cubing.list_cube_types()
+      |> Enum.filter(fn ct -> ct.name in Whisk.puzzle_types() end)
 
     for cube_type <- cube_types do
       [key: cube_type.name, value: cube_type.id]
