@@ -17,11 +17,21 @@
       class="relative min-h-screen flex items-center justify-center p-4">
       <div x-on:click.stop x-trap.noscroll.inert="open"
         class="relative max-w-2xl w-full bg-white rounded-lg border border-black p-8 overflow-y-auto">
-        <!-- Title -->
-        <h2 class="text-xl font-medium text-center" :id="$id('modal-title')">Donate</h2>
-        <!-- Content -->
+        <h1 class="text-center":id="$id('modal-title')">
+          <span class="text-red-400 text-2xl">
+            <i class="fas fa-heart"></i>
+          </span>
+        </h1>
+        <!-- Feedback -->
+        <h2 class="mt-3 text-xl font-medium text-center">Feedback</h2>
         <p class="mt-2 text-gray-600 text-center">
-          Thanks for using Cuberacer! If you would like to donate to help with server costs, you can do so via the icons below.
+          Thanks for using Cuberacer! This site is under construction, and I would love any and all feedback on it.
+          Feel free to email me at gpreston@cuberacer.io with any thoughts or questions!
+        </p>
+        <!-- Donate -->
+        <h2 class="mt-3 text-xl font-medium text-center">Donate</h2>
+        <p class="mt-2 text-gray-600 text-center">
+          If you would like to donate to help with server costs, you can do so via the icons below.
         </p>
         <!-- Donation icons -->
         <div class="flex flex-row justify-center my-4">
