@@ -50,57 +50,11 @@
       </div>
 
       <div class="absolute inset-y-0 right-12 flex items-center pr-2 sm:static sm:inset-auto ml-2 sm:pr-0">
-        <%= render "_show_love.html" , assigns %>
+        <%= render "_show_love.html", assigns %>
       </div>
 
       <div class="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto ml-2 sm:pr-0">
-        <!-- Profile dropdown -->
-        <div class="ml-3 relative" x-data="{ dropdownOpen: false }" @mousedown.outside="dropdownOpen = false">
-          <div>
-            <%= if @current_user do %>
-              <button @mousedown="dropdownOpen = !dropdownOpen" type="button"
-                class="bg-gray-800 flex text-sm rounded-full"
-                x-bind:class="dropdownOpen ? 'outline-none ring-2 ring-offset-2 ring-offset-gray-800 ring-white' : ''"
-                id="user-menu-button">
-                <span class="sr-only">Open user menu</span>
-                <img class="h-8 w-8 rounded-full" src={Routes.static_path(@conn, "/images/default-profile.jpeg" )}
-                  alt="">
-              </button>
-              <% else %>
-                <a type="button" href={Routes.user_session_path(@conn, :new)}
-                  class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                  id="user-registration-button">
-                  Log in
-                </a>
-                <% end %>
-          </div>
-
-          <%= if @current_user do %>
-            <div x-show="dropdownOpen"
-              class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none"
-              x-transition:enter="transition ease-out duration-100"
-              x-transition:enter-start="transform opacity-0 scale-95"
-              x-transition:enter-end="transform opacity-100 scale-100"
-              x-transition:leave="transition ease-in duration-75"
-              x-transition:leave-start="transform opacity-100 scale-100"
-              x-transition:leave-end="transform opacity-0 scale-95"
-              role="menu" aria-orientation="vertical" aria-labelledby="user-menu-button" tabindex="-1">
-              <span class="block px-4 py-2 text-sm text-gray-500">
-                <%= @current_user.username %>
-              </span>
-
-              <hr />
-
-              <%= link "Settings" , to: Routes.user_settings_path(@conn, :edit),
-                class: "block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" , role: "menuitem" , tabindex: "-1" ,
-                id: "user-menu-item-0" %>
-
-              <%= link "Log out" , to: Routes.user_session_path(@conn, :delete), method: :delete,
-                class: "block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" , role: "menuitem" , tabindex: "-1",
-                id: "user-menu-item-2" %>
-            </div>
-          <% end %>
-        </div>
+        <%= render "_profile_icon.html", assigns %>
       </div>
     </div>
   </div>
