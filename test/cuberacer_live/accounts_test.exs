@@ -83,7 +83,7 @@ defmodule CuberacerLive.AccountsTest do
 
       assert %{
                email: ["must have the @ sign and no spaces"],
-               username: ["must have no spaces"],
+               username: ["must only contain characters a-z, 0-9 and _"],
                password: ["should be at least 12 character(s)"]
              } = errors_on(changeset)
     end

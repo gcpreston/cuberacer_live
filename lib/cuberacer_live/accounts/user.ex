@@ -58,7 +58,7 @@ defmodule CuberacerLive.Accounts.User do
   defp validate_username(changeset) do
     changeset
     |> validate_required([:username])
-    |> validate_format(:username, ~r/^[^\s]+$/, message: "must have no spaces")
+    |> validate_format(:username, ~r/^[[:word:]]+$/, message: "must only contain characters a-z, 0-9 and _")
     |> validate_length(:username, max: 25)
     |> unsafe_validate_unique(:username, CuberacerLive.Repo)
     |> unique_constraint(:username)

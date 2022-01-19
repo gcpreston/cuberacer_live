@@ -4,10 +4,12 @@ defmodule CuberacerLive.AccountsFixtures do
   entities via the `CuberacerLive.Accounts` context.
   """
 
-  def unique_user_email, do: "user#{System.unique_integer()}@example.com"
+  defp unique_suffix, do: String.replace("#{System.unique_integer()}", "-", "_")
+
+  def unique_user_email, do: "user#{unique_suffix()}@example.com"
 
   def unique_email_and_username do
-    username = "user#{System.unique_integer()}"
+    username = "user#{unique_suffix()}"
     email = "#{username}@example.com"
     {email, username}
   end
