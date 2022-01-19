@@ -34,10 +34,9 @@
       <div class="flex-1 flex items-center justify-center sm:items-stretch sm:justify-start">
         <div class="flex-shrink-0 flex items-center">
           <a href={Routes.game_lobby_path(@conn, :index)} class="block lg:hidden h-8 w-auto"><span
-              class="text-yellow-400 text-3xl">C</span><span class="text-red-600 text-3xl">R</span></a>
+              class="text-gray-200 text-3xl font-medium italic">CR</span></a>
           <a href={Routes.game_lobby_path(@conn, :index)} class="hidden lg:block h-8 w-auto"><span
-              class="text-yellow-400 text-3xl">C</span><span class="text-white">ube</span><span
-              class="text-red-600 text-3xl">R</span><span class="text-white">acer</span></a>
+              class="text-gray-200 text-3xl font-medium italic">CubeRacer</span></a>
         </div>
         <div class="hidden sm:block sm:ml-6">
           <div class="flex space-x-4">
@@ -63,10 +62,6 @@
   <div x-show="mobileMenuOpen" class="sm:hidden" id="mobile-menu">
     <div class="px-2 pt-2 pb-3 space-y-1">
       <!-- Current: "bg-gray-900 text-white", Default: "text-gray-300 hover:bg-gray-700 hover:text-white" -->
-      <%= link "Lobby" , to: Routes.game_lobby_path(@conn, :index),
-        class: "text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium" ,
-        aria_current: "page" %>
-
       <%= if function_exported?(Routes, :live_dashboard_path, 2) do %>
         <%= link "LiveDashboard" , to: Routes.live_dashboard_path(@conn, :home),
           class: "text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium"
