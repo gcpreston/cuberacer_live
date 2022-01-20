@@ -8,7 +8,7 @@ defmodule CuberacerLive.Accounts.UserNotifier do
     email =
       new()
       |> to(recipient)
-      |> from({"MyApp", "contact@example.com"})
+      |> from({"Cuberacer", "do-not-reply@cuberacer.io"})
       |> subject(subject)
       |> text_body(body)
 
