@@ -25,6 +25,12 @@ config :cuberacer_live, CuberacerLive.Repo,
   ssl: true,
   pool_size: 2
 
+config :cuberacer_live, CuberacerLive.Mailer,
+  adapter: Swoosh.Adapters.Sendgrid,
+  api_key: "${SENDGRID_API_KEY}"
+
+config :swoosh, :api_client, Swoosh.ApiClient.Finch
+
 # Do not print debug messages in production
 config :logger, level: :info
 
