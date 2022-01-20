@@ -52,7 +52,8 @@ defmodule CuberacerLive.MixProject do
       {:jason, "~> 1.2"},
       {:plug_cowboy, "~> 2.5"},
       {:whisk, "~> 0.0.3"},
-      {:distillery, "~> 2.1"}
+      {:distillery, "~> 2.1"},
+      {:finch, "~> 0.10.2"}
     ]
   end
 
