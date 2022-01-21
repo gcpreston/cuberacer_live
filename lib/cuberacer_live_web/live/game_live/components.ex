@@ -1,9 +1,24 @@
-defmodule CuberacerLive.GameLive.Components do
+defmodule CuberacerLiveWeb.GameLive.Components do
   use Phoenix.Component
 
+  alias CuberacerLiveWeb.Router.Helpers, as: Routes
   alias CuberacerLive.Sessions
   alias CuberacerLive.Sessions.Round
   alias CuberacerLive.Accounts.User
+
+  def room_card(assigns) do
+    ~H"""
+    <%= live_redirect to: Routes.game_room_path(CuberacerLiveWeb.Endpoint, :show, @session.id), class: "t_room-card" do %>
+      <div id={"t_room-card-#{@session.id}"} class="p-4 rounded-lg shadow-sm border bg-white transition-all hover:bg-gray-50 hover:shadow-md">
+        <h2 class="text-lg text-center font-medium"><%= @session.name %></h2>
+        <hr class="my-2" />
+        <div class="flex justify-center">
+          <div><%= @session.cube_type.name %></div>
+        </div>
+      </div>
+    <% end %>
+    """
+  end
 
   def timer(assigns) do
     ~H"""
