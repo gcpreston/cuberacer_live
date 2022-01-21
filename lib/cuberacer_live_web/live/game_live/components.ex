@@ -1,4 +1,4 @@
-defmodule CuberacerLive.GameLive.Components do
+defmodule CuberacerLiveWeb.GameLive.Components do
   use Phoenix.Component
 
   alias CuberacerLive.Sessions
