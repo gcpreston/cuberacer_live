@@ -554,6 +554,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       assert html =~ Sessions.display_solve(solve)
 
       other_session = session_fixture()
+      _other_session_round = round_fixture(session: other_session)
       live_redirect(other_view, to: "/#{other_session.id}")
 
       refute render(view) =~ other_user.username
