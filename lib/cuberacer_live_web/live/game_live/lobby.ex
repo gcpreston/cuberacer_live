@@ -1,6 +1,8 @@
 defmodule CuberacerLiveWeb.GameLive.Lobby do
   use CuberacerLiveWeb, :live_view
 
+  import CuberacerLiveWeb.GameLive.Components
+
   alias CuberacerLive.Sessions
   alias CuberacerLive.Sessions.Session
 

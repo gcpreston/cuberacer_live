@@ -5,6 +5,8 @@ defmodule CuberacerLive.GameLive.LobbyTest do
   import CuberacerLive.SessionsFixtures
   import CuberacerLive.CubingFixtures
 
+  alias CuberacerLive.Sessions
+
   setup :register_and_log_in_user
 
   describe ":index" do
@@ -12,7 +14,9 @@ defmodule CuberacerLive.GameLive.LobbyTest do
       session = session_fixture() |> CuberacerLive.Repo.preload(:cube_type)
       {:ok, _live, html} = live(conn, Routes.game_lobby_path(conn, :index))
 
-      assert html =~ "Lobby"
+      html
+      |> assert_html(".t_room-card", count: 1)
+      |> assert_html("#t_room-card-#{session.id}", count: 1)
       assert html =~ session.name
       assert html =~ session.cube_type.name
     end
@@ -25,6 +29,45 @@ defmodule CuberacerLive.GameLive.LobbyTest do
       |> render_click()
 
       assert_patch(live, Routes.game_lobby_path(conn, :new))
+    end
+
+    test "shows correct copy when there are no rooms", %{conn: conn} do
+      {:ok, _live, html} = live(conn, Routes.game_lobby_path(conn, :index))
+
+      refute_html(html, ".t_room-card")
+      assert html =~ "Welcome"
+      assert html =~ "Create a room to get things started!"
+    end
+
+    test "shows correct copy when there are rooms", %{conn: conn} do
+      _session = session_fixture()
+      {:ok, _live, html} = live(conn, Routes.game_lobby_path(conn, :index))
+
+      assert_html(html, ".t_room-card", count: 1)
+      assert html =~ "Welcome"
+      assert html =~ "Join a room below, or create your own!"
+    end
+
+    test "changes copy when rooms are created or terminated", %{conn: conn} do
+      {:ok, live, html} = live(conn, Routes.game_lobby_path(conn, :index))
+
+      refute_html(html, ".t_room-card")
+      assert html =~ "Welcome"
+      assert html =~ "Create a room to get things started!"
+
+      session = session_fixture()
+
+      html = render(live)
+      assert_html(html, ".t_room-card", count: 1)
+      assert html =~ "Welcome"
+      assert html =~ "Join a room below, or create your own!"
+
+      Sessions.delete_session(session)
+
+      html = render(live)
+      refute_html(html, ".t_room-card")
+      assert html =~ "Welcome"
+      assert html =~ "Create a room to get things started!"
     end
 
     test "redirects if user is not logged in" do
@@ -54,7 +97,7 @@ defmodule CuberacerLive.GameLive.LobbyTest do
       cube_type = cube_type_fixture()
       {:ok, live, html} = live(conn, Routes.game_lobby_path(conn, :new))
 
-      refute_html(html, ".t_room")
+      refute_html(html, ".t_room-card")
 
       result =
         live
@@ -65,11 +108,11 @@ defmodule CuberacerLive.GameLive.LobbyTest do
 
       {:ok, lobby_live, html} = follow_redirect(result, conn)
 
-      assert_html(html, ".t_room", count: 1)
+      assert_html(html, ".t_room-card", count: 1)
 
       result =
         lobby_live
-        |> element(".t_join")
+        |> element(".t_room-card")
         |> render_click()
 
       assert_redirect(lobby_live)
