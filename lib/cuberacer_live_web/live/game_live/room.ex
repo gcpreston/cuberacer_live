@@ -199,4 +199,14 @@ defmodule CuberacerLiveWeb.GameLive.Room do
   defp current_scramble([]) do
     nil
   end
+
+  defp scramble_text_size(scramble) do
+    len = String.length(scramble)
+
+    cond do
+      len > 325 -> "text-sm lg:text-base"
+      len > 225 -> "text-base lg:text-lg"
+      true -> "text-lg"
+    end
+  end
 end

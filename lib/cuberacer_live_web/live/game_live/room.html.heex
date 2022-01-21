@@ -4,7 +4,7 @@
       <h1 class="text-xl font-bold mb-6"><%= @session.name %></h1>
 
       <div class="my-3 mx-auto text-center">
-        <div class="text-xl t_scramble"><%= current_scramble(@rounds) %></div>
+        <div class={"#{scramble_text_size(current_scramble(@rounds))} t_scramble"}><%= current_scramble(@rounds) %></div>
         <div class="text-6xl my-4"><.timer has_current_solve?={@has_current_solve?} /></div>
         <.penalty_input />
 
