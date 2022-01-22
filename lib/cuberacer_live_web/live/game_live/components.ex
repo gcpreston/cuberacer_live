@@ -28,6 +28,8 @@ defmodule CuberacerLiveWeb.GameLive.Components do
       x-init={"hasCurrentSolve = #{@has_current_solve?}"}
       @keydown.space.window="handleSpaceDown"
       @keyup.space.window.prevent="handleSpaceUp"
+      @touchstart="handleSpaceDown"
+      @touchend="handleSpaceUp"
       phx-hook="Timer"
     >
       <span id="time" x-text="formattedTime" :class="timeColor"></span>
