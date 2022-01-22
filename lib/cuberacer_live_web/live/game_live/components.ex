@@ -45,7 +45,7 @@ defmodule CuberacerLiveWeb.GameLive.Components do
 
   def chat(assigns) do
     ~H"""
-    <div id="chat" class="flex flex-col w-80 border" x-data="{
+    <div id="chat" class="flex flex-col border h-full w-full" x-data="{
       message: '',
 
       sendMessage() {
