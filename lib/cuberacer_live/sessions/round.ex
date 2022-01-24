@@ -2,6 +2,7 @@ defmodule CuberacerLive.Sessions.Round do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @derive {Jason.Encoder, only: [:id, :scramble, :solves]}
   schema "rounds" do
     field :scramble, :string
     belongs_to :session, CuberacerLive.Sessions.Session

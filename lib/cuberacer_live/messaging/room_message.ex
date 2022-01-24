@@ -2,6 +2,7 @@ defmodule CuberacerLive.Messaging.RoomMessage do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @derive {Jason.Encoder, only: [:id, :message, :user]}
   schema "room_messages" do
     field :message, :string
     belongs_to :user, CuberacerLive.Accounts.User

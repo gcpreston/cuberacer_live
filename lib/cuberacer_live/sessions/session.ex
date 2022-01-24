@@ -2,6 +2,7 @@ defmodule CuberacerLive.Sessions.Session do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @derive {Jason.Encoder, only: [:name, :cube_type, :room_messages, :rounds]}
   schema "sessions" do
     field :name, :string
     field :host_id, :id
