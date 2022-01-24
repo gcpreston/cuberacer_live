@@ -5,7 +5,11 @@ defmodule CuberacerLive.Sessions.Session do
   schema "sessions" do
     field :name, :string
     field :host_id, :id
+
     belongs_to :cube_type, CuberacerLive.Cubing.CubeType
+
+    has_many :rounds, CuberacerLive.Sessions.Round
+    has_many :room_messages, CuberacerLive.Messaging.RoomMessage
 
     timestamps()
   end

@@ -95,6 +95,30 @@ defmodule CuberacerLive.Sessions do
   def get_session!(id), do: Repo.get!(Session, id)
 
   @doc """
+  Retrieve session data preloadedd with everything necessary for
+  display on room load.
+  """
+  def get_room_data!(room_id) do
+    query =
+      from session in Session,
+        where: session.id == ^room_id,
+        left_join: cube_type in assoc(session, :cube_type),
+        left_join: room_message in assoc(session, :room_messages),
+        left_join: user in assoc(room_message, :user),
+        left_join: round in assoc(session, :rounds),
+        left_join: solve in assoc(round, :solves),
+        left_join: penalty in assoc(solve, :penalty),
+        order_by: [desc: round.id],
+        preload: [
+          cube_type: cube_type,
+          room_messages: {room_message, user: user},
+          rounds: {round, solves: {solve, penalty: penalty}}
+        ]
+
+    Repo.one!(query)
+  end
+
+  @doc """
   Creates a session.
 
   ## Examples
