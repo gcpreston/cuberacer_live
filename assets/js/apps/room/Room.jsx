@@ -1,19 +1,57 @@
 import React, { useState, useEffect } from 'react';
+import { Presence } from 'phoenix';
 
 import { useChannel } from '../../contexts/socketContext';
 import Timer from './Timer';
 
+function getCurrentScramble(session) {
+  return session.rounds[0].scramble;
+}
+
+function presenceToUsers(presenceList) {
+  return Object.keys(presenceList).map(userId => presenceList[userId].user);
+}
+
+function userSolveForRound(round, user) {
+  return round.solves.find(solve => solve.user_id === user.id);
+}
+
+function msToSecStr(ms) {
+  return (ms / 1000).toFixed(3);
+}
+
+function displaySolve(solve) {
+  if (solve === undefined) return '--';
+
+  switch (solve.penalty.name) {
+    case 'OK':
+      return msToSecStr(solve.time);
+    case '+2':
+      return msToSecStr(solve.time + 2000) + '+';
+    case 'DNF':
+      return 'DNF';
+  }
+}
+
 const Room = ({ roomId }) => {
   const [session, setSession] = useState(null);
-  console.log(session);
+  const [currentUsers, setCurrentUsers] = useState([]);
+
   const roomChannel = useChannel(`room:${roomId}`, (session) => setSession(session));
 
-  /*
+  if (roomChannel) {
+    const roomPresence = new Presence(roomChannel);
+  }
+
   useEffect(() => {
     if (!roomChannel) return;
-    ...
+
+    roomChannel.on('presence_state', payload => setCurrentUsers(presenceToUsers(payload)));
+
+    return () => {
+      roomChannel.off('presence_state');
+    }
   }, [roomChannel]);
-  */
 
   if (!session) return null;
 
@@ -25,10 +63,7 @@ const Room = ({ roomId }) => {
           <p className="italic mb-3">{session.cube_type.name}</p>
 
           <div className="my-3 mx-auto text-center">
-            {/*
-            <div className={"#{scramble_text_size(current_scramble(@rounds))} t_scramble"}><%= current_scramble(@rounds) %></div>
-            */}
-
+            <div className="text-xl t_scramble">{getCurrentScramble(session)}</div>
             <div className="text-6xl my-4">
               <Timer onStop={(time) => console.log('got end time', time)} />
             </div>
@@ -69,13 +104,27 @@ const Room = ({ roomId }) => {
               <table className="w-full border-separate [border-spacing:0]">
                 <thead className="bg-gray-50 sticky top-0">
                   <tr>
-                    <th scope="col" className="border-y px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      This person idk
-                    </th>
+                    {currentUsers.map(user => (
+                      <th key={user.id} scope="col" className="border-y px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        {user.username}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
-                <tbody id="times-table-body" className="bg-white" phx-update="prepend">
-                  {/* rounds... */}
+                <tbody id="times-table-body" className="bg-white">
+                  {session.rounds.map(round => (
+                    <tr key={`round-${round.id}`} className="t_round-row">
+                      {currentUsers.map(user => (
+                        <td key={`round-${round.id}-solve-user-${user.id}`} className="border-b px-6 py-4 whitespace-nowrap">
+                          <div className="ml-4">
+                            <div className="text-sm font-medium text-gray-900">
+                              {displaySolve(userSolveForRound(round, user))}
+                            </div>
+                          </div>
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
