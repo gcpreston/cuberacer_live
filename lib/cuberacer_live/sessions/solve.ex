@@ -2,7 +2,7 @@ defmodule CuberacerLive.Sessions.Solve do
   use Ecto.Schema
   import Ecto.Changeset
 
-  @derive {Jason.Encoder, only: [:time]}
+  @derive {Jason.Encoder, only: [:time, :user_id, :penalty]}
   schema "solves" do
     field :time, :integer
     belongs_to :user, CuberacerLive.Accounts.User

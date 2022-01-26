@@ -2,7 +2,7 @@ defmodule CuberacerLive.Accounts.User do
   use Ecto.Schema
   import Ecto.Changeset
 
-  @derive {Jason.Encoder, only: [:email, :username]}
+  @derive {Jason.Encoder, only: [:id, :email, :username]}
   schema "users" do
     field :email, :string
     field :username, :string
