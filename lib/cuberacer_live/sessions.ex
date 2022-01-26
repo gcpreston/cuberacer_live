@@ -278,6 +278,10 @@ defmodule CuberacerLive.Sessions do
   Raises `Ecto.NoResultsError` if the session has no rounds.
   """
   def get_current_round!(%Session{id: session_id}) do
+    get_current_round!(session_id)
+  end
+
+  def get_current_round!(session_id) do
     query = current_round_query(session_id)
     Repo.one!(query)
   end
@@ -304,7 +308,9 @@ defmodule CuberacerLive.Sessions do
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_round(%Session{} = session, scramble \\ nil) do
+  def create_round(session_or_id, scramble \\ nil)
+
+  def create_round(%Session{} = session, scramble) do
     session = Repo.preload(session, :cube_type)
     scramble = scramble || Whisk.scramble(session.cube_type.name)
     attrs = %{session_id: session.id, scramble: scramble}
@@ -313,6 +319,17 @@ defmodule CuberacerLive.Sessions do
     |> Round.create_changeset(attrs)
     |> Repo.insert()
     |> notify_subscribers([:round, :created])
+  end
+
+  def create_round(session_id, scramble) do
+    query =
+      from s in Session,
+        where: s.id == ^session_id,
+        join: c in assoc(s, :cube_type),
+        preload: [cube_type: c]
+
+    session = Repo.one!(query)
+    create_round(session, scramble)
   end
 
   @doc """
@@ -385,6 +402,10 @@ defmodule CuberacerLive.Sessions do
   Returns `nil` if the user has no solve for the current round.
   """
   def get_current_solve(%Session{id: session_id}, %User{id: user_id}) do
+    get_current_solve(session_id, user_id)
+  end
+
+  def get_current_solve(session_id, user_id) do
     query =
       from r in subquery(current_round_query(session_id)),
         join: s in assoc(r, :solves),
@@ -419,8 +440,12 @@ defmodule CuberacerLive.Sessions do
   Adds the solve to the current round of the given session.
   """
   def create_solve(%Session{} = session, %User{} = user, time, %Penalty{} = penalty) do
-    round = get_current_round!(session)
-    attrs = %{user_id: user.id, time: time, penalty_id: penalty.id, round_id: round.id}
+    create_solve(session.id, user.id, time, penalty.id)
+  end
+
+  def create_solve(session_id, user_id, time, penalty_id) do
+    round = get_current_round!(session_id)
+    attrs = %{user_id: user_id, time: time, penalty_id: penalty_id, round_id: round.id}
 
     %Solve{}
     |> Solve.create_changeset(attrs)

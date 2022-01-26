@@ -59,6 +59,10 @@ defmodule CuberacerLive.Messaging do
 
   """
   def create_room_message(%Session{id: session_id}, %User{id: user_id}, message) do
+    create_room_message(session_id, user_id, message)
+  end
+
+  def create_room_message(session_id, user_id, message) do
     attrs = %{message: message, user_id: user_id, session_id: session_id}
 
     %RoomMessage{}
