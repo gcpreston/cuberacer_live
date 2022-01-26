@@ -36,24 +36,103 @@ function displaySolve(solve) {
 const Room = ({ roomId }) => {
   const [session, setSession] = useState(null);
   const [currentUsers, setCurrentUsers] = useState([]);
+  const [chatMessage, setChatMessage] = useState('');
 
   const roomChannel = useChannel(`room:${roomId}`, (session) => setSession(session));
 
-  if (roomChannel) {
-    const roomPresence = new Presence(roomChannel);
-  }
-
   useEffect(() => {
-    if (!roomChannel) return;
+    if (!roomChannel) return null;
 
     roomChannel.on('presence_state', payload => setCurrentUsers(presenceToUsers(payload)));
 
+    roomChannel.on('round_created', round => {
+      setSession({
+        ...session,
+        rounds: [
+          round,
+          ...session.rounds
+        ]
+      });
+    });
+
+    roomChannel.on('solve_created', solve => {
+      setSession({
+        ...session,
+        rounds: [
+          {
+            ...session.rounds[0],
+            solves: [
+              ...session.rounds[0].solves,
+              solve
+            ]
+          },
+          ...session.rounds.slice(1)
+        ]
+      });
+    });
+
+    roomChannel.on('solve_updated', solve => {
+      const otherSolves = session.rounds[0].solves.filter(s => s.id !== solve.id)
+      setSession({
+        ...session,
+        rounds: [
+          {
+            ...session.rounds[0],
+            solves: [
+              solve,
+              ...otherSolves
+            ]
+          },
+          ...session.rounds.slice(1)
+        ]
+      })
+    });
+
+    roomChannel.on('message_created', roomMessage => {
+      setSession({
+        ...session,
+        room_messages: [
+          ...session.room_messages,
+          roomMessage
+        ]
+      });
+    });
+
     return () => {
       roomChannel.off('presence_state');
+      roomChannel.off('round_created');
+      roomChannel.off('solve_created');
+      roomChannel.off('solve_updated');
+      roomChannel.off('message_created');
     }
-  }, [roomChannel]);
+  }, [roomChannel, session]);
 
   if (!session) return null;
+
+  const roomPresence = new Presence(roomChannel);
+
+  const changePenaltyHandler = (penalty) => (
+    () => roomChannel.push('change_penalty', { penalty })
+  );
+
+  const newRound = () => {
+    roomChannel.push('new_round');
+  };
+
+  const newSolve = (time) => {
+    roomChannel.push('new_solve', { time });
+  };
+
+  const sendMessage = () => {
+    roomChannel.push('send_message', { message: chatMessage });
+    setChatMessage('');
+  };
+
+  const handleChatKeyDown = (event) => {
+    if (event.key === 'Enter') {
+      sendMessage();
+    }
+  };
 
   return (
     <div className="flex flex-row h-full">
@@ -65,14 +144,20 @@ const Room = ({ roomId }) => {
           <div className="my-3 mx-auto text-center">
             <div className="text-xl t_scramble">{getCurrentScramble(session)}</div>
             <div className="text-6xl my-4">
-              <Timer onStop={(time) => console.log('got end time', time)} />
+              <Timer onStop={newSolve} />
             </div>
 
             <div id="penalty-input">
-              <button phx-click="change-penalty" phx-value-name="OK">OK</button> | <button phx-click="change-penalty" phx-value-name="+2">+2</button> | <button phx-click="change-penalty" phx-value-name="DNF">DNF</button>
+              <button onClick={changePenaltyHandler('OK')}>OK</button> | <button onClick={changePenaltyHandler('+2')}>+2</button> | <button onClick={changePenaltyHandler('DNF')}>DNF</button>
             </div>
 
-            <button id="new-round-button" className="px-4 py-2 mt-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium bg-white hover:bg-gray-50">New round</button>
+            <button
+              id="new-round-button"
+              className="px-4 py-2 mt-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium bg-white hover:bg-gray-50"
+              onClick={newRound}
+            >
+              New round
+            </button>
           </div>
         </div>
 
@@ -151,8 +236,11 @@ const Room = ({ roomId }) => {
               type="text"
               className="flex-1 border rounded-xl px-2 py-1 mx-2 my-1"
               placeholder="Chat"
+              value={chatMessage}
+              onChange={e => setChatMessage(e.target.value)}
+              onKeyDown={handleChatKeyDown}
             />
-            <button className="font-medium mr-2 text-cyan-600 hover:text-cyan-800">Send</button>
+            <button className="font-medium mr-2 text-cyan-600 hover:text-cyan-800" onClick={sendMessage}>Send</button>
           </div>
         </div>
       </div>
