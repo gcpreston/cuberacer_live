@@ -106,6 +106,8 @@ const Timer = ({ onStop }) => {
 
   const handleKeyDown = (event) => {
     if (event.keyCode === 32) {
+      event.preventDefault();
+
       // TODO: check for input focus and has current solve
       if (timerState === 'running') {
         stopTimer();
@@ -117,6 +119,8 @@ const Timer = ({ onStop }) => {
 
   const handleKeyUp = (event) => {
     if (event.keyCode === 32) {
+      event.preventDefault();
+
       if (timerState === 'ready') {
         startTimer();
       } else if (timerState === 'preparing') {
