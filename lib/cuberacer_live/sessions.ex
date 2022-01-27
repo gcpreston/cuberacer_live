@@ -108,7 +108,7 @@ defmodule CuberacerLive.Sessions do
         left_join: round in assoc(session, :rounds),
         left_join: solve in assoc(round, :solves),
         left_join: penalty in assoc(solve, :penalty),
-        order_by: [desc: round.id],
+        order_by: [desc: round.id, asc: room_message.id],
         preload: [
           cube_type: cube_type,
           room_messages: {room_message, user: user},
