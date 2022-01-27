@@ -28,6 +28,31 @@ defmodule CuberacerLiveWeb.RoomChannelTest do
   # TODO: implement some basic logic to handle unauthenticated room connections,
   #   even though this couldn't happen rn bc of socket auth
 
+  describe "Presence" do
+    test "pushes state on join", %{user: user} do
+      user_id_str = "#{user.id}"
+      assert_push "presence_state", %{^user_id_str => _}
+    end
+
+    test "broadcasts diffs on other user join and leave", %{session: session} do
+      other_user = user_fixture()
+
+      {:ok, _, other_socket} =
+        CuberacerLiveWeb.UserSocket
+        |> socket("user_socket:#{other_user.id}", %{user_id: other_user.id})
+        |> subscribe_and_join(CuberacerLiveWeb.RoomChannel, "room:#{session.id}")
+
+      other_user_id_str = "#{other_user.id}"
+
+      assert_broadcast "presence_diff", %{joins: %{^other_user_id_str => _}, leaves: %{}}
+
+      Process.unlink(other_socket.channel_pid)
+      leave(other_socket)
+
+      assert_broadcast "presence_diff", %{joins: %{}, leaves: %{^other_user_id_str => _}}
+    end
+  end
+
   describe "handle_in/3" do
     test "new_round creates a new round", %{socket: socket, session: session} do
       Sessions.subscribe(session.id)
