@@ -17,6 +17,8 @@ defmodule CuberacerLiveWeb.ChannelCase do
 
   use ExUnit.CaseTemplate
 
+  @presence_shutdown_timer_ms 10
+
   using do
     quote do
       # Import conveniences for testing with channels
@@ -31,6 +33,20 @@ defmodule CuberacerLiveWeb.ChannelCase do
   setup tags do
     pid = Ecto.Adapters.SQL.Sandbox.start_owner!(CuberacerLive.Repo, shared: not tags[:async])
     on_exit(fn -> Ecto.Adapters.SQL.Sandbox.stop_owner(pid) end)
+
+    if tags[:ensure_presence_shutdown] do
+      # Ensure Presence processes have shut down before test process exits
+      # https://github.com/phoenixframework/phoenix/issues/3619
+      on_exit(fn ->
+        :timer.sleep(@presence_shutdown_timer_ms)
+
+        for pid <- CuberacerLiveWeb.Presence.fetchers_pids() do
+          ref = Process.monitor(pid)
+          assert_receive {:DOWN, ^ref, _, _, _}, 1000
+        end
+      end)
+    end
+
     :ok
   end
 end
