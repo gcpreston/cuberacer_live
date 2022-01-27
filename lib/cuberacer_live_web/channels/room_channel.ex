@@ -23,12 +23,12 @@ defmodule CuberacerLiveWeb.RoomChannel do
 
   def handle_in("new_solve", %{"time" => time}, socket) do
     penalty = Cubing.get_penalty("OK")
-    Sessions.create_solve(session_id(socket), socket.assigns.user.id, time, penalty.id)
+    Sessions.create_solve(session_id(socket), socket.assigns.user_id, time, penalty.id)
     {:noreply, socket}
   end
 
   def handle_in("change_penalty", %{"penalty" => penalty_name}, socket) do
-    if solve = Sessions.get_current_solve(session_id(socket), socket.assigns.user.id) do
+    if solve = Sessions.get_current_solve(session_id(socket), socket.assigns.user_id) do
       Sessions.change_penalty(solve, Cubing.get_penalty(penalty_name))
     end
 
@@ -36,13 +36,13 @@ defmodule CuberacerLiveWeb.RoomChannel do
   end
 
   def handle_in("send_message", %{"message" => message}, socket) do
-    Messaging.create_room_message(session_id(socket), socket.assigns.user.id, message)
+    Messaging.create_room_message(session_id(socket), socket.assigns.user_id, message)
     {:noreply, socket}
   end
 
   @impl true
   def handle_info(:after_join, socket) do
-    {:ok, _} = Presence.track(socket, socket.assigns.user.id, %{
+    {:ok, _} = Presence.track(socket, socket.assigns.user_id, %{
       online_at: inspect(System.system_time(:second))
     })
 
@@ -52,25 +52,25 @@ defmodule CuberacerLiveWeb.RoomChannel do
 
   def handle_info({Sessions, [:round, :created], round}, socket) do
     round = Repo.preload(round, :solves)
-    broadcast!(socket, "round_created", round)
+    push(socket, "round_created", round)
     {:noreply, socket}
   end
 
   def handle_info({Sessions, [:solve, :created], solve}, socket) do
     solve = Repo.preload(solve, :penalty)
-    broadcast!(socket, "solve_created", solve)
+    push(socket, "solve_created", solve)
     {:noreply, socket}
   end
 
   def handle_info({Sessions, [:solve, :updated], solve}, socket) do
     solve = Repo.preload(solve, :penalty)
-    broadcast!(socket, "solve_updated", solve)
+    push(socket, "solve_updated", solve)
     {:noreply, socket}
   end
 
   def handle_info({Messaging, [:room_message, _], room_message}, socket) do
     room_message = Repo.preload(room_message, :user)
-    broadcast!(socket, "message_created", room_message)
+    push(socket, "message_created", room_message)
     {:noreply, socket}
   end
 
