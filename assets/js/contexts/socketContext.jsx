@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
-import { Socket } from 'phoenix';
+import { Socket, Presence } from 'phoenix';
 
 const PhoenixSocketContext = createContext({ socket: null });
 
@@ -25,16 +25,24 @@ PhoenixSocketProvider.propTypes = {
   children: PropTypes.node,
 };
 
-const useChannel = (channelName, joinOkCallback, joinErrorCallback) => {
+const useChannelWithPresence = (channelName, joinOkCallback, joinErrorCallback, syncListCallback) => {
   const [channel, setChannel] = useState();
+  const [presence, setPresence] = useState();
   const { socket } = useContext(PhoenixSocketContext);
 
   useEffect(() => {
     const phoenixChannel = socket.channel(channelName);
+    const phoenixPresence = new Presence(phoenixChannel);
+
+    phoenixPresence.onSync(() => {
+      if (syncListCallback) syncListCallback(phoenixPresence.list());
+    });
 
     phoenixChannel.join()
       .receive('ok', (resp) => {
         setChannel(phoenixChannel);
+        setPresence(phoenixPresence);
+
         if (joinOkCallback) joinOkCallback(resp);
       })
       .receive('error', (resp) => {
@@ -46,7 +54,7 @@ const useChannel = (channelName, joinOkCallback, joinErrorCallback) => {
     };
   }, []);
 
-  return channel;
+  return [channel, presence];
 };
 
-export { PhoenixSocketProvider, useChannel };
+export { PhoenixSocketProvider, useChannelWithPresence };

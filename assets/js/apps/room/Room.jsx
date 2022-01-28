@@ -1,15 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Presence } from 'phoenix';
 
-import { useChannel } from '../../contexts/socketContext';
+import { useChannelWithPresence } from '../../contexts/socketContext';
 import Timer from './Timer';
 
 function getCurrentScramble(session) {
   return session.rounds[0].scramble;
 }
 
-function presenceToUsers(presenceList) {
-  return Object.keys(presenceList).map(userId => presenceList[userId].user);
+function presenceListToUsers(presenceList) {
+  return presenceList.map(data => data.user);
 }
 
 function userSolveForRound(round, user) {
@@ -38,12 +37,15 @@ const Room = ({ roomId }) => {
   const [currentUsers, setCurrentUsers] = useState([]);
   const [chatMessage, setChatMessage] = useState('');
 
-  const roomChannel = useChannel(`room:${roomId}`, (session) => setSession(session));
+  const [roomChannel, _roomPresence] = useChannelWithPresence(
+    `room:${roomId}`,
+    joinResp => setSession(joinResp),
+    errorResp => console.log('error joining channel', errorResp),
+    presenceList => setCurrentUsers(presenceListToUsers(presenceList))
+  );
 
   useEffect(() => {
     if (!roomChannel) return null;
-
-    roomChannel.on('presence_state', payload => setCurrentUsers(presenceToUsers(payload)));
 
     roomChannel.on('round_created', round => {
       setSession({
@@ -99,7 +101,6 @@ const Room = ({ roomId }) => {
     });
 
     return () => {
-      roomChannel.off('presence_state');
       roomChannel.off('round_created');
       roomChannel.off('solve_created');
       roomChannel.off('solve_updated');
@@ -108,8 +109,6 @@ const Room = ({ roomId }) => {
   }, [roomChannel, session]);
 
   if (!session) return null;
-
-  const roomPresence = new Presence(roomChannel);
 
   const changePenaltyHandler = (penalty) => (
     () => roomChannel.push('change_penalty', { penalty })
