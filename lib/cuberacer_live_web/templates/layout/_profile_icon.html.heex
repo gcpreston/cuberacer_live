@@ -1,5 +1,5 @@
 <!-- Profile dropdown -->
-<div class="ml-3 relative" x-data="{ dropdownOpen: false }" @mousedown.outside="dropdownOpen = false">
+<div class="relative" x-data="{ dropdownOpen: false }" @mousedown.outside="dropdownOpen = false">
   <div>
     <%= if @current_user do %>
       <button @mousedown="dropdownOpen = !dropdownOpen" type="button"
