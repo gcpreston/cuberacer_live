@@ -7,8 +7,8 @@ on:
     branches: [main]
 
 jobs:
-  test:
-    name: Build and test
+  test_elixir:
+    name: Build and test Elixir
     runs-on: ubuntu-latest
 
     services:
@@ -42,3 +42,18 @@ jobs:
         run: mix deps.get
       - name: Run tests
         run: mix test
+
+  test_js:
+    name: Test JavaScript/React
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./assets
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install modules
+        run: npm install
+      - name: Run tests
+        run: npm test
