@@ -108,7 +108,7 @@ const Room = ({ roomId }) => {
     }
   }, [roomChannel, session]);
 
-  if (!session) return null;
+  if (!session) return <p>Loading...</p>;
 
   const changePenaltyHandler = (penalty) => (
     () => roomChannel.push('change_penalty', { penalty })
@@ -163,7 +163,7 @@ const Room = ({ roomId }) => {
         <div className="flex-1 overflow-auto">
           <div className="flex flex-row h-full">
             <div className="border-r">
-              {/* stats */}
+              {/* Stats */}
               <table className="w-full">
                 <thead className="bg-gray-50">
                   <tr>
@@ -196,8 +196,8 @@ const Room = ({ roomId }) => {
                   </tr>
                 </thead>
                 <tbody id="times-table-body" className="bg-white">
-                  {session.rounds.map(round => (
-                    <tr key={`round-${round.id}`} className="t_round-row">
+                  {session.rounds.map((round, idx) => (
+                    <tr key={`round-${round.id}`} aria-label={`Round ${session.rounds.length - idx}`}>
                       {currentUsers.map(user => (
                         <td key={`round-${round.id}-solve-user-${user.id}`} className="border-b px-6 py-4 whitespace-nowrap">
                           <div className="ml-4">
@@ -222,7 +222,7 @@ const Room = ({ roomId }) => {
           <div className="flex-1 flex flex-col-reverse overflow-auto">
             <div id="room-messages" className="divide-y">
               {session.room_messages.map(roomMessage => (
-                <div key={`room-message-${roomMessage.id}`} className="px-2 t_room-message">
+                <div key={`room-message-${roomMessage.id}`} data-testid="room-message" className="px-2">
                   {`${roomMessage.user.username}: ${roomMessage.message}`}
                 </div>
               ))}
@@ -231,6 +231,7 @@ const Room = ({ roomId }) => {
 
           <div className="flex flex-row">
             <input
+              aria-label="Chat input"
               id="chat-input"
               type="text"
               className="flex-1 border rounded-xl px-2 py-1 mx-2 my-1"
