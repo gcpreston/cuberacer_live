@@ -13,6 +13,30 @@ defmodule CuberacerLiveWeb.UserSettingsControllerTest do
       assert response =~ "Settings</h1>"
     end
 
+    test "renders user unconfirmed status", %{conn: conn} do
+      conn = get(conn, Routes.user_settings_path(conn, :edit))
+      response = html_response(conn, 200)
+      assert response =~ "Unconfirmed</span>"
+      refute response =~ "Confirmed</span>"
+      assert response =~ "Resend confirmation email</button>"
+    end
+
+    test "renders user confirmed status", %{conn: conn, user: user} do
+      token =
+        extract_user_token(fn url ->
+          Accounts.deliver_user_confirmation_instructions(user, url)
+        end)
+
+      conn =
+        post(conn, Routes.user_confirmation_path(conn, :update, token))
+        |> get(Routes.user_settings_path(conn, :edit))
+
+      response = html_response(conn, 200)
+      assert response =~ "Confirmed</span>"
+      refute response =~ "Unconfirmed</span>"
+      refute response =~ "Resend confirmation email</button>"
+    end
+
     test "redirects if user is not logged in" do
       conn = build_conn()
       conn = get(conn, Routes.user_settings_path(conn, :edit))
