@@ -8,7 +8,10 @@ const PhoenixSocketProvider = ({ children }) => {
   const [socket, setSocket] = useState();
 
   useEffect(() => {
-    const params = { token: document.querySelector('meta[name="socket_token"]').content };
+    const params = {};
+    const tokenElem = document.querySelector('meta[name="socket_token"]');
+    if (tokenElem) params.token = tokenElem.content;
+
     const socket = new Socket('/socket', { params: params });
     socket.connect();
     setSocket(socket);
