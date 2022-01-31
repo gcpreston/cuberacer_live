@@ -4,6 +4,16 @@
   <div class="w-full bg-gray-200 border border-gray-600 rounded-lg p-3 mb-6">
     <h3 class="text-xl">Change email</h3>
 
+      <%= if @conn.assigns.current_user.confirmed_at do %>
+        <span class="rounded bg-green-300 text-green-900 text-sm font-medium px-1 py-0.5">Confirmed</span>
+      <% else %>
+        <span class="rounded bg-orange-300 text-orange-900 text-sm font-medium px-1 py-0.5">Unconfirmed</span>
+        <.form let={resend_confirm} for={:user} action={Routes.user_confirmation_path(@conn, :create)} class="inline">
+          <%= hidden_input resend_confirm, :email, value: @conn.assigns.current_user.email %>
+          <%= submit "Resend confirmation email", class: "text-blue-500 hover:underline" %>
+        </.form>
+      <% end %>
+
     <.form let={f} for={@email_changeset} action={Routes.user_settings_path(@conn, :update)} id="update_email">
       <%= if @email_changeset.action do %>
         <div class="alert alert-danger">
