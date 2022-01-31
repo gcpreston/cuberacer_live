@@ -222,7 +222,7 @@ const Room = ({ roomId }) => {
           <div className="flex-1 flex flex-col-reverse overflow-auto">
             <div id="room-messages" className="divide-y">
               {session.room_messages.map(roomMessage => (
-                <div key={`room-message-${roomMessage.id}`} data-testid="room-message" className="px-2">
+                <div key={`room-message-${roomMessage.id}`} data-testid={`room-message-${roomMessage.id}`} className="px-2">
                   {`${roomMessage.user.username}: ${roomMessage.message}`}
                 </div>
               ))}

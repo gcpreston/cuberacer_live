@@ -35,7 +35,7 @@ class PhoenixWS {
    * @param {object?} response
    * @returns {string}
    */
-  async channelJoined(status, response) {
+  async replyToJoin(status, response) {
     while (true) {
       const [joinRef, ref, topic, event, _payload] = await this.client.nextMessage;
 
