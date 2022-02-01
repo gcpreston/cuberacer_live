@@ -4,8 +4,8 @@ import { PhoenixWS, render, screen } from '../../test-utils';
 
 import Room from '../../../js/apps/room/Room';
 
-WEBSOCKET_URL = 'ws://localhost/socket/websocket';
-SESSION_DATA = {
+const WEBSOCKET_URL = 'ws://localhost/socket/websocket';
+const SESSION_DATA = {
   name: 'test room',
   cube_type: { name: '2x2' },
   room_messages: [
@@ -29,7 +29,7 @@ SESSION_DATA = {
   ]
 };
 
-PRESENCE_STATE = {
+const PRESENCE_STATE = {
   '2': {
     metas: [{ phx_ref: 'Fs8ZgGa7d_G2xAIi' }],
     user: { id: 2, email: 'testuser1@example.com', username: 'testuser1' }
