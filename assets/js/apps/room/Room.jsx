@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 
 import { useChannelWithPresence } from '../../contexts/socketContext';
 import Timer from './Timer';
@@ -32,7 +33,7 @@ function displaySolve(solve) {
   }
 }
 
-const Room = ({ roomId }) => {
+const Room = ({ roomId, currentUserId }) => {
   const [session, setSession] = useState(null);
   const [currentUsers, setCurrentUsers] = useState([]);
   const [chatMessage, setChatMessage] = useState('');
@@ -110,8 +111,6 @@ const Room = ({ roomId }) => {
   }, [roomChannel, session]);
 
   if (!session) return <p>Loading...</p>;
-
-  const currentUserId = parseInt(document.querySelector('meta[name="current_user_id"]').content);
 
   const changePenaltyHandler = (penalty) => (
     () => roomChannel.push('change_penalty', { penalty })
@@ -255,5 +254,10 @@ const Room = ({ roomId }) => {
     </div>
   );
 };
+
+Room.propTypes = {
+  roomId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+  currentUserId: PropTypes.number
+}
 
 export default Room;
