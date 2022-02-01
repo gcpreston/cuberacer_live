@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 
 const INTERVAL_MS = 10;
 const READY_HOLD_TIME_MS = 500;
 const PREPARING_COLOR = 'text-red-500';
 const READY_COLOR = 'text-green-400';
 
-const Timer = ({ onStop }) => {
+const Timer = ({ blocked, onStop }) => {
   // null, 'preparing', 'ready', 'running'
   const [timerState, setTimerState] = useState(null);
   const [readyTimeout, setReadyTimeout] = useState(null);
@@ -34,7 +35,7 @@ const Timer = ({ onStop }) => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     }
-  }, [timerState, runningTime]);
+  });
 
   useEffect(() => {
     window.addEventListener('keyup', handleKeyUp);
@@ -105,7 +106,7 @@ const Timer = ({ onStop }) => {
   // Event handlers
 
   const handleKeyDown = (event) => {
-    if (event.keyCode === 32) {
+    if (!blocked && event.keyCode === 32) {
       event.preventDefault();
 
       // TODO: check for input focus and has current solve
@@ -130,10 +131,15 @@ const Timer = ({ onStop }) => {
   };
 
   return (
-    <div id="timer" onKeyDown={handleKeyDown}>
+    <div id="timer">
       <span id="time" className={getTimeColor()}>{getFormattedTime()}</span>
-    </div>
+    </div >
   );
 }
+
+Timer.propTypes = {
+  blocked: PropTypes.bool,
+  onStop: PropTypes.func
+};
 
 export default Timer;

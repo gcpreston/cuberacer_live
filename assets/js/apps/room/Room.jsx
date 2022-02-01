@@ -3,8 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { useChannelWithPresence } from '../../contexts/socketContext';
 import Timer from './Timer';
 
-function getCurrentScramble(session) {
-  return session.rounds[0].scramble;
+function currentRound(session) {
+  return session.rounds[0];
 }
 
 function presenceListToUsers(presenceList) {
@@ -36,6 +36,7 @@ const Room = ({ roomId }) => {
   const [session, setSession] = useState(null);
   const [currentUsers, setCurrentUsers] = useState([]);
   const [chatMessage, setChatMessage] = useState('');
+  const [chatInputFocused, setChatInputFocused] = useState(false);
 
   const [roomChannel, _roomPresence] = useChannelWithPresence(
     `room:${roomId}`,
@@ -110,6 +111,8 @@ const Room = ({ roomId }) => {
 
   if (!session) return <p>Loading...</p>;
 
+  const currentUserId = parseInt(document.querySelector('meta[name="current_user_id"]').content);
+
   const changePenaltyHandler = (penalty) => (
     () => roomChannel.push('change_penalty', { penalty })
   );
@@ -141,9 +144,12 @@ const Room = ({ roomId }) => {
           <p className="italic mb-3">{session.cube_type.name}</p>
 
           <div className="my-3 mx-auto text-center">
-            <div className="text-xl t_scramble">{getCurrentScramble(session)}</div>
+            <div className="text-xl t_scramble">{currentRound(session).scramble}</div>
             <div className="text-6xl my-4">
-              <Timer onStop={newSolve} />
+              <Timer
+                blocked={Boolean(chatInputFocused ||  userSolveForRound(currentRound(session), { id: currentUserId }))}
+                onStop={newSolve}
+              />
             </div>
 
             <div id="penalty-input">
@@ -239,6 +245,8 @@ const Room = ({ roomId }) => {
               value={chatMessage}
               onChange={e => setChatMessage(e.target.value)}
               onKeyDown={handleChatKeyDown}
+              onFocus={() => setChatInputFocused(true)}
+              onBlur={() => setChatInputFocused(false)}
             />
             <button className="font-medium mr-2 text-cyan-600 hover:text-cyan-800" onClick={sendMessage}>Send</button>
           </div>
