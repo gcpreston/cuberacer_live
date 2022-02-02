@@ -1,5 +1,6 @@
 import React from 'react'
 import { render } from '@testing-library/react'
+import { diff } from 'jest-diff';
 import WS from 'jest-websocket-mock';
 
 import { PhoenixSocketProvider } from '../js/contexts/socketContext';
@@ -60,6 +61,82 @@ class PhoenixWS {
     this.client.send([this.joinRef, null, this.topic, event, payload]);
   }
 }
+
+const WAIT_DELAY = 1000;
+const TIMEOUT = Symbol('timeout');
+
+expect.extend({
+  async toReceiveEvent(server, expectedEvent, expectedPayload, options) {
+    const isPhoenixWS = server instanceof PhoenixWS;
+    if (!isPhoenixWS) {
+      return {
+        pass: this.isNot, // always fail
+        message: makeInvalidWsMessage.bind(this, server, 'toReceiveMessage'),
+      };
+    }
+
+    const waitDelay = options?.timeout ?? WAIT_DELAY;
+
+    const messageOrTimeout = await Promise.race([
+      server.client.nextMessage,
+      new Promise((resolve) => setTimeout(() => resolve(TIMEOUT), waitDelay)),
+    ]);
+
+    if (messageOrTimeout === TIMEOUT) {
+      return {
+        pass: this.isNot, // always fail
+        message: () =>
+          this.utils.matcherHint(
+            this.isNot ? '.not.toReceiveMessage' : '.toReceiveMessage',
+            'WS',
+            'expected'
+          ) +
+          '\n\n' +
+          `Expected the websocket server to receive a message,\n` +
+          `but it didn't receive anything in ${waitDelay}ms.`,
+      };
+    }
+    const [_joinRef, _ref, _topic, event, payload] = messageOrTimeout;
+
+    const pass = this.equals(event, expectedEvent) && this.equals(payload, expectedPayload);
+
+    const message = pass
+      ? () =>
+          this.utils.matcherHint('.not.toReceiveEvent', 'PhoenixWS', 'expectedEvent', 'expectedPayload') +
+          '\n\n' +
+          `Expected the next received event and payload to not equal:\n` +
+          `  ${this.utils.printExpected(expectedEvent)}\n` +
+          `  ${this.utils.printExpected(expectedPayload)}\n` +
+          `Received:\n` +
+          `  ${this.utils.printReceived(event)}\n` +
+          `  ${this.utils.printReceived(payload)}`
+      : () => {
+          const eventDiffString = diff(expectedEvent, event, { expand: this.expand });
+          const payloadDiffString = diff(expectedPayload, payload, { expand: this.expand });
+
+          return (
+            this.utils.matcherHint('.toReceiveEvent', 'PhoenixWS', 'expectedEvent', 'expectedPayload') +
+            '\n\n' +
+            `Expected the next received event and payload to equal:\n` +
+            `  ${this.utils.printExpected(expectedEvent)}\n` +
+            `  ${this.utils.printExpected(expectedPayload)}\n` +
+            `Received:\n` +
+            `  ${this.utils.printReceived(event)}\n` +
+            `  ${this.utils.printReceived(payload)}\n\n` +
+            `Event difference:\n\n${eventDiffString}\n\n` +
+            `Payload difference:\n\n${payloadDiffString}`
+          );
+        };
+
+    return {
+      actual: [event, payload],
+      expected: [expectedEvent, expectedPayload],
+      message,
+      name: 'toReceiveEvent',
+      pass,
+    };
+  }
+});
 
 // re-export everything
 export * from '@testing-library/react'
