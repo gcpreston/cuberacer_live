@@ -1,4 +1,5 @@
 import React from 'react';
+import userEvent from '@testing-library/user-event';
 import WS from 'jest-websocket-mock';
 import { PhoenixWS, render, screen } from '../../test-utils';
 
@@ -148,6 +149,54 @@ describe('<Room />', () => {
       const msgs = screen.getAllByTestId(/room-message-\d+/)
       expect(msgs.length).toBe(3);
       expect(msgs[2]).toHaveTextContent('other_user: a new message');
+    });
+  });
+
+  describe('outgoing events', () => {
+    beforeEach(async () => {
+      render(<Room roomId={123} />);
+
+      await server.replyToJoin('ok', SESSION_DATA);
+      await screen.findByRole('heading');
+    });
+
+    test('OK button sends an event', async () => {
+      userEvent.click(screen.getByRole('button', { name: 'OK' }));
+      await expect(server).toReceiveEvent('change_penalty', { penalty: 'OK' });
+    });
+
+    test('+2 button sends an event', async () => {
+      userEvent.click(screen.getByRole('button', { name: '+2' }));
+      await expect(server).toReceiveEvent('change_penalty', { penalty: '+2' });
+    });
+
+    test('DNF button sends an event', async () => {
+      userEvent.click(screen.getByRole('button', { name: 'DNF' }));
+      await expect(server).toReceiveEvent('change_penalty', { penalty: 'DNF' });
+    });
+
+    test('chat via button sends event and clears input', async () => {
+      userEvent.click(screen.getByRole('textbox'));
+      userEvent.keyboard('test chat message');
+
+      expect(screen.getByRole('textbox')).toHaveDisplayValue('test chat message');
+
+      userEvent.click(screen.getByRole('button', { name: 'Send' }));
+
+      expect(screen.getByRole('textbox')).toHaveDisplayValue('');
+      await expect(server).toReceiveEvent('send_message', { message: 'test chat message' });
+    });
+
+    test('chat via Enter key sends event and clears input', async () => {
+      userEvent.click(screen.getByRole('textbox'));
+      userEvent.keyboard('test chat message');
+
+      expect(screen.getByRole('textbox')).toHaveDisplayValue('test chat message');
+
+      userEvent.keyboard('[Enter]');
+
+      expect(screen.getByRole('textbox')).toHaveDisplayValue('');
+      await expect(server).toReceiveEvent('send_message', { message: 'test chat message' });
     });
   });
 });
