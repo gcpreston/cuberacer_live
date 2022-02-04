@@ -1,7 +1,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import { Provider as StoreProvider } from 'react-redux'
 
 import { PhoenixSocketProvider } from '../../contexts/socketContext';
+import store from './store';
 import Room from './Room';
 
 const root = document.getElementById('room-root');
@@ -10,8 +12,11 @@ const currentUserId = parseInt(document.querySelector('meta[name="current_user_i
 
 if (root) {
   ReactDOM.render(
-    <PhoenixSocketProvider>
-      <Room roomId={roomId} currentUserId={currentUserId} />
-    </PhoenixSocketProvider>,
-    root);
+    <StoreProvider store={store}>
+      <PhoenixSocketProvider>
+        <Room roomId={roomId} currentUserId={currentUserId} />
+      </PhoenixSocketProvider>
+    </StoreProvider>,
+    root
+  );
 }
