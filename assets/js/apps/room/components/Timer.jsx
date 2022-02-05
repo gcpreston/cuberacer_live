@@ -30,6 +30,33 @@ const Timer = ({ blocked, onStop }) => {
     return () => clearTimeout(timerTimeout);
   }, [timerState, runningTime]);
 
+  // Event handlers
+
+  const handleKeyDown = (event) => {
+    if (!blocked && event.keyCode === 32) {
+      event.preventDefault();
+
+      // TODO: check for input focus and has current solve
+      if (timerState === 'running') {
+        stopTimer();
+      } else if (timerState === null) {
+        prepare();
+      }
+    }
+  };
+
+  const handleKeyUp = (event) => {
+    if (event.keyCode === 32) {
+      event.preventDefault();
+
+      if (timerState === 'ready') {
+        startTimer();
+      } else if (timerState === 'preparing') {
+        clearPrepare();
+      }
+    }
+  };
+
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
     return () => {
@@ -43,6 +70,8 @@ const Timer = ({ blocked, onStop }) => {
       window.removeEventListener('keyup', handleKeyUp);
     };
   }, [timerState, readyTimeout]);
+
+  // Logic
 
   const prepare = () => {
     setReadyTimeout(
@@ -69,7 +98,8 @@ const Timer = ({ blocked, onStop }) => {
     setTimerState('preparing');
     clearTimeout(timerTimeout);
     setTimerTimeout(null);
-    onStop(runningTime);
+
+    if (onStop) onStop(runningTime);
   };
 
   // Calculated fields
@@ -103,36 +133,9 @@ const Timer = ({ blocked, onStop }) => {
     return '';
   };
 
-  // Event handlers
-
-  const handleKeyDown = (event) => {
-    if (!blocked && event.keyCode === 32) {
-      event.preventDefault();
-
-      // TODO: check for input focus and has current solve
-      if (timerState === 'running') {
-        stopTimer();
-      } else if (timerState === null) {
-        prepare();
-      }
-    }
-  };
-
-  const handleKeyUp = (event) => {
-    if (event.keyCode === 32) {
-      event.preventDefault();
-
-      if (timerState === 'ready') {
-        startTimer();
-      } else if (timerState === 'preparing') {
-        clearPrepare();
-      }
-    }
-  };
-
   return (
-    <div id="timer">
-      <span id="time" className={getTimeColor()}>{getFormattedTime()}</span>
+    <div id='timer'>
+      <span data-testid='time' className={getTimeColor()}>{getFormattedTime()}</span>
     </div >
   );
 }

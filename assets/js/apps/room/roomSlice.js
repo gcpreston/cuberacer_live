@@ -28,7 +28,8 @@ export const roomSlice = createSlice({
 
       state.entities.solves = { ...state.entities.solves, ...entities.solves };
       state.entities.users = { ...state.entities.users, ...entities.users };
-      selectCurrentRound(state).solves.push(result);
+      const currentRoundId = state.entities.sessions[state.sessionId].rounds[0];
+      state.entities.rounds[currentRoundId].solves.push(result);
     },
     updateSolve: (state, action) => {
       const { entities } = normalize(action.payload, solve);
@@ -47,9 +48,46 @@ export const roomSlice = createSlice({
 
 export const { setSession, addRound, addSolve, updateSolve, addMessage } = roomSlice.actions;
 
+export const selectCurrentSession = (state) => {
+  if (!state.room.sessionId) return null;
+  return state.room.entities.sessions[state.room.sessionId];
+}
+
 export const selectCurrentRound = (state) => {
-  const roundId = state.entities.sessions[state.sessionId].rounds[0];
-  return state.entities.rounds[roundId];
+  const session = selectCurrentSession(state);
+  if (!session) return null;
+
+  const roundId = session.rounds[0];
+  return state.room.entities.rounds[roundId];
+};
+
+export const selectCurrentPuzzleName = (state) => {
+  const session = selectCurrentSession(state);
+  if (!session) return null;
+
+  const puzzleTypeId = session.cube_type;
+  return state.room.entities.puzzleTypes[puzzleTypeId].name;
+};
+
+export const selectUserSolveForRound = (userId, roundId) => (state) => {
+  const solveId = state.room.entities.rounds[roundId].solves.find(
+    // TODO: Have to do .user_id here because that's what the API gives back
+    // Reason being I don't really want to preload the user just to not use that
+    // data on the frontend. It makes things inconsistent though (would like to
+    // have .user here). But at the same time, maybe I should preload user, because
+    // we want to be able to store the entity in case it doesn't already exist
+    // I guess...
+    solveId => state.room.entities.solves[solveId].user_id === userId
+  );
+  return state.room.entities.solves[solveId];
+};
+
+export const selectRoomMessage = (roomMessageId) => (state) => {
+  return state.room.entities.messages[roomMessageId];
+};
+
+export const selectUser = (userId) => (state) => {
+  return state.room.entities.users[userId];
 };
 
 export default roomSlice.reducer;
