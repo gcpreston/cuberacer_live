@@ -5,17 +5,18 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useChannelWithPresence } from '../../contexts/socketContext';
 import {
   setSession, addRound, addSolve, updateSolve, addMessage, selectCurrentRound,
-  selectCurrentPuzzleName, selectCurrentSession, selectUserSolveForRound
+  selectCurrentPuzzleName, selectCurrentSession
 } from './roomSlice';
 import Timer from './components/Timer';
 import TimesTable from './components/TimesTable';
 import Chat from './components/Chat';
+import Stats from './components/Stats';
 
 function presenceListToUsers(presenceList) {
   return presenceList.map(data => data.user);
 }
 
-const Room = ({ roomId, currentUserId }) => {
+const Room = ({ roomId }) => {
   const dispatch = useDispatch();
 
   const [currentUsers, setCurrentUsers] = useState([]);
@@ -108,23 +109,7 @@ const Room = ({ roomId, currentUserId }) => {
           <div className='flex flex-row h-full'>
             <div className='border-r'>
               {/* Stats */}
-              <table className='w-full'>
-                <thead className='bg-gray-50'>
-                  <tr>
-                    <th scope='col' className='border-y px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                      Stats
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className='bg-white'>
-                  <tr>
-                    <td className='px-6 whitespace-nowrap'>ao5: <span className='t_ao5'>--</span></td>
-                  </tr>
-                  <tr>
-                    <td className='px-6 whitespace-nowrap'>ao12: <span className='t_ao12'>--</span></td>
-                  </tr>
-                </tbody>
-              </table>
+              <Stats />
             </div>
 
             <div className='flex-1 h-full overflow-auto'>
@@ -145,7 +130,6 @@ const Room = ({ roomId, currentUserId }) => {
 
 Room.propTypes = {
   roomId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
-  currentUserId: PropTypes.number
 };
 
 export default Room;

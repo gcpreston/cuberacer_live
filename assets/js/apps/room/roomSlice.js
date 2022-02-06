@@ -2,18 +2,27 @@ import { createSlice } from '@reduxjs/toolkit';
 import { normalize } from 'normalizr';
 
 import { session, round, solve, message } from './schemas';
+import { actualTime, aoN } from './utils';
 
 export const roomSlice = createSlice({
   name: 'room',
   initialState: {
     sessionId: null,
-    entities: {}
+    currentUserId: parseInt(document.querySelector('meta[name="current_user_id"]').content),
+    entities: {
+      sessions: [],
+      rounds: [],
+      solves: [],
+      penalties: [],
+      users: [],
+      messages: []
+    }
   },
   reducers: {
     setSession: (state, action) => {
       const { entities, result } = normalize(action.payload, session);
 
-      state.entities = entities;
+      state.entities = { ...state.entities, ...entities };
       state.sessionId = result;
     },
     addRound: (state, action) => {
@@ -51,7 +60,9 @@ export const { setSession, addRound, addSolve, updateSolve, addMessage } = roomS
 export const selectCurrentSession = (state) => {
   if (!state.room.sessionId) return null;
   return state.room.entities.sessions[state.room.sessionId];
-}
+};
+
+export const selectCurrentUserId = state => state.room.currentUserId;
 
 export const selectCurrentRound = (state) => {
   const session = selectCurrentSession(state);
@@ -88,6 +99,45 @@ export const selectRoomMessage = (roomMessageId) => (state) => {
 
 export const selectUser = (userId) => (state) => {
   return state.room.entities.users[userId];
+};
+
+export const selectSolvePenalty = (solve) => (state) => {
+  if (!solve) return null;
+  return state.room.entities.penalties[solve.penalty];
+};
+
+/**
+ * Return a selector to get all solves for a user in the session, by round.
+ *
+ * If a user has no solve for a round, that index will contain `undefined`.
+ */
+export const selectUserSolves = (userId) => (state) => {
+  const session = selectCurrentSession(state);
+  return session.rounds.map(roundId => selectUserSolveForRound(userId, roundId)(state));
+};
+
+/**
+ * Compute all room stats for a user.
+ *
+ * Done in one selector so all the user's solves don't have
+ * to be selected multiple times.
+ */
+export const selectStats = (state) => {
+  const currentUserId = selectCurrentUserId(state);
+  let solves = selectUserSolves(currentUserId)(state);
+
+  // Ignore current round if user has no solve yet
+  if (!solves[0]) solves = solves.splice(1);
+
+  const times = solves.map((solve) => {
+    const penalty = selectSolvePenalty(solve)(state);
+    return actualTime(solve, penalty);
+  });
+
+  return {
+    ao5: aoN(times, 5),
+    ao12: aoN(times, 12)
+  };
 };
 
 export default roomSlice.reducer;
