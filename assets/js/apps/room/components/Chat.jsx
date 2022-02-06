@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 
-import { selectCurrentSession } from '../roomSlice';
+import { chatInputFocused, chatInputBlurred, selectCurrentSession } from '../roomSlice';
 import ChatMessage from './ChatMessage';
 
 const Chat = ({ roomChannel }) => {
+  const dispatch = useDispatch();
   const session = useSelector(selectCurrentSession);
 
   const [chatMessage, setChatMessage] = useState('');
-  const [chatInputFocused, setChatInputFocused] = useState(false);
 
   const sendMessage = () => {
     roomChannel.push('send_message', { message: chatMessage });
@@ -41,8 +41,8 @@ const Chat = ({ roomChannel }) => {
           value={chatMessage}
           onChange={e => setChatMessage(e.target.value)}
           onKeyDown={handleChatKeyDown}
-          onFocus={() => setChatInputFocused(true)}
-          onBlur={() => setChatInputFocused(false)}
+          onFocus={() => dispatch(chatInputFocused())}
+          onBlur={() => dispatch(chatInputBlurred())}
         />
         <button className='font-medium mr-2 text-cyan-600 hover:text-cyan-800' onClick={sendMessage}>Send</button>
       </div>

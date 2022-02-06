@@ -9,6 +9,7 @@ export const roomSlice = createSlice({
   initialState: {
     sessionId: null,
     currentUserId: parseInt(document.querySelector('meta[name="current_user_id"]').content),
+    chatInputFocused: false,
     entities: {
       sessions: [],
       rounds: [],
@@ -24,6 +25,12 @@ export const roomSlice = createSlice({
 
       state.entities = { ...state.entities, ...entities };
       state.sessionId = result;
+    },
+    chatInputFocused: (state) => {
+      state.chatInputFocused = true;
+    },
+    chatInputBlurred: (state) => {
+      state.chatInputFocused = false;
     },
     addRound: (state, action) => {
       const { entities, result } = normalize(action.payload, round);
@@ -55,7 +62,10 @@ export const roomSlice = createSlice({
   },
 });
 
-export const { setSession, addRound, addSolve, updateSolve, addMessage } = roomSlice.actions;
+export const {
+  setSession, chatInputFocused, chatInputBlurred, addRound, addSolve, updateSolve,
+  addMessage
+} = roomSlice.actions;
 
 export const selectCurrentSession = (state) => {
   if (!state.room.sessionId) return null;
@@ -63,6 +73,15 @@ export const selectCurrentSession = (state) => {
 };
 
 export const selectCurrentUserId = state => state.room.currentUserId;
+
+export const selectTimerBlocked = (state) => {
+  if (!state.room.sessionId) return true;
+
+  return state.room.chatInputFocused || Boolean(selectUserSolveForRound(
+    selectCurrentUserId(state),
+    selectCurrentRound(state).id
+  )(state));
+};
 
 export const selectCurrentRound = (state) => {
   const session = selectCurrentSession(state);

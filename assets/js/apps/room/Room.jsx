@@ -5,7 +5,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useChannelWithPresence } from '../../contexts/socketContext';
 import {
   setSession, addRound, addSolve, updateSolve, addMessage, selectCurrentRound,
-  selectCurrentPuzzleName, selectCurrentSession
+  selectCurrentPuzzleName, selectCurrentSession, selectTimerBlocked
 } from './roomSlice';
 import Timer from './components/Timer';
 import TimesTable from './components/TimesTable';
@@ -31,6 +31,7 @@ const Room = ({ roomId }) => {
   const session = useSelector(selectCurrentSession);
   const currentPuzzleName = useSelector(selectCurrentPuzzleName);
   const currentRound = useSelector(selectCurrentRound);
+  const timerBlocked = useSelector(selectTimerBlocked);
 
   useEffect(() => {
     if (!roomChannel) return null;
@@ -83,10 +84,8 @@ const Room = ({ roomId }) => {
           <div className='my-3 mx-auto text-center'>
             <div className='text-xl t_scramble'>{currentRound.scramble}</div>
             <div className='text-6xl my-4'>
-              {/* TODO: this needs to get lifted somewhre so the whole room doesn't re-render when
-              this stray selector changes value */}
               <Timer
-                // blocked={Boolean(chatInputFocused)}
+                blocked={timerBlocked}
                 onStop={newSolve}
               />
             </div>
