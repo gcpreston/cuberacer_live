@@ -79,6 +79,12 @@ config :cuberacer_live, CuberacerLiveWeb.Endpoint,
       "--postcss",
       "--watch",
       cd: Path.expand("../assets", __DIR__)
+    ],
+    npx: [
+      "tsc",
+      "--watch",
+      "--preserveWatchOutput",
+      cd: Path.expand("../assets", __DIR__)
     ]
   ]
 
