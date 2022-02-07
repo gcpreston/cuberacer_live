@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { useSelector, useDispatch } from 'react-redux';
+import { batch, useSelector, useDispatch } from 'react-redux';
 
 import { useChannelWithPresence } from '../../contexts/socketContext';
 import {
-  setSession, addRound, addSolve, updateSolve, addMessage, selectCurrentRound,
-  selectCurrentPuzzleName, selectCurrentSession, selectTimerBlocked
+  setSession, setCurrentUserId, addRound, addSolve, updateSolve, addMessage,
+  selectCurrentRound, selectCurrentPuzzleName, selectCurrentSession, selectTimerBlocked
 } from './roomSlice';
 import Timer from './components/Timer';
 import TimesTable from './components/TimesTable';
@@ -23,7 +23,12 @@ const Room = ({ roomId }) => {
 
   const [roomChannel, _roomPresence] = useChannelWithPresence(
     `room:${roomId}`,
-    joinResp => dispatch(setSession(joinResp)),
+    joinResp => {
+      batch(() => {
+        dispatch(setSession(joinResp.session));
+        dispatch(setCurrentUserId(joinResp.user_id));
+      });
+    },
     errorResp => console.log('error joining channel', errorResp),
     presenceList => setCurrentUsers(presenceListToUsers(presenceList))
   );

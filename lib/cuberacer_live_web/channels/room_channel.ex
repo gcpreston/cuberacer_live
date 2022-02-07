@@ -12,7 +12,8 @@ defmodule CuberacerLiveWeb.RoomChannel do
     Sessions.subscribe(room_id)
     Messaging.subscribe(room_id)
     session = Sessions.get_room_data!(room_id)
-    {:ok, session, socket}
+  
+    {:ok, %{session: session, user_id: socket.assigns.user_id}, socket}
   end
 
   @impl true

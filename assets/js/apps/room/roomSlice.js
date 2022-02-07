@@ -8,7 +8,7 @@ export const roomSlice = createSlice({
   name: 'room',
   initialState: {
     sessionId: null,
-    currentUserId: parseInt(document.querySelector('meta[name="current_user_id"]').content),
+    currentUserId: null,
     chatInputFocused: false,
     entities: {
       sessions: [],
@@ -25,6 +25,9 @@ export const roomSlice = createSlice({
 
       state.entities = { ...state.entities, ...entities };
       state.sessionId = result;
+    },
+    setCurrentUserId: (state, action) => {
+      state.currentUserId = action.payload;
     },
     chatInputFocused: (state) => {
       state.chatInputFocused = true;
@@ -63,8 +66,8 @@ export const roomSlice = createSlice({
 });
 
 export const {
-  setSession, chatInputFocused, chatInputBlurred, addRound, addSolve, updateSolve,
-  addMessage
+  setSession, setCurrentUserId, chatInputFocused, chatInputBlurred, addRound, addSolve,
+  updateSolve, addMessage
 } = roomSlice.actions;
 
 export const selectCurrentSession = (state) => {
