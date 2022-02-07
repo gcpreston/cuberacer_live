@@ -1,20 +1,25 @@
 import React from 'react'
+import { Provider as StoreProvider } from 'react-redux';
 import { render } from '@testing-library/react'
 import { diff } from 'jest-diff';
 import WS from 'jest-websocket-mock';
 
+import store from '../js/apps/room/store';
 import { PhoenixSocketProvider } from '../js/contexts/socketContext';
 
 const AllTheProviders = ({ children }) => {
+
   return (
-    <PhoenixSocketProvider>
-      {children}
-    </PhoenixSocketProvider>
+    <StoreProvider store={store}>
+      <PhoenixSocketProvider>
+        {children}
+      </PhoenixSocketProvider>
+    </StoreProvider>
   )
-}
+};
 
 const customRender = (ui, options) =>
-  render(ui, { wrapper: AllTheProviders, ...options })
+  render(ui, { wrapper: AllTheProviders, ...options });
 
 /**
  * A wrapper around `jest-websocket-mock`'s `WS` object for simulating Phoenix
