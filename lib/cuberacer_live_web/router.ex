@@ -86,7 +86,7 @@ defmodule CuberacerLiveWeb.Router do
     live "/lobby/new", GameLive.Lobby, :new
     live "/room_live/:id", GameLive.Room, :show
 
-    get "/room/:id", RoomController, :index
+    get "/room/:id", RoomController, :show
 
     get "/users/settings", UserSettingsController, :edit
     put "/users/settings", UserSettingsController, :update

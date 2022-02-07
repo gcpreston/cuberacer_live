@@ -6,7 +6,7 @@ defmodule CuberacerLiveWeb.GameLive.Components do
   alias CuberacerLive.Sessions.Round
   alias CuberacerLive.Accounts.User
 
-  def room_card(assigns) do
+  def room_card_live(assigns) do
     ~H"""
     <%= live_redirect to: Routes.game_room_path(CuberacerLiveWeb.Endpoint, :show, @session.id), class: "t_room-card" do %>
       <div id={"t_room-card-#{@session.id}"} class="p-4 rounded-lg shadow-sm border bg-white transition-all hover:bg-gray-50 hover:shadow-md">
@@ -17,6 +17,20 @@ defmodule CuberacerLiveWeb.GameLive.Components do
         </div>
       </div>
     <% end %>
+    """
+  end
+
+  def room_card(assigns) do
+    ~H"""
+    <a href={Routes.room_path(CuberacerLiveWeb.Endpoint, :show, @session.id)} class="t_room-card">
+      <div id={"t_room-card-#{@session.id}"} class="p-4 rounded-lg shadow-sm border bg-white transition-all hover:bg-gray-50 hover:shadow-md">
+        <h2 class="text-lg text-center font-medium"><%= @session.name %></h2>
+        <hr class="my-2" />
+        <div class="flex justify-center">
+          <div><%= @session.cube_type.name %></div>
+        </div>
+      </div>
+    </a>
     """
   end
 
