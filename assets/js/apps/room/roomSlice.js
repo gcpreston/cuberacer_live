@@ -45,14 +45,17 @@ export const roomSlice = createSlice({
     addSolve: (state, action) => {
       const { entities, result } = normalize(action.payload, solve);
 
-      state.entities.solves = { ...state.entities.solves, ...entities.solves };
+      state.entities.penalties = { ...state.entities.penalties, ...entities.penalties };
       state.entities.users = { ...state.entities.users, ...entities.users };
+      state.entities.solves = { ...state.entities.solves, ...entities.solves };
       const currentRoundId = state.entities.sessions[state.sessionId].rounds[0];
       state.entities.rounds[currentRoundId].solves.push(result);
     },
     updateSolve: (state, action) => {
       const { entities } = normalize(action.payload, solve);
 
+      state.entities.penalties = { ...state.entities.penalties, ...entities.penalties };
+      state.entities.users = { ...state.entities.users, ...entities.users };
       state.entities.solves = { ...state.entities.solves, ...entities.solves };
     },
     addMessage: (state, action) => {

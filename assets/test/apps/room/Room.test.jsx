@@ -6,7 +6,19 @@ import { PhoenixWS, render, screen } from '../../test-utils';
 import Room from '../../../js/apps/room/Room';
 
 const WEBSOCKET_URL = 'ws://localhost/socket/websocket';
-const CHANNEL_JOIN_DATA = {
+const CHANNEL_JOIN_NEW_DATA = {
+  session: {
+    id: 37,
+    name: 'new room',
+    cube_type: { id: 2, name: '3x3' },
+    room_messages: [],
+    rounds: [
+      { id: 182, scramble: "U' R2 D2 R' U2 F R U L B D2 R U L2 B' L2 F' L' D R2", solves: [] }
+    ]
+  },
+  user_id: 2
+}
+const CHANNEL_JOIN_EXISTING_DATA = {
   session: {
     id: 36,
     name: 'test room',
@@ -83,7 +95,7 @@ describe('<Room />', () => {
 
     await server.connected;
 
-    const topic = await server.replyToJoin('ok', CHANNEL_JOIN_DATA);
+    const topic = await server.replyToJoin('ok', CHANNEL_JOIN_EXISTING_DATA);
     server.push('presence_state', PRESENCE_STATE_1);
 
     expect(topic).toBe('room:123');
@@ -129,82 +141,99 @@ describe('<Room />', () => {
   });
 
   describe('incoming events', () => {
-    test('reacts to new round', async () => {
-      render(<Room roomId={123} />);
+    describe('new room', () => {
+      test('reacts to new solve and penalty change', async () => {
+        render(<Room roomId={123} />);
 
-      await server.replyToJoin('ok', CHANNEL_JOIN_DATA);
-      server.push('presence_state', PRESENCE_STATE_1);
+        await server.replyToJoin('ok', CHANNEL_JOIN_NEW_DATA);
+        server.push('presence_state', PRESENCE_STATE_1);
 
-      let rounds = screen.getAllByRole('row', { name: /Round \d+/ });
-      expect(rounds.length).toBe(6);
+        server.push('solve_created', { id: 112, user_id: 2, time: 15631, penalty: { id: 1, name: 'OK' } });
+        expect(await screen.findByRole('cell', { name: '15.631' })).toBeInTheDocument();
 
-      server.push('round_created', { id: 182, scramble: "U2 F U2 R2 F' R F R F U'", solves: [] });
-
-      expect(await screen.findByText("U2 F U2 R2 F' R F R F U'")).toBeInTheDocument();
-      rounds = screen.getAllByRole('row', { name: /Round \d+/ });
-      expect(rounds.length).toBe(7);
-
-      expect(screen.getByRole('cell', { name: 'ao5: DNF' })).toBeInTheDocument();
+        server.push('solve_updated', { id: 112, user_id: 2, time: 15631, penalty: { id: 2, name: '+2' } });
+        expect(await screen.findByRole('cell', { name: '17.631+' })).toBeInTheDocument();
+      });
     });
 
-    test('reacts to new solve', async () => {
-      render(<Room roomId={123} />);
+    describe('existing room', () => {
+      test('reacts to new round', async () => {
+        render(<Room roomId={123} />);
 
-      await server.replyToJoin('ok', CHANNEL_JOIN_DATA);
-      server.push('presence_state', PRESENCE_STATE_1);
-      server.push('solve_created', { id: 112, user_id: 2, time: 9264, penalty: { id: 1, name: 'OK' } });
+        await server.replyToJoin('ok', CHANNEL_JOIN_EXISTING_DATA);
+        server.push('presence_state', PRESENCE_STATE_1);
 
-      expect(await screen.findByRole('cell', { name: '9.264' })).toBeInTheDocument();
-      // TODO: how to assert it's in the right row and column?
+        let rounds = screen.getAllByRole('row', { name: /Round \d+/ });
+        expect(rounds.length).toBe(6);
 
-      expect(screen.getByRole('cell', { name: 'ao5: 6.964' })).toBeInTheDocument();
-    });
+        server.push('round_created', { id: 182, scramble: "U2 F U2 R2 F' R F R F U'", solves: [] });
 
-    test('reacts to penalty change', async () => {
-      render(<Room roomId={123} />);
+        expect(await screen.findByText("U2 F U2 R2 F' R F R F U'")).toBeInTheDocument();
+        rounds = screen.getAllByRole('row', { name: /Round \d+/ });
+        expect(rounds.length).toBe(7);
 
-      await server.replyToJoin('ok', CHANNEL_JOIN_DATA);
-      server.push('presence_state', PRESENCE_STATE_2);
-      server.push('solve_updated', { id: 111, time: 2345, user_id: 6, penalty: { id: 2, name: '+2' } });
-
-      expect(await screen.findByRole('cell', { name: '4.345+' })).toBeInTheDocument();
-      // TODO: how to assert it's in the right row and column?
-    });
-
-    test('stats react to penalty change', async () => {
-      render(<Room roomId={123} />);
-
-      await server.replyToJoin('ok', CHANNEL_JOIN_DATA);
-      server.push('presence_state', PRESENCE_STATE_1);
-      server.push('solve_created', { id: 112, user_id: 2, time: 9264, penalty: { id: 1, name: 'OK' } });
-
-      expect(await screen.findByRole('cell', { name: '9.264' })).toBeInTheDocument();
-      expect(screen.getByRole('cell', { name: 'ao5: 6.964' })).toBeInTheDocument();
-
-      server.push('solve_updated', { id: 112, user_id: 2, time: 9264, penalty: { id: 2, name: '+2' } });
-      expect(await screen.findByRole('cell', { name: 'ao5: 7.631' })).toBeInTheDocument();
-
-      server.push('solve_updated', { id: 112, user_id: 2, time: 9264, penalty: { id: 3, name: 'DNF' } });
-      expect(await screen.findByRole('cell', { name: 'ao5: DNF' })).toBeInTheDocument();
-
-      server.push('solve_updated', { id: 112, user_id: 2, time: 9264, penalty: { id: 1, name: 'OK' } });
-      expect(await screen.findByRole('cell', { name: 'ao5: 6.964' })).toBeInTheDocument();
-    });
-
-    test('reacts to new message', async () => {
-      render(<Room roomId={123} />);
-
-      await server.replyToJoin('ok', CHANNEL_JOIN_DATA);
-      server.push('message_created', {
-        id: 84,
-        message: 'a new message',
-        user: { id: 7, username: 'other_user', email: 'hi@example.com' }
+        expect(screen.getByRole('cell', { name: 'ao5: DNF' })).toBeInTheDocument();
       });
 
-      expect(await screen.findByTestId('room-message-84')).toBeInTheDocument();
-      const msgs = screen.getAllByTestId(/room-message-\d+/)
-      expect(msgs.length).toBe(3);
-      expect(msgs[2]).toHaveTextContent('other_user: a new message');
+      test('reacts to new solve', async () => {
+        render(<Room roomId={123} />);
+
+        await server.replyToJoin('ok', CHANNEL_JOIN_EXISTING_DATA);
+        server.push('presence_state', PRESENCE_STATE_1);
+        server.push('solve_created', { id: 112, user_id: 2, time: 9264, penalty: { id: 1, name: 'OK' } });
+
+        expect(await screen.findByRole('cell', { name: '9.264' })).toBeInTheDocument();
+        // TODO: how to assert it's in the right row and column?
+
+        expect(screen.getByRole('cell', { name: 'ao5: 6.964' })).toBeInTheDocument();
+      });
+
+      test('reacts to penalty change', async () => {
+        render(<Room roomId={123} />);
+
+        await server.replyToJoin('ok', CHANNEL_JOIN_EXISTING_DATA);
+        server.push('presence_state', PRESENCE_STATE_2);
+        server.push('solve_updated', { id: 111, time: 2345, user_id: 6, penalty: { id: 2, name: '+2' } });
+
+        expect(await screen.findByRole('cell', { name: '4.345+' })).toBeInTheDocument();
+        // TODO: how to assert it's in the right row and column?
+      });
+
+      test('stats react to penalty change', async () => {
+        render(<Room roomId={123} />);
+
+        await server.replyToJoin('ok', CHANNEL_JOIN_EXISTING_DATA);
+        server.push('presence_state', PRESENCE_STATE_1);
+        server.push('solve_created', { id: 112, user_id: 2, time: 9264, penalty: { id: 1, name: 'OK' } });
+
+        expect(await screen.findByRole('cell', { name: '9.264' })).toBeInTheDocument();
+        expect(screen.getByRole('cell', { name: 'ao5: 6.964' })).toBeInTheDocument();
+
+        server.push('solve_updated', { id: 112, user_id: 2, time: 9264, penalty: { id: 2, name: '+2' } });
+        expect(await screen.findByRole('cell', { name: 'ao5: 7.631' })).toBeInTheDocument();
+
+        server.push('solve_updated', { id: 112, user_id: 2, time: 9264, penalty: { id: 3, name: 'DNF' } });
+        expect(await screen.findByRole('cell', { name: 'ao5: DNF' })).toBeInTheDocument();
+
+        server.push('solve_updated', { id: 112, user_id: 2, time: 9264, penalty: { id: 1, name: 'OK' } });
+        expect(await screen.findByRole('cell', { name: 'ao5: 6.964' })).toBeInTheDocument();
+      });
+
+      test('reacts to new message', async () => {
+        render(<Room roomId={123} />);
+
+        await server.replyToJoin('ok', CHANNEL_JOIN_EXISTING_DATA);
+        server.push('message_created', {
+          id: 84,
+          message: 'a new message',
+          user: { id: 7, username: 'other_user', email: 'hi@example.com' }
+        });
+
+        expect(await screen.findByTestId('room-message-84')).toBeInTheDocument();
+        const msgs = screen.getAllByTestId(/room-message-\d+/)
+        expect(msgs.length).toBe(3);
+        expect(msgs[2]).toHaveTextContent('other_user: a new message');
+      });
     });
   });
 
@@ -212,7 +241,7 @@ describe('<Room />', () => {
     beforeEach(async () => {
       render(<Room roomId={123} />);
 
-      await server.replyToJoin('ok', CHANNEL_JOIN_DATA);
+      await server.replyToJoin('ok', CHANNEL_JOIN_EXISTING_DATA);
       await screen.findByRole('heading');
     });
 

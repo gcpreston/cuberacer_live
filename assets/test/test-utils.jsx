@@ -7,8 +7,9 @@ import WS from 'jest-websocket-mock';
 import store from '../js/apps/room/store';
 import { PhoenixSocketProvider } from '../js/contexts/socketContext';
 
+// TODO: Need to create store between renders because this keeps the
+// same stored data between tests
 const AllTheProviders = ({ children }) => {
-
   return (
     <StoreProvider store={store}>
       <PhoenixSocketProvider>
