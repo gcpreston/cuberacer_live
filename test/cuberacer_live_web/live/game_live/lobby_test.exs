@@ -17,6 +17,7 @@ defmodule CuberacerLive.GameLive.LobbyTest do
       html
       |> assert_html(".t_room-card", count: 1)
       |> assert_html("#t_room-card-#{session.id}", count: 1)
+
       assert html =~ session.name
       assert html =~ session.cube_type.name
     end

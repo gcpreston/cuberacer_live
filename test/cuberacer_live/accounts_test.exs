@@ -90,7 +90,10 @@ defmodule CuberacerLive.AccountsTest do
 
     test "validates maximum values for email, username, and password for security" do
       too_long = String.duplicate("db", 100)
-      {:error, changeset} = Accounts.register_user(%{email: too_long, username: too_long, password: too_long})
+
+      {:error, changeset} =
+        Accounts.register_user(%{email: too_long, username: too_long, password: too_long})
+
       assert "should be at most 160 character(s)" in errors_on(changeset).email
       assert "should be at most 25 character(s)" in errors_on(changeset).username
       assert "should be at most 72 character(s)" in errors_on(changeset).password

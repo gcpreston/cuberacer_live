@@ -222,8 +222,8 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       _round12 = round_fixture(session: session)
 
       html =
-      live
-      |> render_click("new-solve", time: 9012)
+        live
+        |> render_click("new-solve", time: 9012)
 
       stats = Sessions.current_stats(session, user)
       assert stats.ao5 != :dnf
@@ -402,7 +402,12 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       assert html =~ Sessions.display_solve(nil)
     end
 
-    test "change-penalty fetches stats", %{conn: conn, user: user, session: session, round: round1} do
+    test "change-penalty fetches stats", %{
+      conn: conn,
+      user: user,
+      session: session,
+      round: round1
+    } do
       penalty_dnf = penalty_fixture(name: "DNF")
       _solve1 = solve_fixture(user_id: user.id, round_id: round1.id)
       round2 = round_fixture(session: session)
