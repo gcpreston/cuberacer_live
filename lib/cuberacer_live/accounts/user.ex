@@ -9,6 +9,12 @@ defmodule CuberacerLive.Accounts.User do
     field :hashed_password, :string, redact: true
     field :confirmed_at, :naive_datetime
 
+    # Profile fields
+    field :wca_id, :string
+    field :country, :string
+    field :birthday, :date
+    field :bio, :string
+
     timestamps()
   end
 
