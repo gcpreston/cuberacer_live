@@ -1,19 +1,28 @@
-<div class="grid grid-cols-5 gap-4 max-w-4xl mx-auto my-6 px-6">
-  <div class="col-span-2 border">
+<div class="sm:grid sm:grid-cols-5 sm:gap-4 max-w-4xl mx-auto my-6 px-6">
+  <div class="col-span-2">
     <h3 class="text-4xl font-semibold"><%= @user.username %></h3>
 
-    <div class="my-4">
+    <div class="mt-4">
       <%= @user.bio %>
     </div>
 
-    <ul class="fa-ul">
-      <li><span class="fa-li"><i class="fas fa-user"></i></span><a class="underline" href={"https://www.worldcubeassociation.org/persons/#{@user.wca_id}"}><%= @user.wca_id %></a></li>
-      <li><span class="fa-li"><i class="fas fa-globe"></i></span><%= @user.country %> <.flag code={@user.country} class="h-4 inline-block align-baseline" /></li>
-      <li><span class="fa-li"><i class="fas fa-cake-candles"></i></span>Age <%= Accounts.get_user_age(@user) %></li>
+    <ul class="mt-4 fa-ul text-gray-900">
+      <%= if @user.wca_id do %>
+        <li><span class="fa-li"><i class="fas fa-user"></i></span><a class="underline" href={"https://www.worldcubeassociation.org/persons/#{@user.wca_id}"}><%= @user.wca_id %></a></li>
+      <% end %>
+      <%= if @user.country do %>
+        <li><span class="fa-li"><i class="fas fa-globe"></i></span><%= @user.country %> <.flag code={@user.country} class="h-4 inline-block align-baseline" /></li>
+      <% end %>
+      <%= if @user.birthday do %>
+        <li><span class="fa-li"><i class="fas fa-birthday-cake"></i></span>Age <%= Accounts.get_user_age(@user) %></li>
+      <% end %>
+      <li><span class="fa-li"><i class="fas fa-arrow-right"></i></span>Joined <%= Calendar.strftime(@user.inserted_at, "%B %-d, %Y") %></li>
     </ul>
+
+    <button class="mt-4 mb-8 w-full font-medium rounded-md border py-0.5 bg-gray-50 shadow-xs hover:bg-gray-100 hover:shadow-sm active:bg-gray-200 transition-all">Edit profile</button>
   </div>
 
-  <div class="col-span-3 border p-3">
+  <div class="col-span-3">
     <h2 class="text-2xl font-medium">Sessions</h2>
 
     <div class="mt-4 grid grid-cols-1 gap-3">
