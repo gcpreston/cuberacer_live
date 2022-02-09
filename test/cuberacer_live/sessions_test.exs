@@ -6,6 +6,7 @@ defmodule CuberacerLive.SessionsTest do
   describe "sessions" do
     alias CuberacerLive.Sessions.{Session, Round}
 
+    import CuberacerLive.AccountsFixtures
     import CuberacerLive.SessionsFixtures
     import CuberacerLive.CubingFixtures
 
@@ -14,6 +15,19 @@ defmodule CuberacerLive.SessionsTest do
     test "list_sessions/0 returns all sessions, preloaded with cube type" do
       session = session_fixture() |> Repo.preload(:cube_type)
       assert Sessions.list_sessions() == [session]
+    end
+
+    test "list_user_sessions/1 returns all sessions with user solves, ordered desc" do
+      user = user_fixture()
+      session1 = session_fixture()
+      _session2 = session_fixture()
+      session3 = session_fixture()
+      round1 = round_fixture(session: session1)
+      _solve1 = solve_fixture(round_id: round1.id, user_id: user.id)
+      round2 = round_fixture(session: session3)
+      _solve2 = solve_fixture(round_id: round2.id, user_id: user.id)
+
+      assert Enum.map(Sessions.list_user_sessions(user), fn s -> s.id end) == [session3.id, session1.id]
     end
 
     test "get_session!/1 returns the session with given id" do

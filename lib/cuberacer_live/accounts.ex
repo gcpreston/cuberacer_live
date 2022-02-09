@@ -132,6 +132,21 @@ defmodule CuberacerLive.Accounts do
     User.registration_changeset(user, attrs, hash_password: false)
   end
 
+  @doc """
+  Calculate a user's age, based on UTC time.
+  """
+  def get_user_age(%User{} = user) do
+    today = Date.utc_today()
+    {:ok, today_in_birthday_year} = Date.new(user.birthday.year, today.month, today.day)
+    years_diff = today.year - user.birthday.year
+
+    if Date.compare(today_in_birthday_year, user.birthday) == :lt do
+      years_diff - 1
+    else
+      years_diff
+    end
+  end
+
   ## Settings
 
   @doc """
