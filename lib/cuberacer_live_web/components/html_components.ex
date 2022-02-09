@@ -5,7 +5,7 @@ defmodule CuberacerLiveWeb.HTMLComponents do
   def flag(assigns) do
     ~H"""
     <img
-      class={"h-#{@height}"}
+      class={@class}}
       src={Routes.static_path(CuberacerLiveWeb.Endpoint, "/images/flags/#{String.downcase(@code)}.svg")}
       alt={String.upcase(@code)}
     >
