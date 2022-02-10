@@ -27,7 +27,10 @@ defmodule CuberacerLive.SessionsTest do
       round2 = round_fixture(session: session3)
       _solve2 = solve_fixture(round_id: round2.id, user_id: user.id)
 
-      assert Enum.map(Sessions.list_user_sessions(user), fn s -> s.id end) == [session3.id, session1.id]
+      assert Enum.map(Sessions.list_user_sessions(user), fn s -> s.id end) == [
+               session3.id,
+               session1.id
+             ]
     end
 
     test "get_session!/1 returns the session with given id" do
