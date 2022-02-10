@@ -79,12 +79,12 @@ defmodule CuberacerLive.AccountsTest do
 
     test "validates email, username, and password when given" do
       {:error, changeset} =
-        Accounts.register_user(%{email: "not valid", username: "not valid", password: "not valid"})
+        Accounts.register_user(%{email: "not valid", username: "not valid", password: "short"})
 
       assert %{
                email: ["must have the @ sign and no spaces"],
                username: ["must only contain characters a-z, 0-9 and _"],
-               password: ["should be at least 12 character(s)"]
+               password: ["should be at least 6 character(s)"]
              } = errors_on(changeset)
     end
 
@@ -307,12 +307,12 @@ defmodule CuberacerLive.AccountsTest do
     test "validates password", %{user: user} do
       {:error, changeset} =
         Accounts.update_user_password(user, valid_user_password(), %{
-          password: "not valid",
+          password: "short",
           password_confirmation: "another"
         })
 
       assert %{
-               password: ["should be at least 12 character(s)"],
+               password: ["should be at least 6 character(s)"],
                password_confirmation: ["does not match password"]
              } = errors_on(changeset)
     end
@@ -516,12 +516,12 @@ defmodule CuberacerLive.AccountsTest do
     test "validates password", %{user: user} do
       {:error, changeset} =
         Accounts.reset_user_password(user, %{
-          password: "not valid",
+          password: "short",
           password_confirmation: "another"
         })
 
       assert %{
-               password: ["should be at least 12 character(s)"],
+               password: ["should be at least 6 character(s)"],
                password_confirmation: ["does not match password"]
              } = errors_on(changeset)
     end
