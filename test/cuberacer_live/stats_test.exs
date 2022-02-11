@@ -1,5 +1,5 @@
 defmodule CuberacerLive.StatsTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
   alias CuberacerLive.Stats
 

@@ -1,5 +1,5 @@
 defmodule CuberacerLiveWeb.PageControllerTest do
-  use CuberacerLiveWeb.ConnCase
+  use CuberacerLiveWeb.ConnCase, async: true
 
   import CuberacerLive.AccountsFixtures
 
