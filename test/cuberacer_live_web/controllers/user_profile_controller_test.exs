@@ -11,7 +11,7 @@ defmodule CuberacerLiveWeb.UserProfileControllerTest do
     test "displays a different user's profile with profile data", %{conn: conn, user: user} do
       # 20.5 years ago
       birthday = Date.add(Date.utc_today(), -7480)
-      other_user = user_fixture(bio: "some test bio", country: "US", birthday: birthday)
+      other_user = user_fixture(bio: "some test bio", wca_id: "2020ABCD01", country: "US", birthday: birthday)
 
       conn =
         conn
@@ -33,7 +33,7 @@ defmodule CuberacerLiveWeb.UserProfileControllerTest do
         "#profile-join-date",
         "Joined #{Calendar.strftime(Date.utc_today(), "%B %Y")}"
       )
-      |> refute_html("button#profile-edit")
+      |> refute_html("#profile-edit")
 
       assert html =~ "Sessions"
     end
@@ -45,7 +45,7 @@ defmodule CuberacerLiveWeb.UserProfileControllerTest do
         |> get(Routes.user_profile_path(conn, :show, user.id))
 
       html = html_response(conn, 200)
-      assert_html(html, "button#profile-edit", "Edit profile")
+      assert_html(html, "#profile-edit", "Edit profile")
     end
 
     test "does not show profile data not provided", %{conn: conn, user: user} do
