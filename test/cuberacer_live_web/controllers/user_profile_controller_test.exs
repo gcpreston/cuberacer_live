@@ -11,7 +11,14 @@ defmodule CuberacerLiveWeb.UserProfileControllerTest do
     test "displays a different user's profile with profile data", %{conn: conn, user: user} do
       # 20.5 years ago
       birthday = Date.add(Date.utc_today(), -7480)
-      other_user = user_fixture(bio: "some test bio", wca_id: "2020ABCD01", country: "US", birthday: birthday)
+
+      other_user =
+        user_fixture(
+          bio: "some test bio",
+          wca_id: "2020ABCD01",
+          country: "US",
+          birthday: birthday
+        )
 
       conn =
         conn
@@ -26,8 +33,10 @@ defmodule CuberacerLiveWeb.UserProfileControllerTest do
       |> assert_html(
         ~s(a#profile-wca-link[href="https://www.worldcubeassociation.org/persons/#{other_user.wca_id}")
       )
-      |> assert_html("#profile-country")
-      |> assert_html(~s(img[src="/images/flags/us.svg"]))
+      |> assert_html(
+        "#profile-country",
+        "#{other_user.country} #{CuberacerLive.CountryUtils.to_flag_emoji(other_user.country)}"
+      )
       |> assert_html("#profile-age", "Age 20")
       |> assert_html(
         "#profile-join-date",

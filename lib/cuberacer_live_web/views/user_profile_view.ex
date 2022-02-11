@@ -1,8 +1,6 @@
 defmodule CuberacerLiveWeb.UserProfileView do
   use CuberacerLiveWeb, :view
 
-  import CuberacerLiveWeb.HTMLComponents
-
   alias CuberacerLive.Accounts
   alias CuberacerLive.Sessions
 
