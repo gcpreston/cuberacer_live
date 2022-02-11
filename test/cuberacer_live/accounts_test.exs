@@ -355,6 +355,60 @@ defmodule CuberacerLive.AccountsTest do
     end
   end
 
+  describe "change_user_profile/2" do
+    test "returns a user changeset" do
+      assert %Ecto.Changeset{} = changeset = Accounts.change_user_profile(%User{})
+      assert changeset.required == []
+    end
+
+    test "allows fields to be set" do
+      changeset =
+        Accounts.change_user_profile(%User{}, %{
+          "bio" => "some test bio",
+          "wca_id" => "2022USER01",
+          "country" => "US",
+          "birthday" => ~D[1998-08-09]
+        })
+
+      assert changeset.valid?
+      assert get_change(changeset, :bio) == "some test bio"
+      assert get_change(changeset, :wca_id) == "2022USER01"
+      assert get_change(changeset, :country) == "US"
+      assert get_change(changeset, :birthday) == ~D[1998-08-09]
+    end
+  end
+
+  describe "update_user_profile/2" do
+    setup do
+      %{user: user_fixture()}
+    end
+
+    test "validates bio", %{user: user} do
+      {:error, changeset} =
+        Accounts.update_user_profile(user, %{
+          bio: String.duplicate("really long bio", 100)
+        })
+
+      assert %{bio: ["should be at most 500 character(s)"]} = errors_on(changeset)
+    end
+
+    test "updates the profile", %{user: user} do
+      {:ok, user} =
+        Accounts.update_user_profile(user, %{
+          bio: "new valid bio",
+          wca_id: "2022USER02",
+          country: "CA",
+          birthday: ~D[1997-09-08]
+        })
+
+      changed_user = Repo.get!(User, user.id)
+      assert changed_user.bio == "new valid bio"
+      assert changed_user.wca_id == "2022USER02"
+      assert changed_user.country == "CA"
+      assert changed_user.birthday == ~D[1997-09-08]
+    end
+  end
+
   describe "generate_user_session_token/1" do
     setup do
       %{user: user_fixture()}

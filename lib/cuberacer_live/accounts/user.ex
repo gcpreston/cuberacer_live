@@ -138,6 +138,23 @@ defmodule CuberacerLive.Accounts.User do
   end
 
   @doc """
+  A user changeset for updating profile information.
+  """
+  def profile_changeset(user, attrs) do
+    user
+    |> cast(attrs, [:bio, :wca_id, :country, :birthday])
+    |> validate_bio()
+    # |> validate_wca_id()
+    # |> validate_country()
+    # |> validate_birthday()
+  end
+
+  defp validate_bio(changeset) do
+    changeset
+    |> validate_length(:bio, max: 500)
+  end
+
+  @doc """
   Verifies the password.
 
   If there is no user or the user doesn't have a password, we call

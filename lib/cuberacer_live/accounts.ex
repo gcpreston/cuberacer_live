@@ -269,6 +269,39 @@ defmodule CuberacerLive.Accounts do
     end
   end
 
+  @doc """
+  Returns an `%Ecto.Changeset{}` for changing the user profile
+
+  ## Examples
+
+      iex> change_user_profile(user)
+      %Ecto.Changeset{data: %User{}}
+
+  """
+  def change_user_profile(user, attrs \\ %{}) do
+    User.profile_changeset(user, attrs)
+  end
+
+  @doc """
+  Updates the user profile.
+
+  ## Examples
+
+      iex> upate_user_profile(user, %{password: ...})
+      {:ok, %User{}}
+
+      iex> update_user_password(user, %{})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_user_profile(user, attrs) do
+    changeset =
+      user
+      |> User.profile_changeset(attrs)
+
+    Repo.update(changeset)
+  end
+
   ## Session
 
   @doc """
