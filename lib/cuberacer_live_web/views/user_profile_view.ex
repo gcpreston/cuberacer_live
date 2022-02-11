@@ -1,12 +1,10 @@
 defmodule CuberacerLiveWeb.UserProfileView do
   use CuberacerLiveWeb, :view
 
+  import CuberacerLiveWeb.SharedUtils, only: [format_date: 1]
+
   alias CuberacerLive.Accounts
   alias CuberacerLive.Sessions
-
-  defp format_date(date) do
-    Enum.join([date.year, date.month, date.day], "/")
-  end
 
   defp session_block(assigns) do
     ~H"""
