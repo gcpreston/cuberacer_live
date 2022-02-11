@@ -27,10 +27,10 @@ defmodule CuberacerLive.AccountsFixtures do
   end
 
   def user_fixture(attrs \\ %{}) do
-    {:ok, user} =
-      attrs
-      |> valid_user_attributes()
-      |> CuberacerLive.Accounts.register_user()
+    valid_attrs = valid_user_attributes(attrs)
+
+    {:ok, user} = CuberacerLive.Accounts.register_user(valid_attrs)
+    {:ok, user} = CuberacerLive.Accounts.update_user_profile(user, valid_attrs)
 
     user
   end

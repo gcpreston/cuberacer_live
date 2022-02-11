@@ -44,6 +44,48 @@ defmodule CuberacerLiveWeb.UserSettingsControllerTest do
     end
   end
 
+  describe "PUT /users/settings (change profile form)" do
+    test "updates the user profile", %{conn: conn, user: user} do
+      conn =
+        put(conn, Routes.user_settings_path(conn, :update), %{
+          "action" => "update_profile",
+          "user" => %{
+            "bio" => "some new bio",
+            "wca_id" => "2037TEST04",
+            "country" => "GB",
+            "birthday" => "1996-12-21"
+          }
+        })
+
+      assert redirected_to(conn) == Routes.user_settings_path(conn, :edit)
+      assert get_flash(conn, :info) =~ "Profile updated successfully"
+
+      updated_user = Accounts.get_user!(user.id)
+      assert updated_user.bio == "some new bio"
+      assert updated_user.wca_id == "2037TEST04"
+      assert updated_user.country == "GB"
+      assert updated_user.birthday == ~D[1996-12-21]
+    end
+
+    test "does not update if bio is too long", %{conn: conn, user: user} do
+      conn =
+        put(conn, Routes.user_settings_path(conn, :update), %{
+          "action" => "update_profile",
+          "user" => %{
+            "bio" => String.duplicate("some new bio", 100),
+            "wca_id" => "2037TEST04",
+            "country" => "GB",
+            "birthday" => "1996-12-21"
+          }
+        })
+
+      response = html_response(conn, 200)
+      assert response =~ "Settings</h1>"
+      assert response =~ "should be at most 500 character(s)"
+      assert Accounts.get_user!(user.id) == user
+    end
+  end
+
   describe "PUT /users/settings (change password form)" do
     test "updates the user password and resets tokens", %{conn: conn, user: user} do
       new_password_conn =
