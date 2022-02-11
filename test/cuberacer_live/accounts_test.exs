@@ -79,18 +79,21 @@ defmodule CuberacerLive.AccountsTest do
 
     test "validates email, username, and password when given" do
       {:error, changeset} =
-        Accounts.register_user(%{email: "not valid", username: "not valid", password: "not valid"})
+        Accounts.register_user(%{email: "not valid", username: "not valid", password: "short"})
 
       assert %{
                email: ["must have the @ sign and no spaces"],
                username: ["must only contain characters a-z, 0-9 and _"],
-               password: ["should be at least 12 character(s)"]
+               password: ["should be at least 6 character(s)"]
              } = errors_on(changeset)
     end
 
     test "validates maximum values for email, username, and password for security" do
       too_long = String.duplicate("db", 100)
-      {:error, changeset} = Accounts.register_user(%{email: too_long, username: too_long, password: too_long})
+
+      {:error, changeset} =
+        Accounts.register_user(%{email: too_long, username: too_long, password: too_long})
+
       assert "should be at most 160 character(s)" in errors_on(changeset).email
       assert "should be at most 25 character(s)" in errors_on(changeset).username
       assert "should be at most 72 character(s)" in errors_on(changeset).password
@@ -304,12 +307,12 @@ defmodule CuberacerLive.AccountsTest do
     test "validates password", %{user: user} do
       {:error, changeset} =
         Accounts.update_user_password(user, valid_user_password(), %{
-          password: "not valid",
+          password: "short",
           password_confirmation: "another"
         })
 
       assert %{
-               password: ["should be at least 12 character(s)"],
+               password: ["should be at least 6 character(s)"],
                password_confirmation: ["does not match password"]
              } = errors_on(changeset)
     end
@@ -349,6 +352,60 @@ defmodule CuberacerLive.AccountsTest do
         })
 
       refute Repo.get_by(UserToken, user_id: user.id)
+    end
+  end
+
+  describe "change_user_profile/2" do
+    test "returns a user changeset" do
+      assert %Ecto.Changeset{} = changeset = Accounts.change_user_profile(%User{})
+      assert changeset.required == []
+    end
+
+    test "allows fields to be set" do
+      changeset =
+        Accounts.change_user_profile(%User{}, %{
+          "bio" => "some test bio",
+          "wca_id" => "2022USER01",
+          "country" => "US",
+          "birthday" => ~D[1998-08-09]
+        })
+
+      assert changeset.valid?
+      assert get_change(changeset, :bio) == "some test bio"
+      assert get_change(changeset, :wca_id) == "2022USER01"
+      assert get_change(changeset, :country) == "US"
+      assert get_change(changeset, :birthday) == ~D[1998-08-09]
+    end
+  end
+
+  describe "update_user_profile/2" do
+    setup do
+      %{user: user_fixture()}
+    end
+
+    test "validates bio", %{user: user} do
+      {:error, changeset} =
+        Accounts.update_user_profile(user, %{
+          bio: String.duplicate("really long bio", 100)
+        })
+
+      assert %{bio: ["should be at most 500 character(s)"]} = errors_on(changeset)
+    end
+
+    test "updates the profile", %{user: user} do
+      {:ok, user} =
+        Accounts.update_user_profile(user, %{
+          bio: "new valid bio",
+          wca_id: "2022USER02",
+          country: "CA",
+          birthday: ~D[1997-09-08]
+        })
+
+      changed_user = Repo.get!(User, user.id)
+      assert changed_user.bio == "new valid bio"
+      assert changed_user.wca_id == "2022USER02"
+      assert changed_user.country == "CA"
+      assert changed_user.birthday == ~D[1997-09-08]
     end
   end
 
@@ -513,12 +570,12 @@ defmodule CuberacerLive.AccountsTest do
     test "validates password", %{user: user} do
       {:error, changeset} =
         Accounts.reset_user_password(user, %{
-          password: "not valid",
+          password: "short",
           password_confirmation: "another"
         })
 
       assert %{
-               password: ["should be at least 12 character(s)"],
+               password: ["should be at least 6 character(s)"],
                password_confirmation: ["does not match password"]
              } = errors_on(changeset)
     end

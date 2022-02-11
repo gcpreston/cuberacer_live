@@ -29,9 +29,9 @@
       x-transition:leave-start="transform opacity-100 scale-100"
       x-transition:leave-end="transform opacity-0 scale-95"
       role="menu" aria-orientation="vertical" aria-labelledby="user-menu-button" tabindex="-1">
-      <span class="block px-4 py-2 text-sm text-gray-500">
-        <%= @current_user.username %>
-      </span>
+
+      <%= link @current_user.username, to: Routes.user_profile_path(@conn, :show, @current_user.id),
+        class: "block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" %>
 
       <hr />
 

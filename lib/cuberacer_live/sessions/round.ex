@@ -4,8 +4,8 @@ defmodule CuberacerLive.Sessions.Round do
 
   schema "rounds" do
     field :scramble, :string
-    belongs_to :session, CuberacerLive.Sessions.Session
 
+    belongs_to :session, CuberacerLive.Sessions.Session
     has_many :solves, CuberacerLive.Sessions.Solve
 
     timestamps()

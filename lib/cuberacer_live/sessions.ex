@@ -66,6 +66,25 @@ defmodule CuberacerLive.Sessions do
   end
 
   @doc """
+  Returns a list of sessions (past and current) which the given
+  user has participated in.
+  """
+  def list_user_sessions(%User{id: user_id}) do
+    query =
+      from session in Session,
+        distinct: true,
+        join: cube_type in assoc(session, :cube_type),
+        join: round in assoc(session, :rounds),
+        join: solve in assoc(round, :solves),
+        where: solve.user_id == ^user_id,
+        preload: [cube_type: cube_type],
+        order_by: [desc: session.id],
+        select: session
+
+    Repo.all(query)
+  end
+
+  @doc """
   Determine if a given session is active.
   """
   def session_is_active?(%Session{id: session_id}) do

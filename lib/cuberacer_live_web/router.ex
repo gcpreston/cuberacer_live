@@ -64,6 +64,16 @@ defmodule CuberacerLiveWeb.Router do
   ## Authentication routes
 
   scope "/", CuberacerLiveWeb do
+    pipe_through [:browser]
+
+    delete "/users/log_out", UserSessionController, :delete
+    get "/users/confirm", UserConfirmationController, :new
+    post "/users/confirm", UserConfirmationController, :create
+    get "/users/confirm/:token", UserConfirmationController, :edit
+    post "/users/confirm/:token", UserConfirmationController, :update
+  end
+
+  scope "/", CuberacerLiveWeb do
     pipe_through [:browser, :redirect_if_user_is_authenticated]
 
     get "/", PageController, :index
@@ -84,20 +94,12 @@ defmodule CuberacerLiveWeb.Router do
 
     live "/lobby", GameLive.Lobby, :index
     live "/lobby/new", GameLive.Lobby, :new
-    live "/room/:id", GameLive.Room, :show
+    live "/rooms/:id", GameLive.Room, :show
 
     get "/users/settings", UserSettingsController, :edit
     put "/users/settings", UserSettingsController, :update
     get "/users/settings/confirm_email/:token", UserSettingsController, :confirm_email
-  end
 
-  scope "/", CuberacerLiveWeb do
-    pipe_through [:browser]
-
-    delete "/users/log_out", UserSessionController, :delete
-    get "/users/confirm", UserConfirmationController, :new
-    post "/users/confirm", UserConfirmationController, :create
-    get "/users/confirm/:token", UserConfirmationController, :edit
-    post "/users/confirm/:token", UserConfirmationController, :update
+    get "/users/:id", UserProfileController, :show
   end
 end

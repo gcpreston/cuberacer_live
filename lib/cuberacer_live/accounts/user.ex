@@ -9,6 +9,12 @@ defmodule CuberacerLive.Accounts.User do
     field :hashed_password, :string, redact: true
     field :confirmed_at, :naive_datetime
 
+    # Profile fields
+    field :wca_id, :string
+    field :country, :string
+    field :birthday, :date
+    field :bio, :string
+
     timestamps()
   end
 
@@ -58,7 +64,9 @@ defmodule CuberacerLive.Accounts.User do
   defp validate_username(changeset) do
     changeset
     |> validate_required([:username])
-    |> validate_format(:username, ~r/^[[:word:]]+$/, message: "must only contain characters a-z, 0-9 and _")
+    |> validate_format(:username, ~r/^[[:word:]]+$/,
+      message: "must only contain characters a-z, 0-9 and _"
+    )
     |> validate_length(:username, max: 25)
     |> unsafe_validate_unique(:username, CuberacerLive.Repo)
     |> unique_constraint(:username)
@@ -67,7 +75,7 @@ defmodule CuberacerLive.Accounts.User do
   defp validate_password(changeset, opts) do
     changeset
     |> validate_required([:password])
-    |> validate_length(:password, min: 12, max: 72)
+    |> validate_length(:password, min: 6, max: 72)
     # |> validate_format(:password, ~r/[a-z]/, message: "at least one lower case character")
     # |> validate_format(:password, ~r/[A-Z]/, message: "at least one upper case character")
     # |> validate_format(:password, ~r/[!?@#$%^&*_0-9]/, message: "at least one digit or punctuation character")
@@ -127,6 +135,23 @@ defmodule CuberacerLive.Accounts.User do
   def confirm_changeset(user) do
     now = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
     change(user, confirmed_at: now)
+  end
+
+  @doc """
+  A user changeset for updating profile information.
+  """
+  def profile_changeset(user, attrs) do
+    user
+    |> cast(attrs, [:bio, :wca_id, :country, :birthday])
+    |> validate_bio()
+    # |> validate_wca_id()
+    # |> validate_country()
+    # |> validate_birthday()
+  end
+
+  defp validate_bio(changeset) do
+    changeset
+    |> validate_length(:bio, max: 500)
   end
 
   @doc """

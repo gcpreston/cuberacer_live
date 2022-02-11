@@ -132,6 +132,21 @@ defmodule CuberacerLive.Accounts do
     User.registration_changeset(user, attrs, hash_password: false)
   end
 
+  @doc """
+  Calculate a user's age, based on UTC time.
+  """
+  def get_user_age(%User{} = user) do
+    today = Date.utc_today()
+    {:ok, today_in_birthday_year} = Date.new(user.birthday.year, today.month, today.day)
+    years_diff = today.year - user.birthday.year
+
+    if Date.compare(today_in_birthday_year, user.birthday) == :lt do
+      years_diff - 1
+    else
+      years_diff
+    end
+  end
+
   ## Settings
 
   @doc """
@@ -252,6 +267,39 @@ defmodule CuberacerLive.Accounts do
       {:ok, %{user: user}} -> {:ok, user}
       {:error, :user, changeset, _} -> {:error, changeset}
     end
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for changing the user profile
+
+  ## Examples
+
+      iex> change_user_profile(user)
+      %Ecto.Changeset{data: %User{}}
+
+  """
+  def change_user_profile(user, attrs \\ %{}) do
+    User.profile_changeset(user, attrs)
+  end
+
+  @doc """
+  Updates the user profile.
+
+  ## Examples
+
+      iex> upate_user_profile(user, %{password: ...})
+      {:ok, %User{}}
+
+      iex> update_user_password(user, %{})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_user_profile(user, attrs) do
+    changeset =
+      user
+      |> User.profile_changeset(attrs)
+
+    Repo.update(changeset)
   end
 
   ## Session
