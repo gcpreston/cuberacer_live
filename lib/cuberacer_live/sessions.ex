@@ -375,6 +375,27 @@ defmodule CuberacerLive.Sessions do
   def get_solve!(id), do: Repo.get!(Solve, id)
 
   @doc """
+  Gets a single solve, preloaded.
+
+  Raises `Ecto.NoResultsError` if the Solve does not exist.
+  """
+  def get_loaded_solve!(id) do
+    query =
+      from solve in Solve,
+        join: penalty in assoc(solve, :penalty),
+        join: user in assoc(solve, :user),
+        join: round in assoc(solve, :round),
+        where: solve.id == ^id,
+        preload: [
+          penalty: penalty,
+          round: round,
+          user: user
+        ]
+
+    Repo.one!(query)
+  end
+
+  @doc """
   Get a user's solve in the current round of a session.
 
   Returns `nil` if the user has no solve for the current round.

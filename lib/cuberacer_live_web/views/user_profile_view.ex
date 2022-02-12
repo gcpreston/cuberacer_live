@@ -1,7 +1,7 @@
 defmodule CuberacerLiveWeb.UserProfileView do
   use CuberacerLiveWeb, :view
 
-  import CuberacerLiveWeb.SharedUtils, only: [format_date: 1]
+  import CuberacerLiveWeb.SharedUtils, only: [format_datetime: 1]
 
   alias CuberacerLive.Accounts
   alias CuberacerLive.Sessions
@@ -13,9 +13,7 @@ defmodule CuberacerLiveWeb.UserProfileView do
         <span class="font-medium"><%= @session.name %></span> | <span><%= @session.cube_type.name %></span>
       </div>
       <div>
-        <span class="text-gray-500 italic text-sm"><%= format_date(@session.inserted_at) %></span>
-      </div>
-    </div>
+          <span class="text-gray-500 italic text-sm"><%= format_datetime(@session.inserted_at) %></span>
     """
   end
 end

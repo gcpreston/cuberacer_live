@@ -89,6 +89,8 @@ defmodule CuberacerLiveWeb.Router do
     put "/reset_password/:token", UserResetPasswordController, :update
   end
 
+  ## Main application routes
+
   scope "/", CuberacerLiveWeb do
     pipe_through [:browser_with_navbar, :require_authenticated_user]
 
@@ -101,5 +103,7 @@ defmodule CuberacerLiveWeb.Router do
     get "/users/settings/confirm_email/:token", UserSettingsController, :confirm_email
 
     get "/users/:id", UserProfileController, :show
+
+    get "/solves/:id", SolveController, :show
   end
 end

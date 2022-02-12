@@ -25,10 +25,7 @@ defmodule CuberacerLiveWeb.SharedUtils do
     "#{success_button_classes()} #{extras}"
   end
 
-  @doc """
-  Format a date like YYYY/MM/DD.
-  """
-  def format_date(date) do
-    Enum.join([date.year, date.month, date.day], "/")
+  def format_datetime(datetime) do
+    Calendar.strftime(datetime, "%c") <> " UTC"
   end
 end
