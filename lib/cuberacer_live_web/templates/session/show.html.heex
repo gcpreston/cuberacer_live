@@ -1,0 +1,31 @@
+<div class="flex flex-col">
+  <div class="sm:grid grid-cols-2">
+    <div class="p-6">
+      <h1 class="text-4xl text-gray-800 font-semibold">Session</h1>
+      <div class="mt-8 text-2xl text-gray-800 font-medium"><%= @session.name %></div>
+      <ul class="my-8 fa-ul">
+        <li>
+          <span class="fa-li"><i class="fas fa-cube"></i></span>
+          <span class="text-gray-800"><%= @session.cube_type.name %></span>
+        </li>
+        <li>
+          <span class="fa-li"><i class="fas fa-clock"></i></span>
+          <span class="text-gray-800"><%= format_datetime(@session.inserted_at) %></span>
+        </li>
+      </ul>
+    </div>
+
+    <div class="p-6">
+      <div class="text-lg text-gray-800 font-medium">
+        Chat log
+      </div>
+      <div class="my-8 max-h-72 overflow-auto">
+        <.messages_block messages={@session.room_messages} />
+      </div>
+    </div>
+  </div>
+
+  <div class="flex-1 overflow-auto">
+    <.rounds_table rounds={@session.rounds} users={participants(@session)} include_scramble={true} include_links={true} />
+  </div>
+</div>

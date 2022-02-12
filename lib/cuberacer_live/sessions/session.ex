@@ -8,6 +8,7 @@ defmodule CuberacerLive.Sessions.Session do
 
     belongs_to :cube_type, CuberacerLive.Cubing.CubeType
     has_many :rounds, CuberacerLive.Sessions.Round
+    has_many :room_messages, CuberacerLive.Messaging.RoomMessage
 
     timestamps()
   end

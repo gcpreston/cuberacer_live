@@ -114,6 +114,31 @@ defmodule CuberacerLive.Sessions do
   def get_session!(id), do: Repo.get!(Session, id)
 
   @doc """
+  Gets a single session, fully preloaded with rounds, solves, messages, etc.
+
+  Raises `Ecto.NoResultsError` if the Session does not exist.
+  """
+  def get_loaded_session!(id) do
+    query =
+      from session in Session,
+        join: cube_type in assoc(session, :cube_type),
+        left_join: message in assoc(session, :room_messages),
+        left_join: round in assoc(session, :rounds),
+        left_join: solve in assoc(round, :solves),
+        left_join: user in assoc(solve, :user),
+        left_join: penalty in assoc(solve, :penalty),
+        where: session.id == ^id,
+        order_by: [desc: round.id, asc: message.id],
+        preload: [
+          cube_type: cube_type,
+          room_messages: message,
+          rounds: {round, solves: {solve, user: user, penalty: penalty}}
+        ]
+
+    Repo.one!(query)
+  end
+
+  @doc """
   Creates a session.
 
   ## Examples

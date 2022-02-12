@@ -2,6 +2,7 @@ defmodule CuberacerLiveWeb.GameLive.Room do
   use CuberacerLiveWeb, :live_view
 
   import CuberacerLive.Repo, only: [preload: 2]
+  import CuberacerLiveWeb.SharedComponents, only: [rounds_table: 1]
   import CuberacerLiveWeb.GameLive.Components
 
   alias CuberacerLive.{Sessions, Cubing, Accounts, Messaging}
