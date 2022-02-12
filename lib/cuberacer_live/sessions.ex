@@ -268,6 +268,22 @@ defmodule CuberacerLive.Sessions do
   def get_round!(id), do: Repo.get!(Round, id)
 
   @doc """
+  Gets a single round, preloaded.
+
+  Raises `Ecto.NoResultsError` if the Round does not exist.
+  """
+  def get_loaded_round!(id) do
+    query =
+      from round in Round,
+        left_join: solve in assoc(round, :solves),
+        left_join: user in assoc(solve, :user),
+        where: round.id == ^id,
+        preload: [solves: {solve, user: user}]
+
+    Repo.one!(query)
+  end
+
+  @doc """
   Get the most recent round of a session.
 
   Raises `Ecto.NoResultsError` if the session has no rounds.

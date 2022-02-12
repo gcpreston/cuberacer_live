@@ -22,7 +22,7 @@
         </div>
 
         <div class="flex-1 h-full overflow-auto">
-          <.times_table present_users={@present_users} rounds={@rounds} current_user={@current_user} />
+          <.rounds_table users={@present_users} rounds={@rounds} include_scramble={false} include_links={false} />
         </div>
       </div>
     </div>
