@@ -1,5 +1,5 @@
 defmodule CuberacerLive.CubingTest do
-  use CuberacerLive.DataCase
+  use CuberacerLive.DataCase, async: true
   import CuberacerLive.CubingFixtures
 
   alias CuberacerLive.Cubing
