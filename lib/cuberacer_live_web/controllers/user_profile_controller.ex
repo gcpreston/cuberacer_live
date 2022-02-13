@@ -3,8 +3,8 @@ defmodule CuberacerLiveWeb.UserProfileController do
 
   alias CuberacerLive.Accounts
 
-  def show(conn, %{"id" => id}) do
-    user = Accounts.get_user!(id)
+  def show(conn, %{"id" => user_id}) do
+    user = Accounts.get_user!(user_id)
     render(conn, "show.html", user: user)
   end
 end

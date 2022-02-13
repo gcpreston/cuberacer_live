@@ -1,0 +1,38 @@
+<div class="max-w-4xl mx-auto my-6 ">
+  <div class="mx-6 grid grid-cols-2 gap-4">
+    <div>
+      <h1 class="text-4xl text-gray-800 font-semibold">Solve</h1>
+      <div class="text-gray-500 italic"><%= format_datetime(@solve.inserted_at) %></div>
+
+      <ul class="my-8">
+        <li>
+          <span class="font-semibold text-gray-800">User: </span>
+          <%= link @solve.user.username,
+            to: Routes.user_profile_path(@conn, :show, @solve.user_id),
+            class: "text-blue-500 hover:underline" %>
+        </li>
+        <li>
+          <span class="font-semibold text-gray-800">Scramble: </span>
+          <span class="text-gray-800"><%= @solve.round.scramble %></span>
+        </li>
+        <li>
+          <span class="font-semibold text-gray-800">Round: </span>
+          <%= link @solve.round_id,
+            to: Routes.round_path(@conn, :show, @solve.round_id),
+            class: "text-blue-500 hover:underline" %>
+        </li>
+        <li>
+          <span class="font-semibold text-gray-800">Session: </span>
+          <%= link @solve.round.session_id,
+            to: Routes.session_path(@conn, :show, @solve.round.session_id),
+            class: "text-blue-500 hover:underline" %>
+        </li>
+      </ul>
+    </div>
+
+    <div class="my-10">
+      <span class="text-5xl font-medium"><%= display_solve(@solve) %></span>
+      <span class="text-sm font-light">sec</span>
+    </div>
+  </div>
+</div>

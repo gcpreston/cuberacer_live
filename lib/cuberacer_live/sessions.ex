@@ -114,6 +114,31 @@ defmodule CuberacerLive.Sessions do
   def get_session!(id), do: Repo.get!(Session, id)
 
   @doc """
+  Gets a single session, fully preloaded with rounds, solves, messages, etc.
+
+  Raises `Ecto.NoResultsError` if the Session does not exist.
+  """
+  def get_loaded_session!(id) do
+    query =
+      from session in Session,
+        join: cube_type in assoc(session, :cube_type),
+        left_join: message in assoc(session, :room_messages),
+        left_join: round in assoc(session, :rounds),
+        left_join: solve in assoc(round, :solves),
+        left_join: user in assoc(solve, :user),
+        left_join: penalty in assoc(solve, :penalty),
+        where: session.id == ^id,
+        order_by: [desc: round.id, asc: message.id],
+        preload: [
+          cube_type: cube_type,
+          room_messages: message,
+          rounds: {round, solves: {solve, user: user, penalty: penalty}}
+        ]
+
+    Repo.one!(query)
+  end
+
+  @doc """
   Creates a session.
 
   ## Examples
@@ -268,6 +293,22 @@ defmodule CuberacerLive.Sessions do
   def get_round!(id), do: Repo.get!(Round, id)
 
   @doc """
+  Gets a single round, preloaded.
+
+  Raises `Ecto.NoResultsError` if the Round does not exist.
+  """
+  def get_loaded_round!(id) do
+    query =
+      from round in Round,
+        left_join: solve in assoc(round, :solves),
+        left_join: user in assoc(solve, :user),
+        where: round.id == ^id,
+        preload: [solves: {solve, user: user}]
+
+    Repo.one!(query)
+  end
+
+  @doc """
   Get the most recent round of a session.
 
   Raises `Ecto.NoResultsError` if the session has no rounds.
@@ -373,6 +414,27 @@ defmodule CuberacerLive.Sessions do
 
   """
   def get_solve!(id), do: Repo.get!(Solve, id)
+
+  @doc """
+  Gets a single solve, preloaded.
+
+  Raises `Ecto.NoResultsError` if the Solve does not exist.
+  """
+  def get_loaded_solve!(id) do
+    query =
+      from solve in Solve,
+        join: penalty in assoc(solve, :penalty),
+        join: user in assoc(solve, :user),
+        join: round in assoc(solve, :round),
+        where: solve.id == ^id,
+        preload: [
+          penalty: penalty,
+          round: round,
+          user: user
+        ]
+
+    Repo.one!(query)
+  end
 
   @doc """
   Get a user's solve in the current round of a session.

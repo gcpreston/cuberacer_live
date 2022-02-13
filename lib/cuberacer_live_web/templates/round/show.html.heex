@@ -1,0 +1,25 @@
+<div class="max-w-4xl mx-auto my-6 ">
+  <div class="mx-6 grid grid-cols-2 gap-4">
+    <div>
+      <h1 class="text-4xl text-gray-800 font-semibold">Round</h1>
+      <div class="text-gray-500 italic"><%= format_datetime(@round.inserted_at) %></div>
+
+      <ul class="my-8">
+        <li>
+          <span class="font-semibold text-gray-800">Scramble: </span>
+          <%= @round.scramble %>
+        </li>
+        <li>
+          <span class="font-semibold text-gray-800">Session: </span>
+          <%= link @round.session_id,
+            to: Routes.session_path(@conn, :show, @round.session_id),
+            class: "text-blue-500 hover:underline" %>
+        </li>
+      </ul>
+    </div>
+
+    <div>
+      <.solves_table solves={@round.solves} />
+    </div>
+  </div>
+</div>
