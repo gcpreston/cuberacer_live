@@ -4,6 +4,8 @@ defmodule CuberacerLiveWeb.UserProfileControllerTest do
   import CuberacerLive.AccountsFixtures
   import CuberacerLive.SessionsFixtures
 
+  alias CuberacerLive.CountryUtils
+
   setup do
     %{user: user_fixture()}
   end
@@ -41,7 +43,7 @@ defmodule CuberacerLiveWeb.UserProfileControllerTest do
       )
       |> assert_html(
         "#profile-country",
-        "#{other_user.country} #{CuberacerLive.CountryUtils.to_flag_emoji(other_user.country)}"
+        "#{CountryUtils.country_name_from_code(other_user.country)} #{CountryUtils.to_flag_emoji(other_user.country)}"
       )
       |> assert_html("#profile-age", "Age 20")
       |> assert_html(

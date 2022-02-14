@@ -3,6 +3,7 @@ defmodule CuberacerLiveWeb.UserProfileView do
 
   import CuberacerLiveWeb.SharedUtils, only: [format_datetime: 1]
 
+  alias CuberacerLive.CountryUtils
   alias CuberacerLive.Accounts
   alias CuberacerLive.Sessions
 
