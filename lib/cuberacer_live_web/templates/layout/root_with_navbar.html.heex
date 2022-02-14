@@ -10,7 +10,9 @@
     <script defer phx-track-static type="text/javascript" src={Routes.static_path(@conn, "/assets/app.js")}></script>
 
     <!-- FontAwesome -->
-    <script src="https://kit.fontawesome.com/b37e60a237.js" crossorigin="anonymous"></script>  </head>
+    <link href={Routes.static_path(@conn, "/vendor/fontawesome/css/fontawesome.min.css")} rel="stylesheet">
+    <link href={Routes.static_path(@conn, "/vendor/fontawesome/css/solid.min.css")} rel="stylesheet">
+  </head>
   <body>
     <div class="flex flex-col h-full select-none sm:select-text">
       <header>
