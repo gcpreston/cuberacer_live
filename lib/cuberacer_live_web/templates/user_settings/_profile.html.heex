@@ -22,7 +22,7 @@
 
     <div class="mt-3">
       <%= label f, :country %>
-      <%= text_input f, :country, required: false, class: input_classes() %>
+      <%= select f, :country, CountryUtils.countries_select_options(), required: false, class: input_classes() %>
       <%= error_tag f, :country %>
     </div>
 

@@ -21,7 +21,7 @@
         <li>
           <span class="fa-li"><i class="fas fa-globe"></i></span>
           <span id="profile-country">
-            <%= @user.country %> <%= CuberacerLive.CountryUtils.to_flag_emoji(@user.country) %>
+            <%= CountryUtils.country_name_from_code(@user.country) %> <%= CountryUtils.to_flag_emoji(@user.country) %>
           </span>
         </li>
       <% end %>

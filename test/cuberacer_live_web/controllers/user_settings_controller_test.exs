@@ -37,6 +37,15 @@ defmodule CuberacerLiveWeb.UserSettingsControllerTest do
       refute response =~ "Resend confirmation email</button>"
     end
 
+    test "renders country name dropdown", %{conn: conn} do
+      conn = get(conn, Routes.user_settings_path(conn, :edit))
+      html = html_response(conn, 200)
+
+      html
+      |> assert_html("select[name='user[country]']", count: 1)
+      |> assert_html("select option[value='US']", text: "United States")
+    end
+
     test "redirects if user is not logged in" do
       conn = build_conn()
       conn = get(conn, Routes.user_settings_path(conn, :edit))
