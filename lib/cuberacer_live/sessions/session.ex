@@ -6,7 +6,21 @@ defmodule CuberacerLive.Sessions.Session do
     field :name, :string
     field :host_id, :id
 
-    belongs_to :cube_type, CuberacerLive.Cubing.CubeType
+    field :puzzle_type, Ecto.Enum,
+      values: [
+        :"2x2",
+        :"3x3",
+        :"4x4",
+        :"5x5",
+        :"6x6",
+        :"7x7",
+        :Megaminx,
+        :Pyraminx,
+        :"Square-1",
+        :Skewb,
+        :Clock
+      ]
+
     has_many :rounds, CuberacerLive.Sessions.Round
     has_many :room_messages, CuberacerLive.Messaging.RoomMessage
 
@@ -16,9 +30,8 @@ defmodule CuberacerLive.Sessions.Session do
   @doc false
   def changeset(session, attrs) do
     session
-    |> cast(attrs, [:name, :cube_type_id])
-    |> validate_required([:name, :cube_type_id])
+    |> cast(attrs, [:name, :puzzle_type])
+    |> validate_required([:name, :puzzle_type])
     |> validate_length(:name, max: 100)
-    |> cast_assoc(:cube_type)
   end
 end

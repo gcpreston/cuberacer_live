@@ -1,7 +1,7 @@
 defmodule CuberacerLiveWeb.GameLive.CreateRoomForm do
   use CuberacerLiveWeb, :live_component
 
-  alias CuberacerLive.{Cubing, Sessions}
+  alias CuberacerLive.Sessions
 
   @impl true
   def update(%{session: session} = assigns, socket) do
@@ -27,8 +27,8 @@ defmodule CuberacerLiveWeb.GameLive.CreateRoomForm do
     save_session(socket, socket.assigns.action, session_params)
   end
 
-  defp save_session(socket, :new, %{"name" => name, "cube_type_id" => cube_type_id}) do
-    case Sessions.create_session_and_round(name, cube_type_id) do
+  defp save_session(socket, :new, %{"name" => name, "puzzle_type" => puzzle_type}) do
+    case Sessions.create_session_and_round(name, puzzle_type) do
       {:ok, _session, _round} ->
         {:noreply,
          socket
@@ -37,16 +37,6 @@ defmodule CuberacerLiveWeb.GameLive.CreateRoomForm do
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign(socket, changeset: changeset)}
-    end
-  end
-
-  defp cube_type_options do
-    cube_types =
-      Cubing.list_cube_types()
-      |> Enum.filter(fn ct -> ct.name in Whisk.puzzle_types() end)
-
-    for cube_type <- cube_types do
-      [key: cube_type.name, value: cube_type.id]
     end
   end
 end

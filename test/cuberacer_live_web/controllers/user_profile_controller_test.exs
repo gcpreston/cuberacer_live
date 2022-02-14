@@ -2,6 +2,7 @@ defmodule CuberacerLiveWeb.UserProfileControllerTest do
   use CuberacerLiveWeb.ConnCase, async: true
 
   import CuberacerLive.AccountsFixtures
+  import CuberacerLive.SessionsFixtures
 
   setup do
     %{user: user_fixture()}
@@ -19,6 +20,11 @@ defmodule CuberacerLiveWeb.UserProfileControllerTest do
           country: "US",
           birthday: birthday
         )
+
+      _session1 = session_fixture(name: "session not on profile")
+      session2 = session_fixture(name: "session on profile", puzzle_type: :"4x4")
+      round = round_fixture(session: session2)
+      _solve = solve_fixture(round_id: round.id, user_id: other_user.id)
 
       conn =
         conn
@@ -45,6 +51,9 @@ defmodule CuberacerLiveWeb.UserProfileControllerTest do
       |> refute_html("#profile-edit")
 
       assert html =~ "Sessions"
+      refute html =~ "session not on profile"
+      assert html =~ "session on profile"
+      assert html =~ "4x4"
     end
 
     test "shows Edit profile button on your own profile", %{conn: conn, user: user} do

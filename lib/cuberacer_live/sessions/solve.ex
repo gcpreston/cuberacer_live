@@ -4,8 +4,9 @@ defmodule CuberacerLive.Sessions.Solve do
 
   schema "solves" do
     field :time, :integer
+    field :penalty, Ecto.Enum, values: [:OK, :"+2", :DNF]
+
     belongs_to :user, CuberacerLive.Accounts.User
-    belongs_to :penalty, CuberacerLive.Cubing.Penalty
     belongs_to :round, CuberacerLive.Sessions.Round
 
     has_one :session, through: [:round, :session]
@@ -18,13 +19,12 @@ defmodule CuberacerLive.Sessions.Solve do
   """
   def create_changeset(solve, attrs) do
     solve
-    |> cast(attrs, [:time, :user_id, :penalty_id, :round_id])
-    |> validate_required([:time, :user_id, :penalty_id, :round_id])
+    |> cast(attrs, [:time, :penalty, :user_id, :round_id])
+    |> validate_required([:time, :penalty, :user_id, :round_id])
     |> unique_constraint(:user_id_round_id,
       message: "user has already submitted a time for this round"
     )
     |> cast_assoc(:user)
-    |> cast_assoc(:penalty)
     |> cast_assoc(:round)
   end
 
@@ -33,8 +33,7 @@ defmodule CuberacerLive.Sessions.Solve do
   """
   def penalty_changeset(solve, attrs) do
     solve
-    |> cast(attrs, [:penalty_id])
-    |> validate_required([:penalty_id])
-    |> cast_assoc(:penalty)
+    |> cast(attrs, [:penalty])
+    |> validate_required([:penalty])
   end
 end

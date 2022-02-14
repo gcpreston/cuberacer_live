@@ -2,11 +2,10 @@ defmodule CuberacerLive.SessionControllerTest do
   use CuberacerLiveWeb.ConnCase, async: true
 
   import CuberacerLive.AccountsFixtures
-  import CuberacerLive.CubingFixtures
   import CuberacerLive.MessagingFixtures
   import CuberacerLive.SessionsFixtures
 
-  alias CuberacerLive.{Repo, Sessions}
+  alias CuberacerLive.Sessions
   alias CuberacerLiveWeb.SharedUtils
 
   setup do
@@ -28,8 +27,6 @@ defmodule CuberacerLive.SessionControllerTest do
     test "displays session data", %{conn: conn, user: user1, session: session} do
       user2 = user_fixture()
       user3 = user_fixture()
-      penalty_plus2 = penalty_fixture(name: "+2")
-      penalty_dnf = penalty_fixture(name: "DNF")
 
       _message1 = room_message_fixture(session: session, user: user1, message: "hey everyone")
       _message2 = room_message_fixture(session: session, user: user2, message: "hope this passes")
@@ -44,7 +41,7 @@ defmodule CuberacerLive.SessionControllerTest do
           round_id: round1.id,
           user_id: user2.id,
           time: 4321,
-          penalty_id: penalty_plus2.id
+          penalty: :"+2"
         )
 
       solve3 = solve_fixture(round_id: round2.id, user_id: user1.id, time: 8431)
@@ -55,17 +52,15 @@ defmodule CuberacerLive.SessionControllerTest do
           round_id: round3.id,
           user_id: user2.id,
           time: 1351,
-          penalty_id: penalty_dnf.id
+          penalty: :DNF
         )
-
-      session = Repo.preload(session, :cube_type)
 
       conn = conn |> log_in_user(user1) |> get(Routes.session_path(conn, :show, session.id))
       html = html_response(conn, 200)
 
       assert html =~ "Session</h1>"
       assert html =~ SharedUtils.format_datetime(session.inserted_at)
-      assert html =~ session.cube_type.name
+      assert html =~ "#{session.puzzle_type}"
       assert html =~ Calendar.strftime(session.inserted_at, "%c")
       assert html =~ "Chat log"
       assert html =~ "#{user1.username}: hey everyone"

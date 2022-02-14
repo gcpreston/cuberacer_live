@@ -17,7 +17,6 @@ defmodule CuberacerLive.Sessions do
   alias CuberacerLive.Stats
   alias CuberacerLive.Sessions.{Session, Round, Solve}
   alias CuberacerLive.Accounts.User
-  alias CuberacerLive.Cubing.{CubeType, Penalty}
 
   # For now, any session created in the last 24 hours is active. This is
   # a temporary solution while a more sophisticated one is in the works.
@@ -33,7 +32,7 @@ defmodule CuberacerLive.Sessions do
   end
 
   @doc """
-  Returns the list of sessions. Preloads :cube_type.
+  Returns the list of sessions.
 
   ## Examples
 
@@ -42,7 +41,7 @@ defmodule CuberacerLive.Sessions do
 
   """
   def list_sessions do
-    query = from s in Session, order_by: [desc: s.inserted_at], preload: :cube_type
+    query = from s in Session, order_by: [desc: s.inserted_at]
     Repo.all(query)
   end
 
@@ -59,8 +58,7 @@ defmodule CuberacerLive.Sessions do
     query =
       from s in Session,
         where: s.inserted_at > ^cutoff_time,
-        order_by: [desc: s.inserted_at],
-        preload: :cube_type
+        order_by: [desc: s.inserted_at]
 
     Repo.all(query)
   end
@@ -73,11 +71,9 @@ defmodule CuberacerLive.Sessions do
     query =
       from session in Session,
         distinct: true,
-        join: cube_type in assoc(session, :cube_type),
         join: round in assoc(session, :rounds),
         join: solve in assoc(round, :solves),
         where: solve.user_id == ^user_id,
-        preload: [cube_type: cube_type],
         order_by: [desc: session.id],
         select: session
 
@@ -121,18 +117,15 @@ defmodule CuberacerLive.Sessions do
   def get_loaded_session!(id) do
     query =
       from session in Session,
-        join: cube_type in assoc(session, :cube_type),
         left_join: message in assoc(session, :room_messages),
         left_join: round in assoc(session, :rounds),
         left_join: solve in assoc(round, :solves),
         left_join: user in assoc(solve, :user),
-        left_join: penalty in assoc(solve, :penalty),
         where: session.id == ^id,
         order_by: [desc: round.id, asc: message.id],
         preload: [
-          cube_type: cube_type,
           room_messages: message,
-          rounds: {round, solves: {solve, user: user, penalty: penalty}}
+          rounds: {round, solves: {solve, user: user}}
         ]
 
     Repo.one!(query)
@@ -162,22 +155,15 @@ defmodule CuberacerLive.Sessions do
 
   ## Examples
 
-      iex> create_session_and_round("my cool sesh", %CubeType{})
+      iex> create_session_and_round("my cool sesh", "3x3")
       {:ok, %Session{}, %Round{}}
 
       iex> create_session_and_round(nil, %CubeType{})
       {:error, %Ecto.Changeset{}}
 
-      iex> create_session_and_round("my cool sesh", some_cube_type_id)
-      {:ok, %Session{}, %Round{}}
-
   """
-  def create_session_and_round(name, %CubeType{} = cube_type) do
-    create_session_and_round(name, cube_type.id)
-  end
-
-  def create_session_and_round(name, cube_type_id) do
-    with {:ok, session} <- create_session(%{name: name, cube_type_id: cube_type_id}),
+  def create_session_and_round(name, puzzle_type) do
+    with {:ok, session} <- create_session(%{name: name, puzzle_type: puzzle_type}),
          {:ok, round} <- create_round(session) do
       {:ok, session, round}
     else
@@ -269,9 +255,8 @@ defmodule CuberacerLive.Sessions do
       from r in Round,
         where: r.session_id == ^session_id,
         left_join: s in assoc(r, :solves),
-        left_join: p in assoc(s, :penalty),
         order_by: [{^order, r.id}],
-        preload: [solves: {s, penalty: p}]
+        preload: [solves: s]
 
     Repo.all(query)
   end
@@ -341,8 +326,7 @@ defmodule CuberacerLive.Sessions do
 
   """
   def create_round(%Session{} = session, scramble \\ nil) do
-    session = Repo.preload(session, :cube_type)
-    scramble = scramble || Whisk.scramble(session.cube_type.name)
+    scramble = scramble || Whisk.scramble(to_string(session.puzzle_type))
     attrs = %{session_id: session.id, scramble: scramble}
 
     %Round{}
@@ -423,12 +407,10 @@ defmodule CuberacerLive.Sessions do
   def get_loaded_solve!(id) do
     query =
       from solve in Solve,
-        join: penalty in assoc(solve, :penalty),
         join: user in assoc(solve, :user),
         join: round in assoc(solve, :round),
         where: solve.id == ^id,
         preload: [
-          penalty: penalty,
           round: round,
           user: user
         ]
@@ -474,10 +456,19 @@ defmodule CuberacerLive.Sessions do
   Submit a solve for a user.
 
   Adds the solve to the current round of the given session.
+
+  ## Examples
+
+      iex> create_solve(%Session{}, %User{}, 9905, "OK")
+      %Solve{}
+
+      iex> create_solve(%Session{}, %User{}, 51423, "+2")
+      %Solve{}
+
   """
-  def create_solve(%Session{} = session, %User{} = user, time, %Penalty{} = penalty) do
+  def create_solve(%Session{} = session, %User{} = user, time, penalty) do
     round = get_current_round!(session)
-    attrs = %{user_id: user.id, time: time, penalty_id: penalty.id, round_id: round.id}
+    attrs = %{round_id: round.id, user_id: user.id, time: time, penalty: penalty}
 
     %Solve{}
     |> Solve.create_changeset(attrs)
@@ -490,13 +481,13 @@ defmodule CuberacerLive.Sessions do
 
   ## Examples
 
-      iex> change_penalty(solve, %Penalty{id: 123})
-      {:ok, %Solve{penalty_id: 123}}
+      iex> change_penalty(solve, "DNF")
+      {:ok, %Solve{penalty: :DNF}}
 
   """
-  def change_penalty(%Solve{} = solve, %Penalty{id: penalty_id}) do
+  def change_penalty(%Solve{} = solve, penalty) do
     solve
-    |> Solve.penalty_changeset(%{penalty_id: penalty_id})
+    |> Solve.penalty_changeset(%{penalty: penalty})
     |> Repo.update()
     |> notify_subscribers([:solve, :updated])
   end
@@ -539,12 +530,11 @@ defmodule CuberacerLive.Sessions do
 
   """
   def display_solve(solve) do
-    # TODO: Figure how to do this without preloading
-    case Repo.preload(solve, :penalty) do
+    case solve do
       nil -> "--"
-      %Solve{penalty: %Penalty{name: "OK"}} -> ms_to_sec_str(solve.time)
-      %Solve{penalty: %Penalty{name: "+2"}} -> ms_to_sec_str(solve.time + 2000) <> "+"
-      %Solve{penalty: %Penalty{name: "DNF"}} -> "DNF"
+      %Solve{penalty: :OK} -> ms_to_sec_str(solve.time)
+      %Solve{penalty: :"+2"} -> ms_to_sec_str(solve.time + 2000) <> "+"
+      %Solve{penalty: :DNF} -> "DNF (#{ms_to_sec_str(solve.time)})"
     end
   end
 
@@ -565,10 +555,10 @@ defmodule CuberacerLive.Sessions do
   If the penalty is DNF, or if the solve is `nil`, returns `:dnf`.
   """
   def actual_time(%Solve{} = solve) do
-    case Repo.preload(solve, :penalty) do
-      %Solve{penalty: %Penalty{name: "OK"}} -> solve.time
-      %Solve{penalty: %Penalty{name: "+2"}} -> solve.time + 2000
-      %Solve{penalty: %Penalty{name: "DNF"}} -> :dnf
+    case solve.penalty do
+      :OK -> solve.time
+      :"+2" -> solve.time + 2000
+      :DNF -> :dnf
     end
   end
 
@@ -588,9 +578,8 @@ defmodule CuberacerLive.Sessions do
       from r in Round,
         where: r.session_id == ^session_id,
         left_join: s in assoc(r, :solves),
-        left_join: p in assoc(s, :penalty),
         order_by: [desc: r.id],
-        preload: [solves: {s, penalty: p}]
+        preload: [solves: s]
 
     rounds = Repo.all(query)
 
