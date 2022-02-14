@@ -2,7 +2,6 @@ defmodule CuberacerLive.RoundControllerTest do
   use CuberacerLiveWeb.ConnCase, async: true
 
   import CuberacerLive.AccountsFixtures
-  import CuberacerLive.CubingFixtures
   import CuberacerLive.SessionsFixtures
 
   alias CuberacerLive.Sessions
@@ -31,8 +30,6 @@ defmodule CuberacerLive.RoundControllerTest do
     test "displays round data", %{conn: conn, user: user1, round: round} do
       user2 = user_fixture()
       user3 = user_fixture()
-      penalty_plus2 = penalty_fixture(name: "+2")
-      penalty_dnf = penalty_fixture(name: "DNF")
       solve1 = solve_fixture(round_id: round.id, user_id: user1.id, time: 1234)
 
       solve2 =
@@ -40,7 +37,7 @@ defmodule CuberacerLive.RoundControllerTest do
           round_id: round.id,
           user_id: user2.id,
           time: 4321,
-          penalty_id: penalty_plus2.id
+          penalty: :"+2"
         )
 
       solve3 =
@@ -48,7 +45,7 @@ defmodule CuberacerLive.RoundControllerTest do
           round_id: round.id,
           user_id: user3.id,
           time: 3431,
-          penalty_id: penalty_dnf.id
+          penalty: :DNF
         )
 
       conn = conn |> log_in_user(user1) |> get(Routes.round_path(conn, :show, round.id))

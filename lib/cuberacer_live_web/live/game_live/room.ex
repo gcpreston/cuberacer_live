@@ -5,7 +5,7 @@ defmodule CuberacerLiveWeb.GameLive.Room do
   import CuberacerLiveWeb.SharedComponents, only: [rounds_table: 1]
   import CuberacerLiveWeb.GameLive.Components
 
-  alias CuberacerLive.{Sessions, Cubing, Accounts, Messaging}
+  alias CuberacerLive.{Sessions, Accounts, Messaging}
   alias CuberacerLiveWeb.Presence
 
   @endpoint CuberacerLiveWeb.Endpoint
@@ -63,7 +63,7 @@ defmodule CuberacerLiveWeb.GameLive.Room do
   end
 
   defp fetch_session(socket, session_id) do
-    session = Sessions.get_session!(session_id) |> preload(:cube_type)
+    session = Sessions.get_session!(session_id)
     assign(socket, %{session_id: session_id, session: session})
   end
 
@@ -107,12 +107,7 @@ defmodule CuberacerLiveWeb.GameLive.Room do
 
   @impl true
   def handle_event("new-solve", %{"time" => time}, socket) do
-    Sessions.create_solve(
-      socket.assigns.session,
-      socket.assigns.current_user,
-      time,
-      Cubing.get_penalty("OK")
-    )
+    Sessions.create_solve(socket.assigns.session, socket.assigns.current_user, time, :OK)
 
     {:noreply,
      socket
@@ -121,9 +116,10 @@ defmodule CuberacerLiveWeb.GameLive.Room do
   end
 
   @impl true
-  def handle_event("change-penalty", %{"name" => name}, socket) do
+  def handle_event("change-penalty", %{"penalty" => penalty}, socket) do
+    # TODO: Does this need to pass an atom?
     if solve = Sessions.get_current_solve(socket.assigns.session, socket.assigns.current_user) do
-      Sessions.change_penalty(solve, Cubing.get_penalty(name))
+      Sessions.change_penalty(solve, penalty)
     end
 
     {:noreply, socket |> fetch_stats()}

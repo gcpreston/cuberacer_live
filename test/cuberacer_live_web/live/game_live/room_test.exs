@@ -6,7 +6,6 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
   import Ecto.Query
   import CuberacerLive.AccountsFixtures
   import CuberacerLive.SessionsFixtures
-  import CuberacerLive.CubingFixtures
   import CuberacerLive.MessagingFixtures
 
   alias CuberacerLive.{Repo, Sessions, Messaging}
@@ -24,16 +23,11 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
     %{session: session, round: round}
   end
 
-  defp create_penalty(_) do
-    penalty = penalty_fixture(name: "OK")
-    %{penalty: penalty}
-  end
-
   defp authenticate(%{conn: conn, user: user}) do
     %{conn: log_in_user(conn, user)}
   end
 
-  setup [:create_user, :create_session_and_round, :create_penalty]
+  setup [:create_user, :create_session_and_round]
 
   describe "mount" do
     test "redirects if no user token", %{conn: conn, session: session} do
@@ -65,7 +59,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       user: user
     } do
       conn = log_in_user(conn, user)
-      solve = solve_fixture(%{user_id: user.id, round_id: round.id}) |> Repo.preload([:penalty])
+      solve = solve_fixture(%{user_id: user.id, round_id: round.id})
 
       assert {:ok, _view, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
       assert html =~ user.username
@@ -81,9 +75,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       conn = log_in_user(conn, user)
       other_user = user_fixture()
 
-      _solve =
-        solve_fixture(%{user_id: other_user.id, round_id: round.id})
-        |> Repo.preload([:penalty])
+      _solve = solve_fixture(%{user_id: other_user.id, round_id: round.id})
 
       assert {:ok, _view, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
       assert html =~ user.username
@@ -158,7 +150,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
           order_by: [desc: s.inserted_at],
           limit: 1
 
-      newest_solve = Repo.one(newest_solve_query) |> Repo.preload(:penalty)
+      newest_solve = Repo.one(newest_solve_query)
 
       assert num_solves_after == num_solves_before + 1
       assert newest_solve.time == 42
@@ -240,7 +232,6 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       session: session,
       round: round1
     } do
-      plus2_penalty = penalty_fixture(name: "+2")
       user2 = user_fixture()
       solve1 = solve_fixture(time: 42, user_id: user1.id, round_id: round1.id)
 
@@ -249,7 +240,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       solve2 =
         solve_fixture(
           time: 43,
-          penalty_id: plus2_penalty.id,
+          penalty: :"+2",
           user_id: user1.id,
           round_id: round2.id
         )
@@ -264,11 +255,11 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       assert html =~ Sessions.display_solve(solve2)
       assert html =~ Sessions.display_solve(solve3)
 
-      render_click(view, "change-penalty", %{"name" => "OK"})
-      updated_solve2 = Sessions.get_solve!(solve2.id) |> Repo.preload(:penalty)
+      render_click(view, "change-penalty", %{"penalty" => "OK"})
+      updated_solve2 = Sessions.get_solve!(solve2.id)
       html = render(view)
 
-      assert updated_solve2.penalty.name == "OK"
+      assert updated_solve2.penalty == :OK
       assert html =~ Sessions.display_solve(updated_solve2)
       refute html =~ Sessions.display_solve(solve2)
       assert html =~ Sessions.display_solve(solve1)
@@ -281,8 +272,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       session: session,
       round: round1
     } do
-      plus2_penalty = penalty_fixture(name: "+2")
-      solve = solve_fixture(penalty_id: plus2_penalty.id, user_id: user.id, round_id: round1.id)
+      solve = solve_fixture(penalty: :"+2", user_id: user.id, round_id: round1.id)
       _round2 = round_fixture(session: session)
 
       {:ok, view, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
@@ -290,7 +280,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       assert html =~ Sessions.display_solve(solve)
       assert html =~ Sessions.display_solve(nil)
 
-      render_click(view, "change-penalty", %{"name" => "OK"})
+      render_click(view, "change-penalty", %{"penalty" => "OK"})
 
       assert html =~ Sessions.display_solve(solve)
       assert html =~ Sessions.display_solve(nil)
@@ -302,7 +292,6 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       session: session,
       round: round1
     } do
-      penalty_fixture(name: "+2")
       user2 = user_fixture()
       solve1 = solve_fixture(time: 42, user_id: user1.id, round_id: round1.id)
 
@@ -318,11 +307,11 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       assert html =~ Sessions.display_solve(solve2)
       assert html =~ Sessions.display_solve(solve3)
 
-      render_click(view, "change-penalty", %{"name" => "+2"})
-      updated_solve2 = Sessions.get_solve!(solve2.id) |> Repo.preload(:penalty)
+      render_click(view, "change-penalty", %{"penalty" => "+2"})
+      updated_solve2 = Sessions.get_solve!(solve2.id)
       html = render(view)
 
-      assert updated_solve2.penalty.name == "+2"
+      assert updated_solve2.penalty == :"+2"
       assert html =~ Sessions.display_solve(updated_solve2)
       refute html =~ Sessions.display_solve(solve2)
       assert html =~ Sessions.display_solve(solve1)
@@ -343,7 +332,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       assert html =~ Sessions.display_solve(solve)
       assert html =~ Sessions.display_solve(nil)
 
-      render_click(view, "change-penalty", %{"name" => "+2"})
+      render_click(view, "change-penalty", %{"penalty" => "+2"})
 
       assert html =~ Sessions.display_solve(solve)
       assert html =~ Sessions.display_solve(nil)
@@ -355,7 +344,6 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       session: session,
       round: round1
     } do
-      penalty_fixture(name: "DNF")
       user2 = user_fixture()
       solve1 = solve_fixture(time: 42, user_id: user1.id, round_id: round1.id)
 
@@ -371,13 +359,12 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       assert html =~ Sessions.display_solve(solve2)
       assert html =~ Sessions.display_solve(solve3)
 
-      render_click(view, "change-penalty", %{"name" => "DNF"})
-      updated_solve2 = Sessions.get_solve!(solve2.id) |> Repo.preload(:penalty)
+      render_click(view, "change-penalty", %{"penalty" => "DNF"})
+      updated_solve2 = Sessions.get_solve!(solve2.id)
       html = render(view)
 
-      assert updated_solve2.penalty.name == "DNF"
+      assert updated_solve2.penalty == :DNF
       assert html =~ Sessions.display_solve(updated_solve2)
-      refute html =~ Sessions.display_solve(solve2)
       assert html =~ Sessions.display_solve(solve1)
       assert html =~ Sessions.display_solve(solve3)
     end
@@ -396,7 +383,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       assert html =~ Sessions.display_solve(solve)
       assert html =~ Sessions.display_solve(nil)
 
-      render_click(view, "change-penalty", %{"name" => "DNF"})
+      render_click(view, "change-penalty", %{"penalty" => "DNF"})
 
       assert html =~ Sessions.display_solve(solve)
       assert html =~ Sessions.display_solve(nil)
@@ -408,14 +395,13 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       session: session,
       round: round1
     } do
-      penalty_dnf = penalty_fixture(name: "DNF")
       _solve1 = solve_fixture(user_id: user.id, round_id: round1.id)
       round2 = round_fixture(session: session)
       _solve2 = solve_fixture(user_id: user.id, round_id: round2.id)
       round3 = round_fixture(session: session)
       _solve3 = solve_fixture(user_id: user.id, round_id: round3.id)
       round4 = round_fixture(session: session)
-      _solve4 = solve_fixture(user_id: user.id, round_id: round4.id, penalty_id: penalty_dnf.id)
+      _solve4 = solve_fixture(user_id: user.id, round_id: round4.id, penalty: :DNF)
       round5 = round_fixture(session: session)
       _solve5 = solve_fixture(user_id: user.id, round_id: round5.id)
 
@@ -423,7 +409,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
 
       refute_html(html, ".t_ao5", text: "DNF")
 
-      html = view |> render_click("change-penalty", %{"name" => "DNF"})
+      html = view |> render_click("change-penalty", %{"penalty" => "DNF"})
 
       assert_html(html, ".t_ao5", text: "DNF")
     end
@@ -476,12 +462,12 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       |> assert_html(".t_scramble", text: round.scramble)
     end
 
-    test "reacts to solve created", %{conn: conn, session: session, user: user, penalty: penalty} do
+    test "reacts to solve created", %{conn: conn, session: session, user: user} do
       {:ok, view, _html} = live(conn, Routes.game_room_path(conn, :show, session.id))
 
       num_solves_before = Enum.count(Sessions.list_solves_of_session(session))
 
-      {:ok, solve} = Sessions.create_solve(session, user, 42, penalty)
+      {:ok, solve} = Sessions.create_solve(session, user, 42, :OK)
 
       num_solves_after = Enum.count(Sessions.list_solves_of_session(session))
 
@@ -509,7 +495,6 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       conn: conn,
       session: session,
       round: round,
-      penalty: penalty
     } do
       other_user = user_fixture()
       other_conn = Phoenix.ConnTest.build_conn() |> log_in_user(other_user)
@@ -519,7 +504,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
           round_id: round.id,
           user_id: other_user.id,
           time: 43,
-          penalty_id: penalty.id
+          penalty: :OK
         })
 
       {:ok, view, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
@@ -536,8 +521,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
     test "hides times for user on leave", %{
       conn: conn,
       session: session,
-      round: round,
-      penalty: penalty
+      round: round
     } do
       other_user = user_fixture()
       other_conn = Phoenix.ConnTest.build_conn() |> log_in_user(other_user)
@@ -547,7 +531,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
           round_id: round.id,
           user_id: other_user.id,
           time: 43,
-          penalty_id: penalty.id
+          penalty: :OK
         })
 
       {:ok, other_view, _other_html} =

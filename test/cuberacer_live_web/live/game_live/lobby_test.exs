@@ -3,7 +3,6 @@ defmodule CuberacerLive.GameLive.LobbyTest do
 
   import Phoenix.LiveViewTest
   import CuberacerLive.SessionsFixtures
-  import CuberacerLive.CubingFixtures
 
   alias CuberacerLive.Sessions
 
@@ -11,7 +10,7 @@ defmodule CuberacerLive.GameLive.LobbyTest do
 
   describe ":index" do
     test "displays all sessions", %{conn: conn} do
-      session = session_fixture() |> CuberacerLive.Repo.preload(:cube_type)
+      session = session_fixture()
       {:ok, _live, html} = live(conn, Routes.game_lobby_path(conn, :index))
 
       html
@@ -19,7 +18,7 @@ defmodule CuberacerLive.GameLive.LobbyTest do
       |> assert_html("#t_room-card-#{session.id}", count: 1)
 
       assert html =~ session.name
-      assert html =~ session.cube_type.name
+      assert html =~ "#{session.puzzle_type}"
     end
 
     test "patches to new room modal", %{conn: conn} do
@@ -80,22 +79,21 @@ defmodule CuberacerLive.GameLive.LobbyTest do
 
   describe ":new" do
     test "displays create room modal correctly", %{conn: conn} do
-      cube_type_1 = cube_type_fixture(name: "2x2")
-      cube_type_2 = cube_type_fixture(name: "3x3")
       {:ok, _live, html} = live(conn, Routes.game_lobby_path(conn, :new))
 
       html
       |> assert_html("h2.t_new-room-title", text: "New Room")
       |> assert_html(".t_room-name-input", count: 1)
       |> assert_html(".t_room-cube-type-input", count: 1)
-      |> assert_html("option[value=#{cube_type_1.id}", count: 1)
-      |> assert_html("option[value=#{cube_type_2.id}", count: 1)
       |> assert_html(".t_room-save", count: 1)
+
+      Enum.each(Whisk.puzzle_types(), fn puzzle_type ->
+        assert_html(html, "option[value='#{puzzle_type}']", count: 1)
+      end)
     end
 
     @tag :ensure_presence_shutdown
     test "create room modal creates a new room with an initial round", %{conn: conn} do
-      cube_type = cube_type_fixture()
       {:ok, live, html} = live(conn, Routes.game_lobby_path(conn, :new))
 
       refute_html(html, ".t_room-card")
@@ -103,7 +101,7 @@ defmodule CuberacerLive.GameLive.LobbyTest do
       result =
         live
         |> form("#create-room-form")
-        |> render_submit(%{session: %{name: "new session", cube_type_id: cube_type.id}})
+        |> render_submit(%{session: %{name: "new session", puzzle_type: :"2x2"}})
 
       assert_redirect(live, Routes.game_lobby_path(conn, :index))
 
@@ -126,13 +124,12 @@ defmodule CuberacerLive.GameLive.LobbyTest do
     end
 
     test "displays error messages", %{conn: conn} do
-      cube_type = cube_type_fixture()
       {:ok, live, _html} = live(conn, Routes.game_lobby_path(conn, :new))
 
       html =
         live
         |> form("#create-room-form")
-        |> render_submit(%{session: %{name: "", cube_type_id: cube_type.id}})
+        |> render_submit(%{session: %{name: "", puzzle_type: :"3x3"}})
 
       refute_redirected(live, Routes.game_lobby_path(conn, :index))
 

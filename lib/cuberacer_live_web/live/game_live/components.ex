@@ -13,7 +13,7 @@ defmodule CuberacerLiveWeb.GameLive.Components do
         <h2 class="text-lg text-center font-medium"><%= @session.name %></h2>
         <hr class="my-2" />
         <div class="flex justify-center">
-          <div><%= @session.cube_type.name %></div>
+          <div><%= @session.puzzle_type %></div>
         </div>
       </div>
     <% end %>
@@ -40,7 +40,7 @@ defmodule CuberacerLiveWeb.GameLive.Components do
   def penalty_input(assigns) do
     ~H"""
     <div id="penalty-input">
-      <button phx-click="change-penalty" phx-value-name="OK">OK</button> | <button phx-click="change-penalty" phx-value-name="+2">+2</button> | <button phx-click="change-penalty" phx-value-name="DNF">DNF</button>
+      <button phx-click="change-penalty" phx-value-penalty="OK">OK</button> | <button phx-click="change-penalty" phx-value-penalty="+2">+2</button> | <button phx-click="change-penalty" phx-value-penalty="DNF">DNF</button>
     </div>
     """
   end

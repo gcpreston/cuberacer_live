@@ -2,15 +2,13 @@ defmodule CuberacerLiveWeb.SolveControllerTest do
   use CuberacerLiveWeb.ConnCase, async: true
 
   import CuberacerLive.AccountsFixtures
-  import CuberacerLive.CubingFixtures
   import CuberacerLive.SessionsFixtures
 
   alias CuberacerLive.Sessions
   alias CuberacerLiveWeb.SharedUtils
 
   setup do
-    penalty = penalty_fixture(name: "+2")
-    %{user: user_fixture(), solve: solve_fixture(penalty_id: penalty.id)}
+    %{user: user_fixture(), solve: solve_fixture(penalty: :"+2")}
   end
 
   describe "GET /solves/:id" do

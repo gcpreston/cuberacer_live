@@ -8,12 +8,11 @@ defmodule CuberacerLive.SessionsTest do
 
     import CuberacerLive.AccountsFixtures
     import CuberacerLive.SessionsFixtures
-    import CuberacerLive.CubingFixtures
 
     @invalid_attrs %{name: nil}
 
-    test "list_sessions/0 returns all sessions, preloaded with cube type" do
-      session = session_fixture() |> Repo.preload(:cube_type)
+    test "list_sessions/0 returns all sessions" do
+      session = session_fixture()
       assert Sessions.list_sessions() == [session]
     end
 
@@ -39,45 +38,39 @@ defmodule CuberacerLive.SessionsTest do
     end
 
     test "create_session/1 with valid data creates a session" do
-      cube_type = cube_type_fixture()
-      valid_attrs = %{name: "some name", cube_type_id: cube_type.id}
+      valid_attrs = %{name: "some name", puzzle_type: :"3x3"}
 
       assert {:ok, %Session{} = session} = Sessions.create_session(valid_attrs)
       assert session.name == "some name"
-      assert session.cube_type_id == cube_type.id
+      assert session.puzzle_type == :"3x3"
     end
 
     test "create_session/1 with no name returns error changeset" do
-      cube_type = cube_type_fixture()
-      invalid_attrs_nil = %{name: nil, cube_type_id: cube_type.id}
-      invalid_attrs_empty = %{name: "", cube_type_id: cube_type.id}
+      invalid_attrs_nil = %{name: nil, puzzle_type: :"3x3"}
+      invalid_attrs_empty = %{name: "", puzzle_type: :"3x3"}
 
       assert {:error, %Ecto.Changeset{}} = Sessions.create_session(invalid_attrs_nil)
       assert {:error, %Ecto.Changeset{}} = Sessions.create_session(invalid_attrs_empty)
     end
 
     test "create_session/1 with no cube type returns error changeset" do
-      invalid_attrs = %{name: "some name", cube_type_id: nil}
-
+      invalid_attrs = %{name: "some name", puzzle_type: nil}
       assert {:error, %Ecto.Changeset{}} = Sessions.create_session(invalid_attrs)
     end
 
     test "create_session/1 with a name too long returns error changeset" do
-      cube_type = cube_type_fixture()
-
       invalid_attrs = %{
         name:
           "some really long name that is longer than a hundred characters because that's just overkill now isn't it",
-        cube_type_id: cube_type.id
+        puzzle_type: :"3x3"
       }
 
       assert {:error, %Ecto.Changeset{}} = Sessions.create_session(invalid_attrs)
     end
 
     test "create_session/1 broadcasts to the context topic" do
-      cube_type = cube_type_fixture()
       Sessions.subscribe()
-      valid_attrs = %{name: "some name", cube_type_id: cube_type.id}
+      valid_attrs = %{name: "some name", puzzle_type: :"3x3"}
       {:ok, session} = Sessions.create_session(valid_attrs)
 
       assert_receive {Sessions, [:session, :created], ^session}
@@ -91,31 +84,25 @@ defmodule CuberacerLive.SessionsTest do
     end
 
     test "create_session_and_round/2 with valid data creates a session and a round" do
-      cube_type = cube_type_fixture()
-
       assert {:ok, %Session{} = session, %Round{} = round} =
-               Sessions.create_session_and_round("some name", cube_type)
+               Sessions.create_session_and_round("some name", :"2x2")
 
       assert session.name == "some name"
-      assert session.cube_type_id == cube_type.id
+      assert session.puzzle_type == :"2x2"
       assert round.session_id == session.id
     end
 
     test "create_session_and_round/2 can be passed a cube type ID" do
-      %{id: cube_type_id} = cube_type_fixture()
-
       assert {:ok, %Session{} = session, %Round{} = round} =
-               Sessions.create_session_and_round("some name", cube_type_id)
+               Sessions.create_session_and_round("some name", :"4x4")
 
       assert session.name == "some name"
-      assert session.cube_type_id == cube_type_id
+      assert session.puzzle_type == :"4x4"
       assert round.session_id == session.id
     end
 
     test "create_session_and_round/2 with no name returns error changeset" do
-      cube_type = cube_type_fixture()
-
-      assert {:error, %Ecto.Changeset{}} = Sessions.create_session_and_round(nil, cube_type)
+      assert {:error, %Ecto.Changeset{}} = Sessions.create_session_and_round(nil, :Megaminx)
     end
 
     test "create_session_and_round/2 with no cube type returns error changeset" do
@@ -123,9 +110,8 @@ defmodule CuberacerLive.SessionsTest do
     end
 
     test "create_session_and_round/2 broadcasts to the context topic" do
-      cube_type = cube_type_fixture()
       Sessions.subscribe()
-      {:ok, session, _round} = Sessions.create_session_and_round("some name", cube_type)
+      {:ok, session, _round} = Sessions.create_session_and_round("some name", :Skewb)
 
       assert_receive {Sessions, [:session, :created], ^session}
       # NOTE: The round should also be broadcasted, but only to the session topic, which
@@ -250,10 +236,6 @@ defmodule CuberacerLive.SessionsTest do
 
       Enum.each(actual_rounds, fn round ->
         assert Ecto.assoc_loaded?(round.solves)
-
-        Enum.each(round.solves, fn solve ->
-          assert Ecto.assoc_loaded?(solve.penalty)
-        end)
       end)
     end
 
@@ -353,7 +335,6 @@ defmodule CuberacerLive.SessionsTest do
     alias CuberacerLive.Sessions.Solve
 
     import CuberacerLive.AccountsFixtures
-    import CuberacerLive.CubingFixtures
     import CuberacerLive.SessionsFixtures
 
     # NOTE: Solve results must be preloaded with :round to be checked against
@@ -391,33 +372,28 @@ defmodule CuberacerLive.SessionsTest do
 
     test "create_solve/1 with valid data creates a solve" do
       user = user_fixture()
-      penalty = penalty_fixture()
       round = round_fixture()
 
-      valid_attrs = %{time: 42, user_id: user.id, penalty_id: penalty.id, round_id: round.id}
+      valid_attrs = %{time: 42, user_id: user.id, penalty: :OK, round_id: round.id}
 
       assert {:ok, %Solve{} = solve} = Sessions.create_solve(valid_attrs)
       assert solve.time == 42
       assert solve.user_id == user.id
-      assert solve.penalty_id == penalty.id
+      assert solve.penalty == :OK
       assert solve.round_id == round.id
     end
 
     test "create_solve/1 with no time returns error changeset" do
       user = user_fixture()
-      penalty = penalty_fixture()
       round = round_fixture()
-
-      invalid_attrs = %{time: nil, user_id: user.id, penalty_id: penalty.id, round_id: round.id}
+      invalid_attrs = %{time: nil, penalty: :"3x3", user_id: user.id, round_id: round.id}
 
       assert {:error, %Ecto.Changeset{}} = Sessions.create_solve(invalid_attrs)
     end
 
     test "create_solve/1 with no user returns error changeset" do
-      penalty = penalty_fixture()
       round = round_fixture()
-
-      invalid_attrs = %{time: nil, user_id: nil, penalty_id: penalty.id, round_id: round.id}
+      invalid_attrs = %{time: nil, user_id: nil, penalty: :OK, round_id: round.id}
 
       assert {:error, %Ecto.Changeset{}} = Sessions.create_solve(invalid_attrs)
     end
@@ -425,27 +401,22 @@ defmodule CuberacerLive.SessionsTest do
     test "create_solve/1 with no penalty returns error changeset" do
       user = user_fixture()
       round = round_fixture()
-
-      invalid_attrs = %{time: nil, user_id: user.id, penalty_id: nil, round_id: round.id}
+      invalid_attrs = %{time: nil, user_id: user.id, penalty: nil, round_id: round.id}
 
       assert {:error, %Ecto.Changeset{}} = Sessions.create_solve(invalid_attrs)
     end
 
     test "create_solve/1 with no round returns error changeset" do
       user = user_fixture()
-      penalty = penalty_fixture()
-
-      invalid_attrs = %{time: nil, user_id: user.id, penalty_id: penalty.id, round_id: nil}
+      invalid_attrs = %{time: nil, user_id: user.id, penalty: :"3x3", round_id: nil}
 
       assert {:error, %Ecto.Changeset{}} = Sessions.create_solve(invalid_attrs)
     end
 
     test "create_solve/1 does not allow one user to submit multiple solves in a round" do
       user = user_fixture()
-      penalty = penalty_fixture()
       round = round_fixture()
-
-      valid_attrs = %{time: 42, user_id: user.id, penalty_id: penalty.id, round_id: round.id}
+      valid_attrs = %{time: 42, user_id: user.id, penalty: :OK, round_id: round.id}
 
       assert {:ok, _} = Sessions.create_solve(valid_attrs)
 
@@ -458,10 +429,9 @@ defmodule CuberacerLive.SessionsTest do
     test "create_solve/1 broadcasts to the session topic" do
       round = round_fixture()
       user = user_fixture()
-      penalty = penalty_fixture()
 
       Sessions.subscribe(round.session_id)
-      valid_attrs = %{time: 42, user_id: user.id, penalty_id: penalty.id, round_id: round.id}
+      valid_attrs = %{time: 42, penalty: :OK, user_id: user.id, round_id: round.id}
       {:ok, solve} = Sessions.create_solve(valid_attrs)
 
       assert_receive {Sessions, [:solve, :created], ^solve}
@@ -470,10 +440,9 @@ defmodule CuberacerLive.SessionsTest do
     test "create_solve/1 does not broadcast to context topic" do
       round = round_fixture()
       user = user_fixture()
-      penalty = penalty_fixture()
 
       Sessions.subscribe()
-      valid_attrs = %{time: 42, user_id: user.id, penalty_id: penalty.id, round_id: round.id}
+      valid_attrs = %{time: 42, penalty: :OK, user_id: user.id, round_id: round.id}
       {:ok, _solve} = Sessions.create_solve(valid_attrs)
 
       refute_receive {Sessions, _, _}
@@ -482,11 +451,10 @@ defmodule CuberacerLive.SessionsTest do
     test "create_solve/1 with invalid data does not broadcast" do
       round = round_fixture()
       user = user_fixture()
-      penalty = penalty_fixture()
 
       Sessions.subscribe()
       Sessions.subscribe(round.session_id)
-      invalid_attrs = %{time: nil, user_id: user.id, penalty_id: penalty.id, round_id: round.id}
+      invalid_attrs = %{time: nil, penalty: :OK, user_id: user.id, round_id: round.id}
       {:error, _reason} = Sessions.create_solve(invalid_attrs)
 
       refute_receive {Sessions, _, _}
@@ -494,27 +462,26 @@ defmodule CuberacerLive.SessionsTest do
 
     test "change_penalty/2 with valid data updates the solve" do
       solve = solve_fixture()
-      penalty = penalty_fixture()
 
-      assert {:ok, %Solve{} = solve} = Sessions.change_penalty(solve, penalty)
-      assert solve.penalty_id == penalty.id
+      assert {:ok, %Solve{} = solve} = Sessions.change_penalty(solve, :"+2")
+      assert solve.penalty == :"+2"
+      solve = Sessions.get_solve!(solve.id)
+      assert solve.penalty == :"+2"
     end
 
     test "change_penalty/2 broadcasts to session topic" do
-      penalty = penalty_fixture()
       solve = solve_fixture() |> Repo.preload(:session)
       Sessions.subscribe(solve.session.id)
 
-      assert {:ok, solve} = Sessions.change_penalty(solve, penalty)
+      assert {:ok, solve} = Sessions.change_penalty(solve, :DNF)
       assert_receive {Sessions, [:solve, :updated], ^solve}
     end
 
     test "change_penalty/2 does not broadcast to context topic" do
-      penalty = penalty_fixture()
       solve = solve_fixture()
       Sessions.subscribe()
 
-      assert {:ok, _solve} = Sessions.change_penalty(solve, penalty)
+      assert {:ok, _solve} = Sessions.change_penalty(solve, :DNF)
       refute_receive {Sessions, _, _}
     end
 
@@ -547,22 +514,18 @@ defmodule CuberacerLive.SessionsTest do
     end
 
     test "display_solve/1 +2" do
-      penalty = penalty_fixture(name: "+2")
-      solve = solve_fixture(time: 12340, penalty_id: penalty.id)
+      solve = solve_fixture(time: 12340, penalty: :"+2")
 
       assert Sessions.display_solve(solve) == "14.340+"
     end
 
     test "display_solve/1 DNF" do
-      penalty = penalty_fixture(name: "DNF")
-      solve = solve_fixture(time: 12340, penalty_id: penalty.id)
+      solve = solve_fixture(time: 12340, penalty: :DNF)
 
-      assert Sessions.display_solve(solve) == "DNF"
+      assert Sessions.display_solve(solve) == "DNF (12.340)"
     end
 
     test "current_stats/2 calculates ao5 and ao12" do
-      penalty_plus2 = penalty_fixture(name: "+2")
-      penalty_dnf = penalty_fixture(name: "DNF")
       user1 = user_fixture()
       user2 = user_fixture()
 
@@ -647,7 +610,7 @@ defmodule CuberacerLive.SessionsTest do
           round_id: round11.id,
           user_id: user1.id,
           time: 2142,
-          penalty_id: penalty_plus2.id
+          penalty: :"+2"
         )
 
       _solve11_2 =
@@ -655,7 +618,7 @@ defmodule CuberacerLive.SessionsTest do
           round_id: round11.id,
           user_id: user2.id,
           time: 15975,
-          penalty_id: penalty_dnf.id
+          penalty: :DNF
         )
 
       user1_stats = Sessions.current_stats(session, user1)
@@ -701,7 +664,7 @@ defmodule CuberacerLive.SessionsTest do
           round_id: round13.id,
           user_id: user1.id,
           time: 5705,
-          penalty_id: penalty_dnf.id
+          penalty: :DNF
         )
 
       _solve13_2 =
@@ -709,7 +672,7 @@ defmodule CuberacerLive.SessionsTest do
           round_id: round13.id,
           user_id: user2.id,
           time: 9661,
-          penalty_id: penalty_dnf.id
+          penalty: :DNF
         )
 
       user1_stats = Sessions.current_stats(session, user1)

@@ -5,19 +5,16 @@ defmodule CuberacerLive.SessionsFixtures do
   """
 
   import CuberacerLive.AccountsFixtures
-  import CuberacerLive.CubingFixtures
 
   @doc """
   Generate a session.
   """
   def session_fixture(attrs \\ %{}) do
-    cube_type = cube_type_fixture()
-
     {:ok, session} =
       attrs
       |> Enum.into(%{
         name: "some name",
-        cube_type_id: cube_type.id
+        puzzle_type: :"3x3"
       })
       |> CuberacerLive.Sessions.create_session()
 
@@ -41,16 +38,15 @@ defmodule CuberacerLive.SessionsFixtures do
   """
   def solve_fixture(attrs \\ %{}) do
     user = user_fixture()
-    penalty = CuberacerLive.Cubing.get_penalty("OK") || penalty_fixture()
     round = round_fixture()
 
     {:ok, solve} =
       attrs
       |> Enum.into(%{
-        time: 42,
+        round_id: round.id,
         user_id: user.id,
-        penalty_id: penalty.id,
-        round_id: round.id
+        time: 42,
+        penalty: :OK
       })
       |> CuberacerLive.Sessions.create_solve()
 
