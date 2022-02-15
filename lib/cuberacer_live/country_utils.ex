@@ -118,8 +118,8 @@ defmodule CuberacerLive.CountryUtils do
     "KZ" => "Kazakhstan",
     "KE" => "Kenya",
     "KI" => "Kiribati",
-    "KP" => "Democratic People's Republic of Korea",
-    "KR" => "Republic of Korea",
+    "KP" => "North Korea",
+    "KR" => "South Korea",
     "KW" => "Kuwait",
     "KG" => "Kyrgyzstan",
     "LA" => "Lao People's Democratic Republic",
@@ -132,7 +132,7 @@ defmodule CuberacerLive.CountryUtils do
     "LT" => "Lithuania",
     "LU" => "Luxembourg",
     "MO" => "Macao",
-    "MK" => "The former Yugoslav Republic of Macedonia",
+    "MK" => "North Macedonia",
     "MG" => "Madagascar",
     "MW" => "Malawi",
     "MY" => "Malaysia",
@@ -255,6 +255,7 @@ defmodule CuberacerLive.CountryUtils do
     for {code, name} <- @countries do
       [key: name, value: code]
     end
+    |> Enum.sort(&(&1[:key] < &2[:key]))
   end
 
   def country_name_from_code(code) do
