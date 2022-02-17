@@ -23,22 +23,9 @@
     <%= error_tag f, :bio %>
 
     <div class="mt-3">
-      <%= label f, :wca_id, "WCA ID" %>
-      <%= text_input f, :wca_id, required: false, class: input_classes() %>
-      <%= error_tag f, :wca_id %>
-    </div>
-
-    <div class="mt-3">
       <%= label f, :country %>
       <%= select f, :country, CountryUtils.countries_select_options(), required: false, class: input_classes() %>
       <%= error_tag f, :country %>
-    </div>
-
-    <div class="mt-3">
-      <%= label f, :birthday %>
-      <div class="text-gray-500">This will display your current age on your profile.</div>
-      <%= date_input f, :birthday, required: false, class: input_classes() %>
-      <%= error_tag f, :birthday %>
     </div>
 
     <div class="mt-4">
