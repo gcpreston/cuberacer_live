@@ -439,6 +439,103 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       |> assert_html(".t_room-message", count: 2)
       |> assert_html(".t_room-message:nth-child(2)", text: "#{user.username}: second message")
     end
+
+    test "pagination flow", %{conn: conn1, user: user1, session: session} do
+      user2 = user_fixture()
+      conn2 = Phoenix.ConnTest.build_conn() |> log_in_user(user2)
+      live(conn2, Routes.game_room_path(conn2, :show, session.id))
+
+      user3 = user_fixture()
+      conn3 = Phoenix.ConnTest.build_conn() |> log_in_user(user3)
+      live(conn3, Routes.game_room_path(conn3, :show, session.id))
+
+      user4 = user_fixture()
+      conn4 = Phoenix.ConnTest.build_conn() |> log_in_user(user4)
+      live(conn4, Routes.game_room_path(conn4, :show, session.id))
+
+      user5 = user_fixture()
+      conn5 = Phoenix.ConnTest.build_conn() |> log_in_user(user5)
+      # Don't join with conn5 yet
+
+      {:ok, lv, html} = live(conn1, Routes.game_room_path(conn1, :show, session.id))
+
+      assert html =~ "4 participants"
+      refute html =~ "Page"
+      refute html =~ "fa-chevron-left"
+      refute html =~ "fa-chevron-right"
+
+      # Now join with conn5
+      {:ok, lv5, _html5} = live(conn5, Routes.game_room_path(conn5, :show, session.id))
+      html = render(lv)
+
+      assert html =~ "5 participants"
+      assert html =~ "Page 1/2"
+      refute html =~ "fa-chevron-left"
+      assert html =~ "fa-chevron-right"
+      refute html =~ user5.username
+      Enum.each([user1, user2, user3, user4], fn user -> assert html =~ user.username end)
+
+      html = lv |> render_click("users-page-right")
+
+      assert html =~ "Page 2/2"
+      assert html =~ "fa-chevron-left"
+      refute html =~ "fa-chevron-right"
+      assert html =~ user5.username
+      Enum.each([user1, user2, user3, user4], fn user -> refute html =~ user.username end)
+
+      html = lv |> render_click("users-page-left")
+
+      assert html =~ "Page 1/2"
+      refute html =~ "fa-chevron-left"
+      assert html =~ "fa-chevron-right"
+      refute html =~ user5.username
+      Enum.each([user1, user2, user3, user4], fn user -> assert html =~ user.username end)
+
+      html = lv |> render_click("users-page-right")
+
+      assert html =~ "Page 2/2"
+
+      # Leave with conn5
+      other_session = session_fixture()
+      _other_session_round = round_fixture(session: other_session)
+      live_redirect(lv5, to: "/#{other_session.id}")
+      html = render(lv)
+
+      assert html =~ "4 participants"
+      refute html =~ "Page"
+      refute html =~ "fa-chevron-left"
+      refute html =~ "fa-chevron-right"
+      Enum.each([user1, user2, user3, user4], fn user -> assert html =~ user.username end)
+    end
+
+    test "double chevron", %{conn: conn, session: session} do
+      Enum.each(2..9, fn _ ->
+        user_n = user_fixture()
+        conn_n = Phoenix.ConnTest.build_conn() |> log_in_user(user_n)
+        live(conn_n, Routes.game_room_path(conn_n, :show, session.id))
+      end)
+
+      {:ok, lv, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
+
+      assert html =~ "9 participants"
+      assert html =~ "Page 1/3"
+      refute html =~ "fa-chevron-left"
+      assert html =~ "fa-chevron-right"
+
+      html = lv |> render_click("users-page-right")
+
+      assert html =~ "9 participants"
+      assert html =~ "Page 2/3"
+      assert html =~ "fa-chevron-left"
+      assert html =~ "fa-chevron-right"
+
+      html = lv |> render_click("users-page-right")
+
+      assert html =~ "9 participants"
+      assert html =~ "Page 3/3"
+      assert html =~ "fa-chevron-left"
+      refute html =~ "fa-chevron-right"
+    end
   end
 
   describe "Sessions events" do
@@ -491,34 +588,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
   describe "Presence events" do
     setup [:authenticate]
 
-    test "shows times for user on join", %{
-      conn: conn,
-      session: session,
-      round: round,
-    } do
-      other_user = user_fixture()
-      other_conn = Phoenix.ConnTest.build_conn() |> log_in_user(other_user)
-
-      solve =
-        solve_fixture(%{
-          round_id: round.id,
-          user_id: other_user.id,
-          time: 43,
-          penalty: :OK
-        })
-
-      {:ok, view, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
-
-      refute html =~ other_user.username
-
-      live(other_conn, Routes.game_room_path(other_conn, :show, session.id))
-
-      html = render(view)
-      assert html =~ other_user.username
-      assert html =~ Sessions.display_solve(solve)
-    end
-
-    test "hides times for user on leave", %{
+    test "on join, show times and update presence display", %{
       conn: conn,
       session: session,
       round: round
@@ -534,19 +604,51 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
           penalty: :OK
         })
 
-      {:ok, other_view, _other_html} =
+      {:ok, lv, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
+
+      assert html =~ "1 participant"
+      refute html =~ other_user.username
+
+      live(other_conn, Routes.game_room_path(other_conn, :show, session.id))
+
+      html = render(lv)
+      assert html =~ "2 participants"
+      assert html =~ other_user.username
+      assert html =~ Sessions.display_solve(solve)
+    end
+
+    test "on leave, hide times and update presene display", %{
+      conn: conn,
+      session: session,
+      round: round
+    } do
+      other_user = user_fixture()
+      other_conn = Phoenix.ConnTest.build_conn() |> log_in_user(other_user)
+
+      solve =
+        solve_fixture(%{
+          round_id: round.id,
+          user_id: other_user.id,
+          time: 43,
+          penalty: :OK
+        })
+
+      {:ok, other_lv, _other_html} =
         live(other_conn, Routes.game_room_path(other_conn, :show, session.id))
 
-      {:ok, view, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
+      {:ok, lv, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
 
+      assert html =~ "2 participants"
       assert html =~ other_user.username
       assert html =~ Sessions.display_solve(solve)
 
       other_session = session_fixture()
       _other_session_round = round_fixture(session: other_session)
-      live_redirect(other_view, to: "/#{other_session.id}")
+      live_redirect(other_lv, to: "/#{other_session.id}")
 
-      refute render(view) =~ other_user.username
+      html = render(lv)
+      assert html =~ "1 participant"
+      refute html =~ other_user.username
     end
   end
 end
