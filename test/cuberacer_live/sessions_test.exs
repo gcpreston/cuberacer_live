@@ -509,20 +509,22 @@ defmodule CuberacerLive.SessionsTest do
 
     test "display_solve/1 OK" do
       solve = solve_fixture(time: 12340)
-
       assert Sessions.display_solve(solve) == "12.340"
     end
 
     test "display_solve/1 +2" do
       solve = solve_fixture(time: 12340, penalty: :"+2")
-
       assert Sessions.display_solve(solve) == "14.340+"
     end
 
     test "display_solve/1 DNF" do
       solve = solve_fixture(time: 12340, penalty: :DNF)
-
       assert Sessions.display_solve(solve) == "DNF (12.340)"
+    end
+
+    test "display_solve/1 long" do
+      solve = solve_fixture(time: 127_038, penalty: :OK)
+      assert Sessions.display_solve(solve) == "2:07.038"
     end
 
     test "current_stats/2 calculates ao5 and ao12" do
