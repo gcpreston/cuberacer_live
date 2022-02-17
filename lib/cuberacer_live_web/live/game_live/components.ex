@@ -110,4 +110,28 @@ defmodule CuberacerLiveWeb.GameLive.Components do
     </table>
     """
   end
+
+  def presence(assigns) do
+    ~H"""
+    <table class="w-full mb-4">
+      <thead class="bg-gray-50">
+        <tr>
+          <th scope="col" class="border-y px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            Presence
+          </th>
+        </tr>
+      </thead>
+      <tbody class="bg-white">
+        <tr>
+          <td class="px-6 whitespace-nowrap"><%= @num_present_users %> <%= Inflex.inflect("participant", @num_present_users) %></td>
+        </tr>
+        <%= if @num_users_pages > 1 do %>
+          <tr>
+            <td class="px-6 whitespace-nowrap">Page <%= @users_page %>/<%= @num_users_pages %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+    """
+  end
 end
