@@ -532,9 +532,9 @@ defmodule CuberacerLive.Sessions do
   def display_solve(solve) do
     case solve do
       nil -> "--"
-      %Solve{penalty: :OK} -> ms_to_sec_str(solve.time)
-      %Solve{penalty: :"+2"} -> ms_to_sec_str(solve.time + 2000) <> "+"
-      %Solve{penalty: :DNF} -> "DNF (#{ms_to_sec_str(solve.time)})"
+      %Solve{penalty: :OK} -> ms_to_time_str(solve.time)
+      %Solve{penalty: :"+2"} -> ms_to_time_str(solve.time + 2000) <> "+"
+      %Solve{penalty: :DNF} -> "DNF (#{ms_to_time_str(solve.time)})"
     end
   end
 
@@ -546,7 +546,7 @@ defmodule CuberacerLive.Sessions do
   end
 
   def display_stat(time) do
-    time |> trunc() |> ms_to_sec_str()
+    time |> trunc() |> ms_to_time_str()
   end
 
   @doc """
@@ -600,9 +600,18 @@ defmodule CuberacerLive.Sessions do
     %{ao5: Stats.avg_n(times, 5), ao12: Stats.avg_n(times, 12)}
   end
 
-  defp ms_to_sec_str(ms) do
-    (ms / 1000)
-    |> :erlang.float_to_binary(decimals: 3)
+  defp ms_to_time_str(ms) do
+    seconds = ms |> div(1000) |> rem(60)
+    milliseconds = rem(ms, 1000)
+    padded_milliseconds = String.pad_leading("#{milliseconds}", 3, "0")
+
+    if ms < 60_000 do
+      "#{seconds}.#{padded_milliseconds}"
+    else
+      minutes = ms |> div(60_000) |> rem(60)
+      padded_seconds = String.pad_leading("#{seconds}", 2, "0")
+      "#{minutes}:#{padded_seconds}.#{padded_milliseconds}"
+    end
   end
 
   ## Notify subscribers
