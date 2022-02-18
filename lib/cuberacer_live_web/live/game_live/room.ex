@@ -115,7 +115,7 @@ defmodule CuberacerLiveWeb.GameLive.Room do
 
   @impl true
   def handle_event("new-round", _value, socket) do
-    Sessions.create_round(socket.assigns.session)
+    Sessions.create_round_debounced(socket.assigns.session)
 
     {:noreply, socket}
   end

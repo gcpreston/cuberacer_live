@@ -308,6 +308,14 @@ defmodule CuberacerLive.SessionsTest do
       refute_receive {Sessions, _, _}
     end
 
+    test "create_round_debounced/2 twice too quick returns an error" do
+      session = session_fixture()
+      _round = round_fixture(session: session)
+
+      Sessions.create_round_debounced(session)
+      assert {:error, :too_soon} = Sessions.create_round_debounced(session)
+    end
+
     test "delete_round/1 deletes the round" do
       round = round_fixture()
       assert {:ok, %Round{}} = Sessions.delete_round(round)
