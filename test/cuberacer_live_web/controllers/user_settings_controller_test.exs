@@ -93,6 +93,22 @@ defmodule CuberacerLiveWeb.UserSettingsControllerTest do
       assert response =~ "should be at most 500 character(s)"
       assert Accounts.get_user!(user.id) == user
     end
+
+    test "blank country removes country", %{conn: conn, user: user} do
+      conn =
+        put(conn, Routes.user_settings_path(conn, :update), %{
+          "action" => "update_profile",
+          "user" => %{
+            "country" => "",
+          }
+        })
+
+      assert redirected_to(conn) == Routes.user_settings_path(conn, :edit)
+      assert get_flash(conn, :info) =~ "Profile updated successfully"
+
+      updated_user = Accounts.get_user!(user.id)
+      assert updated_user.country == nil
+    end
   end
 
   describe "PUT /users/settings (change password form)" do
