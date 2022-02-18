@@ -72,6 +72,7 @@ export default () => ({
       this.ready = false;
       this.offset = Date.now();
       this.interval = setInterval(this.updateTime.bind(this), 10);
+      window.timerHook.startSolving();
     }
   },
 

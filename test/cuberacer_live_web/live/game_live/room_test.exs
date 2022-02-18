@@ -133,13 +133,38 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       |> assert_html(".t_scramble", count: 1)
     end
 
+    test "solving indicates that a user is solving", %{
+      conn: conn,
+      user: user,
+      session: session,
+      round: round
+    } do
+      other_user = user_fixture()
+      other_conn = Phoenix.ConnTest.build_conn() |> log_in_user(other_user)
+
+      {:ok, other_lv, _html} =
+        live(other_conn, Routes.game_room_path(other_conn, :show, session.id))
+
+      {:ok, lv, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
+
+      assert_html(html, "#t_cell-round-#{round.id}-user-#{user.id}", text: "--")
+
+      render_hook(lv, "solving")
+
+      render(lv)
+      |> assert_html("#t_cell-round-#{round.id}-user-#{user.id}", text: "Solving...")
+
+      render(other_lv)
+      |> assert_html("#t_cell-round-#{round.id}-user-#{user.id}", text: "Solving...")
+    end
+
     test "new-solve creates a new solve", %{conn: conn, session: session} do
       {:ok, view, _html} = live(conn, Routes.game_room_path(conn, :show, session.id))
 
       num_solves_before = Enum.count(Sessions.list_solves_of_session(session))
 
       view
-      |> render_click("new-solve", time: 42)
+      |> render_hook("new-solve", time: 42)
 
       num_solves_after = Enum.count(Sessions.list_solves_of_session(session))
 
@@ -181,7 +206,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
 
       html =
         live
-        |> render_click("new-solve", time: 9876)
+        |> render_hook("new-solve", time: 9876)
 
       stats = Sessions.current_stats(session, user)
       assert stats.ao5 != :dnf
@@ -202,7 +227,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
 
       html =
         live
-        |> render_click("new-solve", time: 6789)
+        |> render_hook("new-solve", time: 6789)
         |> assert_html(".t_ao5", text: Sessions.display_stat(stats.ao5))
 
       stats = Sessions.current_stats(session, user)
@@ -215,7 +240,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
 
       html =
         live
-        |> render_click("new-solve", time: 9012)
+        |> render_hook("new-solve", time: 9012)
 
       stats = Sessions.current_stats(session, user)
       assert stats.ao5 != :dnf

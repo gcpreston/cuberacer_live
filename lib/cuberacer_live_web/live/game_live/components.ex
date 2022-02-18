@@ -5,6 +5,9 @@ defmodule CuberacerLiveWeb.GameLive.Components do
 
   alias CuberacerLiveWeb.Router.Helpers, as: Routes
   alias CuberacerLive.Sessions
+  alias CuberacerLive.Sessions.Round
+  alias CuberacerLive.Accounts.User
+
 
   def room_card(assigns) do
     ~H"""
@@ -87,6 +90,62 @@ defmodule CuberacerLiveWeb.GameLive.Components do
       </div>
     </div>
     """
+  end
+
+  def times_table(assigns) do
+    ~H"""
+    <table class="w-full border-separate [border-spacing:0]">
+      <thead class="bg-gray-50 sticky top-0">
+        <tr>
+          <%= for user <- @users do %>
+            <th scope="col" class="border-y px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <%= user.username %>
+            </th>
+          <% end %>
+        </tr>
+      </thead>
+      <tbody id="times-table-body" class="bg-white" phx-update="prepend">
+        <%# Current round %>
+        <tr id={"round-#{@current_round.id}"} class="t_round-row" title={@current_round.scramble}>
+          <%= for user <- @users do %>
+            <td id={"round-#{@current_round.id}-solve-user-#{user.id}"} class="border-b px-6 py-4 whitespace-nowrap">
+              <div class="ml-4">
+                <div id={"t_cell-round-#{@current_round.id}-user-#{user.id}"} class="text-sm font-medium text-gray-900">
+                  <%= if user_is_solving?(@users_solving, user) do %>
+                    Solving...
+                  <% else %>
+                    <%= user_solve_for_round(user, @current_round) |> Sessions.display_solve() %>
+                  <% end %>
+                </div>
+              </div>
+            </td>
+          <% end %>
+        </tr>
+        <%# Past rounds %>
+        <%= for round <- @past_rounds do %>
+          <tr id={"round-#{round.id}"} class="t_round-row" title={round.scramble}>
+            <%= for user <- @users do %>
+              <td id={"round-#{round.id}-solve-user-#{user.id}"} class="border-b px-6 py-4 whitespace-nowrap">
+                <div class="ml-4">
+                  <div id={"t_cell-round-#{@current_round.id}-user-#{user.id}"} class="text-sm font-medium text-gray-900">
+                    <%= user_solve_for_round(user, round) |> Sessions.display_solve() %>
+                  </div>
+                </div>
+              </td>
+            <% end %>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+    """
+  end
+
+  defp user_is_solving?(users_solving, %User{id: user_id}) do
+    MapSet.member?(users_solving, user_id)
+  end
+
+  defp user_solve_for_round(%User{} = user, %Round{} = round) do
+    Enum.find(round.solves, fn solve -> solve.user_id == user.id end)
   end
 
   def stats(assigns) do
