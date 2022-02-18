@@ -2,9 +2,11 @@ defmodule CuberacerLiveWeb.SessionView do
   use CuberacerLiveWeb, :view
 
   import CuberacerLiveWeb.SharedUtils, only: [format_datetime: 1]
-  import CuberacerLiveWeb.SharedComponents, only: [rounds_table: 1]
-
+  
+  alias CuberacerLiveWeb.Endpoint
+  alias CuberacerLive.Sessions
   alias CuberacerLive.Sessions.{Session, Round}
+  alias CuberacerLive.Accounts.User
 
   # Fetch all users who participated in the session. Expects a Session
   # to be passed, at least loaded through solves.
@@ -18,6 +20,68 @@ defmodule CuberacerLiveWeb.SessionView do
 
   defp round_users(%Round{solves: solves}) do
     Enum.map(solves, & &1.user)
+  end
+
+  defp rounds_table(assigns) do
+    ~H"""
+    <table class="w-full border-separate [border-spacing:0]">
+      <thead class="bg-gray-50 sticky top-0">
+        <tr>
+
+          <th scope="col" class="border-y px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            Scramble
+          </th>
+
+          <%= for user <- @users do %>
+            <th scope="col" class="border-y px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <%= link user.username, to: Routes.user_profile_path(Endpoint, :show, user.id) %>
+            </th>
+          <% end %>
+        </tr>
+      </thead>
+      <tbody id="times-table-body" class="bg-white">
+        <%= for round <- @rounds do %>
+          <tr id={"round-#{round.id}"} class="t_round-row">
+
+            <td class="border-b px-6 py-4">
+              <div class="ml-4">
+                <div class="text-sm font-medium text-gray-900">
+                  <%= link round.scramble, to: Routes.round_path(Endpoint, :show, round.id) %>
+                </div>
+              </div>
+            </td>
+
+            <%= for user <- @users do %>
+              <.solve_cell user={user} round={round} />
+            <% end %>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+    """
+  end
+
+  defp solve_cell(assigns) do
+    solve = user_solve_for_round(assigns.user, assigns.round)
+    text = Sessions.display_solve(solve)
+
+    ~H"""
+    <td id={"round-#{@round.id}-solve-user-#{@user.id}"} class="border-b px-6 py-4 whitespace-nowrap">
+      <div class="ml-4">
+        <div class="text-sm font-medium text-gray-900">
+          <%= if solve do %>
+            <%= link text, to: Routes.solve_path(Endpoint, :show, solve.id) %>
+          <% else %>
+            <%= text %>
+          <% end %>
+        </div>
+      </div>
+    </td>
+    """
+  end
+
+  defp user_solve_for_round(%User{} = user, %Round{} = round) do
+    Enum.find(round.solves, fn solve -> solve.user_id == user.id end)
   end
 
   defp messages_block(assigns) do
