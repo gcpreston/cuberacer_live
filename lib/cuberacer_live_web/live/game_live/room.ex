@@ -37,7 +37,7 @@ defmodule CuberacerLiveWeb.GameLive.Room do
           |> fetch_present_users()
           |> set_users_page()
           |> fetch_rounds()
-          |> fetch_has_current_solve?()
+          |> fetch_current_solve()
           |> fetch_stats()
           |> fetch_room_messages()
           |> initialize_users_solving()
@@ -66,10 +66,10 @@ defmodule CuberacerLiveWeb.GameLive.Room do
     assign(socket, current_round: current_round, past_rounds: past_rounds)
   end
 
-  defp fetch_has_current_solve?(socket) do
+  defp fetch_current_solve(socket) do
     %{session: session, current_user: user} = socket.assigns
-    has_current_solve? = Sessions.get_current_solve(session, user) != nil
-    assign(socket, has_current_solve?: has_current_solve?)
+    current_solve = Sessions.get_current_solve(session, user)
+    assign(socket, current_solve: current_solve)
   end
 
   defp fetch_stats(socket) do
@@ -131,11 +131,11 @@ defmodule CuberacerLiveWeb.GameLive.Room do
   end
 
   def handle_event("new-solve", %{"time" => time}, socket) do
-    Sessions.create_solve(socket.assigns.session, socket.assigns.current_user, time, :OK)
+    {:ok, solve} = Sessions.create_solve(socket.assigns.session, socket.assigns.current_user, time, :OK)
 
     {:noreply,
      socket
-     |> assign(:has_current_solve?, true)
+     |> assign(:current_solve, solve)
      |> fetch_stats()}
   end
 
@@ -217,7 +217,7 @@ defmodule CuberacerLiveWeb.GameLive.Room do
       socket
       |> update(:past_rounds, fn rounds -> [socket.assigns.current_round | rounds] end)
       |> assign(:current_round, round)
-      |> assign(:has_current_solve?, false)
+      |> assign(:current_solve, nil)
 
     {:noreply, socket}
   end

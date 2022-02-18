@@ -109,6 +109,25 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       |> assert_html(".t_ao5", count: 1, text: "DNF")
       |> assert_html(".t_ao12", count: 1, text: "DNF")
     end
+
+    test "displays green dot and empty timer if user does not have time for current round", %{conn: conn, session: session, user: user} do
+      conn = log_in_user(conn, user)
+      {:ok, _lv, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
+
+      html
+      |> assert_html("circle.fill-green-500", count: 1)
+      |> refute_html("circle.fill-red-500")
+    end
+
+    test "displays red dot and time if user has a time for current round", %{conn: conn, session: session, round: round, user: user} do
+      conn = log_in_user(conn, user)
+      _solve = solve_fixture(time: 16_731, penalty: "+2", user_id: user.id, round_id: round.id)
+      {:ok, _lv, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
+
+      html
+      |> assert_html("circle.fill-red-500", count: 1)
+      |> refute_html("circle.fill-green-500")
+    end
   end
 
   describe "LiveView events" do
@@ -581,7 +600,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
 
       render(view)
       |> assert_html("tr.t_round-row", count: num_rounds_after)
-      |> assert_html(".t_scramble", text: round.scramble)
+      |> assert_html(".t_scramble", text: "&nbsp" <> round.scramble)
     end
 
     test "reacts to solve created", %{conn: conn, session: session, user: user} do

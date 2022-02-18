@@ -96,5 +96,10 @@ export default () => ({
     if (!this.interval) {
       this.clock = 0;
     }
+  },
+
+  presetTime(clock) {
+    this.clock = clock;
+    this.hasCurrentSolve = true;
   }
 });
