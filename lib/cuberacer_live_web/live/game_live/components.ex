@@ -2,6 +2,7 @@ defmodule CuberacerLiveWeb.GameLive.Components do
   use Phoenix.Component
 
   import CuberacerLiveWeb.SharedUtils, only: [format_datetime: 1]
+  import Phoenix.HTML.Link
 
   alias CuberacerLiveWeb.Router.Helpers, as: Routes
   alias CuberacerLive.Sessions
@@ -99,7 +100,7 @@ defmodule CuberacerLiveWeb.GameLive.Components do
         <tr>
           <%= for user <- @users do %>
             <th scope="col" class="border-y px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              <%= user.username %>
+              <%= link user.username, to: Routes.user_profile_path(CuberacerLiveWeb.Endpoint, :show, user.id), target: "_blank" %>
             </th>
           <% end %>
         </tr>
