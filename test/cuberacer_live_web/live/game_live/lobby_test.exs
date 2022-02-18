@@ -1,8 +1,10 @@
 defmodule CuberacerLive.GameLive.LobbyTest do
   use CuberacerLiveWeb.ConnCase
+  @moduletag ensure_presence_shutdown: true
 
   import Phoenix.LiveViewTest
   import CuberacerLive.SessionsFixtures
+  import CuberacerLive.AccountsFixtures
 
   alias CuberacerLive.Sessions
 
@@ -68,6 +70,19 @@ defmodule CuberacerLive.GameLive.LobbyTest do
       refute_html(html, ".t_room-card")
       assert html =~ "Welcome"
       assert html =~ "Create a room to get things started!"
+    end
+
+    test "shows number of users in lobby", %{conn: conn1} do
+      user2 = user_fixture()
+      conn2 = Phoenix.ConnTest.build_conn() |> log_in_user(user2)
+
+      {:ok, lv1, html1} = live(conn1, Routes.game_lobby_path(conn1, :index))
+
+      assert html1 =~ "1 user in the lobby"
+
+      {:ok, _lv2, _html2} = live(conn2, Routes.game_lobby_path(conn2, :index))
+
+      assert render(lv1) =~ "2 users in the lobby"
     end
 
     test "redirects if user is not logged in" do

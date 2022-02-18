@@ -3,13 +3,30 @@ defmodule CuberacerLiveWeb.GameLive.Lobby do
 
   import CuberacerLiveWeb.GameLive.Components
 
-  alias CuberacerLive.Sessions
+  alias CuberacerLiveWeb.Endpoint
+  alias CuberacerLiveWeb.Presence
+  alias CuberacerLive.{Sessions, Accounts}
   alias CuberacerLive.Sessions.Session
 
   @impl true
-  def mount(_params, _session, socket) do
-    if connected?(socket), do: Sessions.subscribe()
-    {:ok, fetch(socket)}
+  def mount(_params, %{"user_token" => user_token}, socket) do
+    user = user_token && Accounts.get_user_by_session_token(user_token)
+
+    socket =
+      if !user do
+        redirect(socket, to: Routes.user_session_path(Endpoint, :new))
+      else
+        if connected?(socket) do
+          track_presence(user.id)
+          Sessions.subscribe()
+        end
+
+        socket
+        |> fetch()
+        |> fetch_user_count()
+      end
+
+    {:ok, socket}
   end
 
   @impl true
@@ -29,13 +46,38 @@ defmodule CuberacerLiveWeb.GameLive.Lobby do
     |> assign(:session, %Session{})
   end
 
+  ## Socket populators
+
   defp fetch(socket) do
     sessions = Sessions.list_active_sessions()
     assign(socket, active_sessions: sessions)
   end
 
+  defp fetch_user_count(socket) do
+    user_count = length(Map.keys(Presence.list(pubsub_topic())))
+    assign(socket, :user_count, user_count)
+  end
+
+  ## PubSub handlers
+
   @impl true
+  def handle_info(%Phoenix.Socket.Broadcast{event: "presence_diff"}, socket) do
+    {:noreply, fetch_user_count(socket)}
+  end
+
   def handle_info({Sessions, [:session | _], _}, socket) do
     {:noreply, fetch(socket)}
+  end
+
+  ## Helpers
+
+  defp pubsub_topic do
+    "lobby"
+  end
+
+  defp track_presence(user_id) do
+    topic = pubsub_topic()
+    Endpoint.subscribe(topic)
+    Presence.track(self(), topic, user_id, %{})
   end
 end
