@@ -45,28 +45,24 @@
       <div class="flex flex-row h-full">
         <div class="border-r flex flex-col justify-between">
           <.stats stats={@stats} />
-          <.presence num_present_users={length(@present_users)} users_page={@users_page} num_users_pages={num_users_pages(length(@present_users))} />
+          <.presence num_present_users={length(@present_users)} />
         </div>
 
-        <%= if @users_page > 1 do %>
           <div class="w-6 border-y border-r bg-gray-50 hover:bg-gray-100 active:bg-gray-200 relative" phx-click="users-page-left">
             <div class="absolute top-1/2 left-1/4 text-gray-500">
               <i class="fas fa-chevron-left"></i>
             </div>
           </div>
-        <% end %>
 
         <div class="flex-1 h-full overflow-auto">
-          <.times_table users={displayed_users(@present_users, @users_page)} current_round={@current_round} past_rounds={@past_rounds} users_solving={@users_solving} />
+          <.times_table users={@present_users} current_round={@current_round} past_rounds={@past_rounds} users_solving={@users_solving} />
         </div>
 
-        <%= if @users_page < num_users_pages(length(@present_users)) do %>
           <div class="w-6 border-y border-l bg-gray-50 hover:bg-gray-100 active:bg-gray-200 relative" phx-click="users-page-right">
             <div class="absolute top-1/2 left-1/4 text-gray-500">
               <i class="fas fa-chevron-right"></i>
             </div>
           </div>
-        <% end %>
       </div>
     </div>
   </div>

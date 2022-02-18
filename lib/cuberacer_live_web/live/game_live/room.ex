@@ -8,7 +8,6 @@ defmodule CuberacerLiveWeb.GameLive.Room do
   alias CuberacerLiveWeb.Presence
 
   @endpoint CuberacerLiveWeb.Endpoint
-  @users_per_page 4
 
   @impl true
   def mount(%{"id" => session_id}, %{"user_token" => user_token}, socket) do
@@ -35,7 +34,6 @@ defmodule CuberacerLiveWeb.GameLive.Room do
           |> assign(:current_user, user)
           |> fetch_session(session_id)
           |> fetch_present_users()
-          |> set_users_page()
           |> fetch_rounds()
           |> fetch_current_solve()
           |> fetch_stats()
@@ -86,21 +84,6 @@ defmodule CuberacerLiveWeb.GameLive.Room do
       end
 
     assign(socket, :present_users, present_users)
-  end
-
-  # Must be called after fetch_present_users
-  defp set_users_page(socket) do
-    if Map.has_key?(socket.assigns, :users_page) do
-      update(socket, :users_page, fn current_page ->
-        if current_page > num_users_pages(length(socket.assigns.present_users)) do
-          current_page - 1
-        else
-          current_page
-        end
-      end)
-    else
-      assign(socket, :users_page, 1)
-    end
   end
 
   defp fetch_room_messages(socket) do
@@ -185,35 +168,11 @@ defmodule CuberacerLiveWeb.GameLive.Room do
     {:noreply, socket}
   end
 
-  def handle_event("users-page-left", _value, socket) do
-    {:noreply,
-     update(socket, :users_page, fn current_page ->
-       if current_page > 1 do
-         current_page - 1
-       else
-         current_page
-       end
-     end)
-    |> fetch_rounds()}
-  end
-
-  def handle_event("users-page-right", _value, socket) do
-    {:noreply,
-     update(socket, :users_page, fn current_page ->
-       if current_page < num_users_pages(length(socket.assigns.present_users)) do
-         current_page + 1
-       else
-         current_page
-       end
-     end)
-    |> fetch_rounds()}
-  end
-
   ## PubSub handlers
 
   @impl true
   def handle_info(%Phoenix.Socket.Broadcast{event: "presence_diff"}, socket) do
-    {:noreply, socket |> fetch_present_users() |> set_users_page() |> fetch_rounds()}
+    {:noreply, socket |> fetch_present_users() |> fetch_rounds()}
   end
 
   def handle_info({__MODULE__, :solving, user_id}, socket) do
@@ -295,15 +254,6 @@ defmodule CuberacerLiveWeb.GameLive.Room do
       len > 225 -> "text-base lg:text-lg"
       true -> "text-lg"
     end
-  end
-
-  defp num_users_pages(num_present_users) do
-    extra = if rem(num_present_users, @users_per_page) == 0, do: 0, else: 1
-    div(num_present_users, @users_per_page) + extra
-  end
-
-  defp displayed_users(present_users, users_page) do
-    Enum.slice(present_users, (users_page - 1) * @users_per_page, @users_per_page)
   end
 
   defp keyboard_input_to_ms(input) do
