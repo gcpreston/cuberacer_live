@@ -127,7 +127,7 @@ defmodule CuberacerLiveWeb.GameLive.Components do
             <%= for user <- @users do %>
               <td id={"round-#{round.id}-solve-user-#{user.id}"} class="border-b px-6 py-4 whitespace-nowrap">
                 <div class="ml-4">
-                  <div id={"t_cell-round-#{@current_round.id}-user-#{user.id}"} class="text-sm font-medium text-gray-900">
+                  <div id={"t_cell-round-#{round.id}-user-#{user.id}"} class="text-sm font-medium text-gray-900">
                     <%= user_solve_for_round(user, round) |> Sessions.display_solve() %>
                   </div>
                 </div>
