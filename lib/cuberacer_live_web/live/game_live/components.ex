@@ -28,7 +28,7 @@ defmodule CuberacerLiveWeb.GameLive.Components do
     <div
       id="timer"
       x-data="timer"
-      x-init={"hasCurrentSolve = #{@has_current_solve?}"}
+      x-init={if @current_solve, do: "presetTime(#{@current_solve.time})", else: "hasCurrentSolve = false"}
       @keydown.space.window="handleSpaceDown"
       @keyup.space.window.prevent="handleSpaceUp"
       @touchstart="handleSpaceDown"
