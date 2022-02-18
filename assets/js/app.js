@@ -45,6 +45,9 @@ Hooks.Timer = {
   mounted() {
     window.timerHook = this;
   },
+  startSolving() {
+    this.pushEvent('solving');
+  },
   submitTime(time) {
     this.pushEvent('new-solve', { time });
   }
