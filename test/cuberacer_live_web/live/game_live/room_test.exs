@@ -65,7 +65,9 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
 
       html
       |> assert_html("th a", text: user.username)
-      |> assert_html("#t_cell-round-#{round.id}-user-#{user.id}", text: Sessions.display_solve(solve))
+      |> assert_html("#t_cell-round-#{round.id}-user-#{user.id}",
+        text: Sessions.display_solve(solve)
+      )
     end
 
     test "does not display solves for user not in room", %{
@@ -112,7 +114,11 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       |> assert_html(".t_ao12", count: 1, text: "DNF")
     end
 
-    test "displays green dot and empty timer if user does not have time for current round", %{conn: conn, session: session, user: user} do
+    test "displays green dot and empty timer if user does not have time for current round", %{
+      conn: conn,
+      session: session,
+      user: user
+    } do
       conn = log_in_user(conn, user)
       {:ok, _lv, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
 
@@ -121,7 +127,12 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       |> refute_html("circle.fill-red-500")
     end
 
-    test "displays red dot and time if user has a time for current round", %{conn: conn, session: session, round: round, user: user} do
+    test "displays red dot and time if user has a time for current round", %{
+      conn: conn,
+      session: session,
+      round: round,
+      user: user
+    } do
       conn = log_in_user(conn, user)
       _solve = solve_fixture(time: 16_731, penalty: "+2", user_id: user.id, round_id: round.id)
       {:ok, _lv, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
@@ -135,21 +146,31 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
   describe "LiveView events" do
     setup [:authenticate]
 
-    test "new-round creates a new round", %{conn: conn, session: session} do
-      {:ok, view, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
+    test "new-round creates a new round and handles race condition", %{
+      conn: conn,
+      session: session
+    } do
+      user2 = user_fixture()
+      conn2 = Phoenix.ConnTest.build_conn() |> log_in_user(user2)
+      {:ok, lv2, _html2} = live(conn2, Routes.game_room_path(conn2, :show, session.id))
+
+      {:ok, lv1, html1} = live(conn, Routes.game_room_path(conn, :show, session.id))
 
       num_rounds_before = Enum.count(Sessions.list_rounds_of_session(session))
 
-      assert_html(html, "tr.t_round-row", count: num_rounds_before)
+      assert_html(html1, "tr.t_round-row", count: num_rounds_before)
 
-      view
-      |> render_click("new-round")
+      # Wait out the debounce timer
+      :timer.sleep(2000)
+
+      render_click(lv1, "new-round")
+      render_click(lv2, "new-round")
 
       num_rounds_after = Enum.count(Sessions.list_rounds_of_session(session))
 
       assert num_rounds_after == num_rounds_before + 1
 
-      render(view)
+      render(lv1)
       |> assert_html("tr.t_round-row", count: num_rounds_after)
       |> assert_html(".t_scramble", count: 1)
     end
