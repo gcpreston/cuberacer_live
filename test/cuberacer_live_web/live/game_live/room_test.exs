@@ -62,8 +62,10 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       solve = solve_fixture(%{user_id: user.id, round_id: round.id})
 
       assert {:ok, _view, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
-      assert html =~ user.username
-      assert html =~ Sessions.display_solve(solve)
+
+      html
+      |> assert_html("th a", text: user.username)
+      |> assert_html("#t_cell-round-#{round.id}-user-#{user.id}", text: Sessions.display_solve(solve))
     end
 
     test "does not display solves for user not in room", %{
