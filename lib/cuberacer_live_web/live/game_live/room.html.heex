@@ -7,7 +7,7 @@
       <p class="italic mb-3"><%= @session.puzzle_type %></p>
 
       <div class="my-3 mx-auto text-center">
-        <div class={"#{scramble_text_size(current_scramble(@rounds))} t_scramble"}><%= current_scramble(@rounds) %></div>
+        <div class={"#{scramble_text_size(@current_round.scramble)} t_scramble"}><%= @current_round.scramble %></div>
         <div class="text-6xl my-4"><.timer has_current_solve?={@has_current_solve?} /></div>
         <.penalty_input />
 
@@ -31,7 +31,7 @@
         <% end %>
 
         <div class="flex-1 h-full overflow-auto">
-          <.rounds_table users={displayed_users(@present_users, @users_page)} users_page={@users_page} rounds={@rounds} include_scramble={false} include_links={false} />
+          <.times_table users={displayed_users(@present_users, @users_page)} current_round={@current_round} past_rounds={@past_rounds} users_solving={@users_solving} />
         </div>
 
         <%= if @users_page < num_users_pages(length(@present_users)) do %>

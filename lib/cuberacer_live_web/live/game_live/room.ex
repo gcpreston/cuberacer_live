@@ -2,7 +2,6 @@ defmodule CuberacerLiveWeb.GameLive.Room do
   use CuberacerLiveWeb, :live_view
 
   import CuberacerLive.Repo, only: [preload: 2]
-  import CuberacerLiveWeb.SharedComponents, only: [rounds_table: 1]
   import CuberacerLiveWeb.GameLive.Components
 
   alias CuberacerLive.{Sessions, Accounts, Messaging}
@@ -41,9 +40,10 @@ defmodule CuberacerLiveWeb.GameLive.Room do
           |> fetch_has_current_solve?()
           |> fetch_stats()
           |> fetch_room_messages()
+          |> initialize_users_solving()
       end
 
-    {:ok, socket, temporary_assigns: [rounds: [], room_messages: []]}
+    {:ok, socket, temporary_assigns: [past_rounds: [], room_messages: []]}
   end
 
   @impl true
@@ -62,8 +62,8 @@ defmodule CuberacerLiveWeb.GameLive.Room do
   end
 
   defp fetch_rounds(socket) do
-    rounds = Sessions.list_rounds_of_session(socket.assigns.session, :desc)
-    assign(socket, rounds: rounds)
+    [current_round | past_rounds] = Sessions.list_rounds_of_session(socket.assigns.session, :desc)
+    assign(socket, current_round: current_round, past_rounds: past_rounds)
   end
 
   defp fetch_has_current_solve?(socket) do
@@ -80,7 +80,7 @@ defmodule CuberacerLiveWeb.GameLive.Room do
 
   defp fetch_present_users(socket) do
     present_users =
-      for {_user_id_str, info} <- Presence.list(presence_topic(socket.assigns.session_id)) do
+      for {_user_id_str, info} <- Presence.list(pubsub_topic(socket.assigns.session_id)) do
         info.user
       end
 
@@ -107,11 +107,25 @@ defmodule CuberacerLiveWeb.GameLive.Room do
     assign(socket, room_messages: room_messages)
   end
 
+  defp initialize_users_solving(socket) do
+    assign(socket, users_solving: MapSet.new())
+  end
+
   ## LiveView handlers
 
   @impl true
   def handle_event("new-round", _value, socket) do
     Sessions.create_round(socket.assigns.session)
+
+    {:noreply, socket}
+  end
+
+  def handle_event("solving", _value, socket) do
+    Phoenix.PubSub.broadcast!(
+      CuberacerLive.PubSub,
+      pubsub_topic(socket.assigns.session_id),
+      {__MODULE__, :solving, socket.assigns.current_user.id}
+    )
 
     {:noreply, socket}
   end
@@ -173,6 +187,10 @@ defmodule CuberacerLiveWeb.GameLive.Room do
     {:noreply, socket |> fetch_present_users() |> set_users_page() |> fetch_rounds()}
   end
 
+  def handle_info({__MODULE__, :solving, user_id}, socket) do
+    {:noreply, update(socket, :users_solving, fn solving -> MapSet.put(solving, user_id) end)}
+  end
+
   def handle_info({Sessions, [:session, :updated], session}, socket) do
     {:noreply, assign(socket, session: session)}
   end
@@ -195,19 +213,32 @@ defmodule CuberacerLiveWeb.GameLive.Room do
 
     socket =
       socket
-      |> update(:rounds, fn rounds -> [round | rounds] end)
+      |> update(:past_rounds, fn rounds -> [socket.assigns.current_round | rounds] end)
+      |> assign(:current_round, round)
       |> assign(:has_current_solve?, false)
 
     {:noreply, socket}
   end
 
-  def handle_info({Sessions, [:solve, _action_type], solve}, socket) do
+  def handle_info({Sessions, [:solve, action], solve}, socket) do
     # The round preload should do nothing because notify_subscribers for solves
     # already handles it.
     # It will stay though in order to not rely on that function's implementation.
     solve = preload(solve, :round)
-    round = preload(solve.round, :solves)
-    {:noreply, update(socket, :rounds, fn rounds -> [round | rounds] end)}
+    current_round = preload(solve.round, :solves)
+
+    socket =
+      socket
+      |> update(:users_solving, fn solving ->
+        if action == :created do
+          MapSet.delete(solving, solve.user_id)
+        else
+          solving
+        end
+      end)
+      |> assign(:current_round, current_round)
+
+    {:noreply, socket}
   end
 
   def handle_info({Messaging, [:room_message, _], room_message}, socket) do
@@ -217,22 +248,14 @@ defmodule CuberacerLiveWeb.GameLive.Room do
 
   ## Helpers
 
-  defp presence_topic(session_id) do
+  defp pubsub_topic(session_id) do
     "room:" <> session_id
   end
 
   defp track_presence(session_id, user_id) do
-    topic = presence_topic(session_id)
-    CuberacerLiveWeb.Endpoint.subscribe(topic)
+    topic = pubsub_topic(session_id)
+    @endpoint.subscribe(topic)
     Presence.track(self(), topic, user_id, %{})
-  end
-
-  defp current_scramble([current_round | _rest]) do
-    current_round.scramble
-  end
-
-  defp current_scramble([]) do
-    nil
   end
 
   defp scramble_text_size(scramble) do
