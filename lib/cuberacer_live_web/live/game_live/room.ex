@@ -166,7 +166,8 @@ defmodule CuberacerLiveWeb.GameLive.Room do
        else
          current_page
        end
-     end)}
+     end)
+    |> fetch_rounds()}
   end
 
   def handle_event("users-page-right", _value, socket) do
@@ -177,7 +178,8 @@ defmodule CuberacerLiveWeb.GameLive.Room do
        else
          current_page
        end
-     end)}
+     end)
+    |> fetch_rounds()}
   end
 
   ## PubSub handlers
