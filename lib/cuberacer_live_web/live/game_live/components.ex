@@ -1,8 +1,7 @@
 defmodule CuberacerLiveWeb.GameLive.Components do
-  use Phoenix.Component
+  use CuberacerLiveWeb, :component
 
   import CuberacerLiveWeb.SharedUtils, only: [format_datetime: 1]
-  import Phoenix.HTML.Link
 
   alias CuberacerLiveWeb.Router.Helpers, as: Routes
   alias CuberacerLive.Sessions
@@ -38,6 +37,19 @@ defmodule CuberacerLiveWeb.GameLive.Components do
     >
       <span id="time" x-text="formattedTime" :class="timeColor"></span>
     </div>
+    """
+  end
+
+  def keyboard_input(assigns) do
+    ~H"""
+    <.form id="keyboard-input" let={f} for={:keyboard_input} phx-submit="keyboard-submit">
+      <div>
+        <%= text_input f, :time,
+          class: "w-72 mx-auto border rounded-md bg-gray-50",
+          pattern: "^(\\d{1,2}:)?\\d{1,2}(\\.\\d{0,3}?)?$",
+          title: "MM:SS.DDD" %>
+      </div>
+    </.form>
     """
   end
 

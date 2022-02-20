@@ -41,6 +41,7 @@ defmodule CuberacerLiveWeb.GameLive.Room do
           |> fetch_stats()
           |> fetch_room_messages()
           |> initialize_users_solving()
+          |> initialize_time_entry()
       end
 
     {:ok, socket, temporary_assigns: [past_rounds: [], room_messages: []]}
@@ -111,6 +112,10 @@ defmodule CuberacerLiveWeb.GameLive.Room do
     assign(socket, users_solving: MapSet.new())
   end
 
+  defp initialize_time_entry(socket) do
+    assign(socket, time_entry: :timer)
+  end
+
   ## LiveView handlers
 
   @impl true
@@ -130,13 +135,35 @@ defmodule CuberacerLiveWeb.GameLive.Room do
     {:noreply, socket}
   end
 
-  def handle_event("new-solve", %{"time" => time}, socket) do
+  def handle_event("toggle-timer", _value, socket) do
+    {:noreply, update(socket, :time_entry, fn entry_method ->
+      if entry_method == :timer, do: :keyboard, else: :timer
+    end)}
+  end
+
+  def handle_event("timer-submit", %{"time" => time}, socket) do
     {:ok, solve} = Sessions.create_solve(socket.assigns.session, socket.assigns.current_user, time, :OK)
 
     {:noreply,
      socket
      |> assign(:current_solve, solve)
      |> fetch_stats()}
+  end
+
+  def handle_event("keyboard-submit", %{"keyboard_input" => %{"time" => time}}, socket) do
+    time_pattern = ~r/^(\d{1,2}:)?\d{1,2}(\.\d{0,3})?$/
+
+    if Regex.match?(time_pattern, time) && !socket.assigns.current_solve do
+      ms = keyboard_input_to_ms(time)
+      {:ok, solve} = Sessions.create_solve(socket.assigns.session, socket.assigns.current_user, ms, :OK)
+
+      {:noreply,
+      socket
+      |> assign(:current_solve, solve)
+      |> fetch_stats()}
+    else
+      {:noreply, socket}
+    end
   end
 
   def handle_event("change-penalty", %{"penalty" => penalty}, socket) do
@@ -277,5 +304,17 @@ defmodule CuberacerLiveWeb.GameLive.Room do
 
   defp displayed_users(present_users, users_page) do
     Enum.slice(present_users, (users_page - 1) * @users_per_page, @users_per_page)
+  end
+
+  defp keyboard_input_to_ms(input) do
+    if String.contains?(input, ":") do
+      [minutes_str, rest] = String.split(input, ":")
+      {minutes, ""} = Integer.parse(minutes_str)
+      {sec, ""} = Float.parse(rest)
+      trunc(((minutes * 60) + sec) * 1000)
+    else
+      {sec, _rest} = Float.parse(input)
+      trunc(sec * 1000)
+    end
   end
 end
