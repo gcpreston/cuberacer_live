@@ -559,7 +559,7 @@ defmodule CuberacerLive.Sessions do
       nil -> "--"
       %Solve{penalty: :OK} -> ms_to_time_str(solve.time)
       %Solve{penalty: :"+2"} -> ms_to_time_str(solve.time + 2000) <> "+"
-      %Solve{penalty: :DNF} -> "DNF (#{ms_to_time_str(solve.time)})"
+      %Solve{penalty: :DNF} -> "DNF"
     end
   end
 
