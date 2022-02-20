@@ -49,7 +49,7 @@ Hooks.Timer = {
     this.pushEvent('solving');
   },
   submitTime(time) {
-    this.pushEvent('new-solve', { time });
+    this.pushEvent('timer-submit', { time });
   }
 };
 

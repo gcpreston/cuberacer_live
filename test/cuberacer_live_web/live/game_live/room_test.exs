@@ -51,6 +51,10 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       assert {:ok, _view, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
       assert html =~ session.name
     end
+  end
+
+  describe "interface" do
+    setup [:authenticate]
 
     test "displays solves for user in room", %{
       conn: conn,
@@ -58,7 +62,6 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       round: round,
       user: user
     } do
-      conn = log_in_user(conn, user)
       solve = solve_fixture(%{user_id: user.id, round_id: round.id})
 
       assert {:ok, _view, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
@@ -76,7 +79,6 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       round: round,
       user: user
     } do
-      conn = log_in_user(conn, user)
       other_user = user_fixture()
 
       _solve = solve_fixture(%{user_id: other_user.id, round_id: round.id})
@@ -93,8 +95,6 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       message2 = room_message_fixture(session: session1, user: other_user)
       message3 = room_message_fixture(session: session2, user: user, message: "some other text")
 
-      conn = log_in_user(conn, user)
-
       assert {:ok, _view, html} = live(conn, Routes.game_room_path(conn, :show, session1.id))
 
       html
@@ -105,8 +105,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       refute html =~ Messaging.display_room_message(message3)
     end
 
-    test "displays ao5 and ao12", %{conn: conn, session: session, user: user} do
-      conn = log_in_user(conn, user)
+    test "displays ao5 and ao12", %{conn: conn, session: session} do
       assert {:ok, _view, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
 
       html
@@ -117,9 +116,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
     test "displays green dot and empty timer if user does not have time for current round", %{
       conn: conn,
       session: session,
-      user: user
     } do
-      conn = log_in_user(conn, user)
       {:ok, _lv, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
 
       html
@@ -133,13 +130,30 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       round: round,
       user: user
     } do
-      conn = log_in_user(conn, user)
       _solve = solve_fixture(time: 16_731, penalty: "+2", user_id: user.id, round_id: round.id)
       {:ok, _lv, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
 
       html
       |> assert_html("circle.fill-red-500", count: 1)
       |> refute_html("circle.fill-green-500")
+    end
+
+    test "displays timer toggle", %{conn: conn, session: session} do
+      {:ok, lv, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
+
+      html
+      |> assert_html("#timer", count: 1)
+      |> refute_html("#keyboard-input")
+      |> refute_html("i.fa-stopwatch")
+      |> assert_html("i.fa-keyboard", count: 1)
+
+      html = lv |> element("button[phx-click='toggle-timer']") |> render_click()
+
+      html
+      |> refute_html("#timer")
+      |> assert_html("#keyboard-input", count: 1)
+      |> assert_html("i.fa-stopwatch", count: 1)
+      |> refute_html("i.fa-keyboard")
     end
   end
 
@@ -200,13 +214,13 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       |> assert_html("#t_cell-round-#{round.id}-user-#{user.id}", text: "Solving...")
     end
 
-    test "new-solve creates a new solve", %{conn: conn, session: session} do
+    test "timer-submit creates a new solve", %{conn: conn, session: session} do
       {:ok, view, _html} = live(conn, Routes.game_room_path(conn, :show, session.id))
 
       num_solves_before = Enum.count(Sessions.list_solves_of_session(session))
 
       view
-      |> render_hook("new-solve", time: 42)
+      |> render_hook("timer-submit", time: 42)
 
       num_solves_after = Enum.count(Sessions.list_solves_of_session(session))
 
@@ -224,7 +238,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       assert render(view) =~ Sessions.display_solve(newest_solve)
     end
 
-    test "new-solve updates current stats", %{
+    test "timer-submit updates current stats", %{
       conn: conn,
       user: user,
       session: session,
@@ -248,7 +262,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
 
       html =
         live
-        |> render_hook("new-solve", time: 9876)
+        |> render_hook("timer-submit", time: 9876)
 
       stats = Sessions.current_stats(session, user)
       assert stats.ao5 != :dnf
@@ -269,7 +283,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
 
       html =
         live
-        |> render_hook("new-solve", time: 6789)
+        |> render_hook("timer-submit", time: 6789)
         |> assert_html(".t_ao5", text: Sessions.display_stat(stats.ao5))
 
       stats = Sessions.current_stats(session, user)
@@ -282,7 +296,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
 
       html =
         live
-        |> render_hook("new-solve", time: 9012)
+        |> render_hook("timer-submit", time: 9012)
 
       stats = Sessions.current_stats(session, user)
       assert stats.ao5 != :dnf
@@ -291,6 +305,35 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       html
       |> assert_html(".t_ao5", text: Sessions.display_stat(stats.ao5))
       |> assert_html(".t_ao12", text: Sessions.display_stat(stats.ao12))
+    end
+
+    test "keyboard-submit creates a new solve", %{conn: conn, user: user, session: session, round: round} do
+      {:ok, lv, _html} = live(conn, Routes.game_room_path(conn, :show, session.id))
+
+      num_solves_before = Enum.count(Sessions.list_solves_of_session(session))
+
+      lv
+      |> element("button[phx-click='toggle-timer']")
+      |> render_click()
+
+      lv
+      |> element("#keyboard-input")
+      |> render_submit(%{"keyboard_input" => %{"time" => "1:5.12"}})
+
+      num_solves_after = Enum.count(Sessions.list_solves_of_session(session))
+
+      newest_solve_query =
+        from s in Solve,
+          join: r in assoc(s, :round),
+          where: r.session_id == ^session.id,
+          order_by: [desc: s.inserted_at],
+          limit: 1
+
+      newest_solve = Repo.one(newest_solve_query)
+
+      assert num_solves_after == num_solves_before + 1
+      assert newest_solve.time == 65_120
+      assert_html(render(lv), "#t_cell-round-#{round.id}-user-#{user.id}", text: "1:05.120")
     end
 
     test "change-penalty OK sets an OK penalty for the user's solve in the current round", %{
