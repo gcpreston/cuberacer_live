@@ -527,7 +527,7 @@ defmodule CuberacerLive.SessionsTest do
 
     test "display_solve/1 DNF" do
       solve = solve_fixture(time: 12340, penalty: :DNF)
-      assert Sessions.display_solve(solve) == "DNF (12.340)"
+      assert Sessions.display_solve(solve) == "DNF"
     end
 
     test "display_solve/1 long" do
