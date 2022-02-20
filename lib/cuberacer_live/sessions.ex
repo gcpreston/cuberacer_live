@@ -326,7 +326,7 @@ defmodule CuberacerLive.Sessions do
 
   """
   def create_round(%Session{} = session, scramble \\ nil) do
-    scramble = scramble || Whisk.scramble(to_string(session.puzzle_type))
+    scramble = scramble || Whisk.scramble(session.puzzle_type)
     attrs = %{session_id: session.id, scramble: scramble}
 
     %Round{}
