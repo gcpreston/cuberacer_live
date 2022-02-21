@@ -113,29 +113,19 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       |> assert_html(".t_ao12", count: 1, text: "DNF")
     end
 
-    test "displays green dot and empty timer if user does not have time for current round", %{
+    test "does not display time if user has a time for current round", %{
       conn: conn,
-      session: session,
+      session: session
     } do
-      {:ok, _lv, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
+      {:ok, lv, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
 
       html
-      |> assert_html("circle.fill-green-500", count: 1)
-      |> refute_html("circle.fill-red-500")
-    end
+      |> assert_html(".text-gray-900 .t_scramble", count: 1)
 
-    test "displays red dot and time if user has a time for current round", %{
-      conn: conn,
-      session: session,
-      round: round,
-      user: user
-    } do
-      _solve = solve_fixture(time: 16_731, penalty: "+2", user_id: user.id, round_id: round.id)
-      {:ok, _lv, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
+      lv |> render_hook("timer-submit", time: 16_731)
 
-      html
-      |> assert_html("circle.fill-red-500", count: 1)
-      |> refute_html("circle.fill-green-500")
+      render(lv)
+      |> assert_html(".text-gray-300 .t_scramble", count: 1)
     end
 
     test "displays timer toggle", %{conn: conn, session: session} do
@@ -307,7 +297,12 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       |> assert_html(".t_ao12", text: Sessions.display_stat(stats.ao12))
     end
 
-    test "keyboard-submit creates a new solve", %{conn: conn, user: user, session: session, round: round} do
+    test "keyboard-submit creates a new solve", %{
+      conn: conn,
+      user: user,
+      session: session,
+      round: round
+    } do
       {:ok, lv, _html} = live(conn, Routes.game_room_path(conn, :show, session.id))
 
       num_solves_before = Enum.count(Sessions.list_solves_of_session(session))
@@ -666,7 +661,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
 
       render(view)
       |> assert_html("tr.t_round-row", count: num_rounds_after)
-      |> assert_html(".t_scramble", text: "&nbsp" <> round.scramble)
+      |> assert_html(".t_scramble", text: round.scramble)
     end
 
     test "reacts to solve created", %{conn: conn, session: session, user: user} do

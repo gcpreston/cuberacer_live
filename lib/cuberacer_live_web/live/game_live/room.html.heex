@@ -25,13 +25,8 @@
       </div>
 
       <div class="my-3 mx-auto text-center">
-        <div class={"#{scramble_text_size(@current_round.scramble)}"}>
-          <span class="inline-block align-middle">
-            <svg width="12" height="12" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="6" cy="6" r="6" class={if @current_solve, do: "fill-red-500", else: "fill-green-500"} />
-            </svg>
-          </span>
-          <span class="inline-block align-middle t_scramble">&nbsp<%= @current_round.scramble %></span>
+        <div class={"#{scramble_text_size(@current_round.scramble)} #{if @current_solve, do: "text-gray-300", else: "text-gray-900"}"}>
+          <span class="t_scramble"><%= @current_round.scramble %></span>
         </div>
         <div class="text-6xl my-4">
           <%= if @time_entry == :timer do %>
