@@ -45,7 +45,7 @@ defmodule CuberacerLiveWeb.GameLive.Components do
     <.form id="keyboard-input" let={f} for={:keyboard_input} phx-submit="keyboard-submit">
       <div>
         <%= text_input f, :time,
-          class: "w-72 mx-auto border rounded-md bg-gray-50",
+          class: "w-72 mx-auto border border-gray-400 rounded-md bg-gray-50",
           pattern: "^(\\d{1,2}:)?\\d{1,2}(\\.\\d{0,3}?)?$",
           title: "MM:SS.DDD" %>
       </div>
