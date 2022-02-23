@@ -5,6 +5,14 @@
  export default () => ({
   mobileChatOpen: false,
 
+  addTouchPropagationStoppers() {
+    this.$el.querySelectorAll('button').forEach(
+      el => el.addEventListener('touchstart', e => e.stopPropagation())
+    );
+  },
+
+  // Pagination
+
   numPresentUsers: 0,
   usersPage: 1,
   usersPerPage: 4,

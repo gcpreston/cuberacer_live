@@ -12,12 +12,25 @@
   </button>
 
   <div class="flex-1 flex flex-col" x-show="!mobileChatOpen">
-    <div class="p-4 static sm:relative">
+    <div
+      class="p-4 static sm:relative"
+      id="timer-area"
+      x-data="timer"
+      @keydown.space.window="handlePointDown"
+      @keyup.space.window.prevent="handlePointUp"
+      @touchstart="handlePointDown"
+      @touchend="handlePointUp"
+      x-init="addTouchPropagationStoppers()"
+      phx-hook="Timer"
+    >
       <h1 class="text-xl font-bold"><%= @session.name %></h1>
       <p class="italic mb-3"><%= @session.puzzle_type %></p>
 
       <div class="absolute top-2 right-2 grid grid-flow-col gap-4">
-        <button class="px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-white hover:bg-gray-50" phx-click="toggle-timer">
+        <button
+          class="px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-white hover:bg-gray-50"
+          phx-click="toggle-timer"
+        >
           <i class={"fas fa-#{if @time_entry == :timer, do: "keyboard", else: "stopwatch"}"}></i>
         </button>
         <button

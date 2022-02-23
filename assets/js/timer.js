@@ -43,7 +43,7 @@ export default () => ({
     return '';
   },
 
-  handleSpaceDown() {
+  handlePointDown() {
     if (!this.$store.inputFocused && !this.hasCurrentSolve) {
       if (this.interval) {
         this.stopTime();
@@ -56,7 +56,7 @@ export default () => ({
     }
   },
 
-  handleSpaceUp() {
+  handlePointUp() {
     if (!this.$store.inputFocused) {
       if (this.ready) {
         this.startTime();
