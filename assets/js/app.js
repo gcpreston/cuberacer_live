@@ -5,8 +5,10 @@
 // AlpineJS
 import Alpine from 'alpinejs';
 import timer from './timer';
+import room from './room';
 
 Alpine.data('timer', timer);
+Alpine.data('room', room);
 Alpine.store('inputFocused', false);
 
 window.Alpine = Alpine;
