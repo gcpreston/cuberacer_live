@@ -22,8 +22,15 @@
   },
 
   get displayStartEnd() {
-    const start = (this.usersPage - 1) * this.usersPerPage
-    return [start, start + this.usersPerPage];
+    let start = (this.usersPage - 1) * this.usersPerPage;
+    let end = start + this.usersPerPage;
+
+    if (end > this.numPresentUsers) {
+      end = this.numPresentUsers;
+      start = end - this.usersPerPage;
+    }
+
+    return [start, end];
   },
 
   isColShown(index) {
@@ -49,6 +56,11 @@
     if (this.moreUsersRight) this.usersPage += 1;
   },
 
+  initializeRoom(numPresentUsers) {
+    this.numPresentUsers = numPresentUsers;
+    this.calibratePagination()
+  },
+
   calibratePagination() {
     const fontSize = parseFloat(
       getComputedStyle(
@@ -64,7 +76,8 @@
 
     this.usersPerPage = Math.floor(timesTableWidth / cellWidth);
 
-    if (this.usersPage > this.numUsersPages)
+    if (this.usersPage > this.numUsersPages) {
       this.usersPage = this.numUsersPages;
+    }
   }
  });

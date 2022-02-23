@@ -1,7 +1,7 @@
 <div
   class="flex flex-row h-full relative"
   x-data="room"
-  x-init={"numPresentUsers= #{length(@present_users)}"}
+  x-init={"initializeRoom(#{length(@present_users)})"}
   @resize.window="calibratePagination"
 >
   <button
