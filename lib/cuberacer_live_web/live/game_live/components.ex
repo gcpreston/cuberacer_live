@@ -106,46 +106,60 @@ defmodule CuberacerLiveWeb.GameLive.Components do
   end
 
   def times_table(assigns) do
+    # Taps into 'room' Alpine data
     ~H"""
-    <table class="w-full border-separate [border-spacing:0]">
+    <table id="times-table" class="table-fixed w-full border-separate [border-spacing:0]" x-init="calibratePagination()">
       <thead class="bg-gray-50 sticky top-0">
-        <tr>
-          <%= for user <- @users do %>
-            <th scope="col" class="border-y px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              <%= link user.username, to: Routes.user_profile_path(CuberacerLiveWeb.Endpoint, :show, user.id), target: "_blank" %>
+        <tr class="flex">
+          <%= for {user, i} <- Enum.with_index(@users) do %>
+            <th
+              scope="col"
+              class="w-28 border-y px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
+              :class={"{ 'hidden': !isColShown(#{i}) }"}
+            >
+              <div class="truncate">
+                <%= link user.username, to: Routes.user_profile_path(CuberacerLiveWeb.Endpoint, :show, user.id), target: "_blank" %>
+              </div>
             </th>
           <% end %>
+          <th class="flex-1 border-y"></th>
         </tr>
       </thead>
       <tbody id="times-table-body" class="bg-white" phx-update="prepend">
         <%# Current round %>
-        <tr id={"round-#{@current_round.id}"} class="t_round-row" title={@current_round.scramble}>
-          <%= for user <- @users do %>
-            <td id={"round-#{@current_round.id}-solve-user-#{user.id}"} class="border-b px-6 py-4 whitespace-nowrap">
-              <div class="ml-4">
-                <div id={"t_cell-round-#{@current_round.id}-user-#{user.id}"} class="text-sm font-medium text-gray-900">
-                  <%= if user_is_solving?(@users_solving, user) do %>
-                    Solving...
-                  <% else %>
-                    <%= user_solve_for_round(user, @current_round) |> Sessions.display_solve() %>
-                  <% end %>
-                </div>
+        <tr id={"round-#{@current_round.id}"} class="flex t_round-row" title={@current_round.scramble}>
+          <%= for {user, i} <- Enum.with_index(@users) do %>
+            <td
+              id={"round-#{@current_round.id}-solve-user-#{user.id}"}
+              class="w-28 border-b px-2 py-4 whitespace-nowrap"
+              x-show={"isColShown(#{i})"}
+            >
+              <div id={"t_cell-round-#{@current_round.id}-user-#{user.id}"} class="text-sm font-medium text-center text-gray-900">
+                <%= if user_is_solving?(@users_solving, user) do %>
+                  Solving...
+                <% else %>
+                  <%= user_solve_for_round(user, @current_round) |> Sessions.display_solve() %>
+                <% end %>
               </div>
             </td>
           <% end %>
+          <td class="flex-1 border-b"></td>
         </tr>
         <%# Past rounds %>
         <%= for round <- @past_rounds do %>
-          <tr id={"round-#{round.id}"} class="t_round-row" title={round.scramble}>
-            <%= for user <- @users do %>
-              <td id={"round-#{round.id}-solve-user-#{user.id}"} class="border-b px-6 py-4 whitespace-nowrap">
-                <div class="ml-4">
-                  <div id={"t_cell-round-#{round.id}-user-#{user.id}"} class="text-sm font-medium text-gray-900">
-                    <%= user_solve_for_round(user, round) |> Sessions.display_solve() %>
-                  </div>
+          <tr id={"round-#{round.id}"} class="flex t_round-row" title={round.scramble}>
+            <%= for {user, i} <- Enum.with_index(@users) do %>
+              <td
+                id={"round-#{round.id}-solve-user-#{user.id}"}
+                class="w-28 border-b px-2 py-4 whitespace-nowrap"
+                x-show={"isColShown(#{i})"}
+              >
+                <div id={"t_cell-round-#{round.id}-user-#{user.id}"} class="text-sm font-medium text-center text-gray-900">
+                  <%= user_solve_for_round(user, round) |> Sessions.display_solve() %>
                 </div>
               </td>
             <% end %>
+            <td class="flex-1 border-b"></td>
           </tr>
         <% end %>
       </tbody>
@@ -163,7 +177,7 @@ defmodule CuberacerLiveWeb.GameLive.Components do
 
   def stats(assigns) do
     ~H"""
-    <table class="w-full">
+    <table class="w-full" id="stats">
       <thead class="bg-gray-50">
         <tr>
           <th scope="col" class="border-y px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -184,6 +198,7 @@ defmodule CuberacerLiveWeb.GameLive.Components do
   end
 
   def presence(assigns) do
+    # Taps into 'room' Alpine data
     ~H"""
     <table class="w-full mb-4">
       <thead class="bg-gray-50">
@@ -196,6 +211,9 @@ defmodule CuberacerLiveWeb.GameLive.Components do
       <tbody class="bg-white">
         <tr>
           <td class="px-6 whitespace-nowrap"><%= @num_present_users %> <%= Inflex.inflect("participant", @num_present_users) %></td>
+        </tr>
+        <tr>
+          <td class="px-6 whitespace-nowrap">Page <span x-text="usersPage"></span>/<span x-text="numUsersPages"></span></td>
         </tr>
       </tbody>
     </table>
