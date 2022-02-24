@@ -58,7 +58,7 @@
 
   initializeRoom(numPresentUsers) {
     this.numPresentUsers = numPresentUsers;
-    this.calibratePagination()
+    this.calibratePagination();
   },
 
   calibratePagination() {
