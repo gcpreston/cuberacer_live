@@ -206,7 +206,7 @@ defmodule CuberacerLiveWeb.GameLive.Components do
         <tr>
           <td class="px-6 whitespace-nowrap"><%= @num_present_users %> <%= Inflex.inflect("participant", @num_present_users) %></td>
         </tr>
-        <tr>
+        <tr x-show="numUsersPages > 1">
           <td class="px-6 whitespace-nowrap">Page <span x-text="usersPage"></span>/<span x-text="numUsersPages"></span></td>
         </tr>
       </tbody>
