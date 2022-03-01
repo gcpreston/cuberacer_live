@@ -18,9 +18,10 @@ defmodule CuberacerLive.Application do
       # Start the Endpoint (http/https)
       CuberacerLiveWeb.Endpoint,
       # Start Finch for the Mailer API client
-      {Finch, name: Swoosh.Finch}
+      {Finch, name: Swoosh.Finch},
       # Start a worker by calling: CuberacerLive.Worker.start_link(arg)
-      # {CuberacerLive.Worker, arg}
+      CuberacerLive.RoomCache,
+      CuberacerLive.LobbyServer
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

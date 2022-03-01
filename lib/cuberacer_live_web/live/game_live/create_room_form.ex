@@ -1,6 +1,7 @@
 defmodule CuberacerLiveWeb.GameLive.CreateRoomForm do
   use CuberacerLiveWeb, :live_component
 
+  alias CuberacerLive.RoomCache
   alias CuberacerLive.Sessions
 
   @impl true
@@ -28,8 +29,8 @@ defmodule CuberacerLiveWeb.GameLive.CreateRoomForm do
   end
 
   defp save_session(socket, :new, %{"name" => name, "puzzle_type" => puzzle_type}) do
-    case Sessions.create_session_and_round(name, puzzle_type) do
-      {:ok, _session, _round} ->
+    case RoomCache.create_room(name, puzzle_type) do
+      {:ok, _pid, _session} ->
         {:noreply,
          socket
          |> put_flash(:info, "Session created successfully")

@@ -110,6 +110,29 @@ defmodule CuberacerLive.Sessions do
   def get_session!(id), do: Repo.get!(Session, id)
 
   @doc """
+  Gets a list of sessions, given a list of session IDs.
+
+  The returned list is not guaranteed to maintain the same session
+  order as the given list.
+
+  If a session ID does not exist, no such session is included
+  in the returned list.
+
+  ## Examples
+
+      iex> get_sessions([1, 2, 3])
+      [%Session{}, %Session{}, %Session]
+
+      iex> get_sessions([123, 456])
+      [%Session{id: 123}]
+
+  """
+  def get_sessions(ids) when is_list(ids) do
+    query = from s in Session, where: s.id in ^ids
+    Repo.all(query)
+  end
+
+  @doc """
   Gets a single session, fully preloaded with rounds, solves, messages, etc.
 
   Raises `Ecto.NoResultsError` if the Session does not exist.

@@ -5,7 +5,7 @@ defmodule CuberacerLiveWeb.GameLive.Lobby do
 
   alias CuberacerLiveWeb.Endpoint
   alias CuberacerLiveWeb.Presence
-  alias CuberacerLive.{Sessions, Accounts}
+  alias CuberacerLive.{LobbyServer, Sessions, Accounts}
   alias CuberacerLive.Sessions.Session
 
   @impl true
@@ -49,8 +49,9 @@ defmodule CuberacerLiveWeb.GameLive.Lobby do
   ## Socket populators
 
   defp fetch(socket) do
-    sessions = Sessions.list_active_sessions()
-    assign(socket, active_sessions: sessions)
+    participant_counts = LobbyServer.get_participant_counts()
+    rooms = Sessions.get_sessions(Map.keys(participant_counts))
+    assign(socket, rooms: rooms, participant_counts: participant_counts)
   end
 
   defp fetch_user_count(socket) do
@@ -63,6 +64,10 @@ defmodule CuberacerLiveWeb.GameLive.Lobby do
   @impl true
   def handle_info(%Phoenix.Socket.Broadcast{event: "presence_diff"}, socket) do
     {:noreply, fetch_user_count(socket)}
+  end
+
+  def handle_info(:fetch, socket) do
+    {:noreply, fetch(socket)}
   end
 
   def handle_info({Sessions, [:session | _], _}, socket) do

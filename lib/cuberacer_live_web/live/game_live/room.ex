@@ -4,23 +4,44 @@ defmodule CuberacerLiveWeb.GameLive.Room do
   import CuberacerLive.Repo, only: [preload: 2]
   import CuberacerLiveWeb.GameLive.Components
 
-  alias CuberacerLive.{Sessions, Accounts, Messaging}
+  alias CuberacerLive.{RoomServer, Sessions, Accounts, Messaging}
   alias CuberacerLiveWeb.Presence
 
   @endpoint CuberacerLiveWeb.Endpoint
 
   @impl true
   def mount(%{"id" => session_id}, %{"user_token" => user_token}, socket) do
+    case Integer.parse(session_id) do
+      {session_id, ""} ->
+        build_socket(session_id, user_token, socket)
+
+      _ ->
+        {:ok,
+         socket
+         |> put_flash(:error, "Invalid room ID")
+         |> push_redirect(to: Routes.game_lobby_path(socket, :index))}
+    end
+  end
+
+  @impl true
+  def mount(_params, _session, socket) do
+    # TODO: How to make it redirect to room after login instead of /?
+    {:ok,
+     socket
+     |> redirect(to: Routes.user_session_path(socket, :new))}
+  end
+
+  defp build_socket(session_id, user_token, socket) when is_integer(session_id) do
     user = user_token && Accounts.get_user_by_session_token(user_token)
 
     socket =
       cond do
         user == nil ->
-          redirect(socket, to: Routes.user_session_path(@endpoint, :new))
+          redirect(socket, to: Routes.user_session_path(socket, :new))
 
-        not Sessions.session_is_active?(session_id) ->
+        !RoomServer.whereis(session_id) ->
           socket
-          |> put_flash(:error, "Session is inactive")
+          |> put_flash(:error, "Room is inactive")
           |> push_redirect(to: Routes.game_lobby_path(socket, :index))
 
         true ->
@@ -32,6 +53,7 @@ defmodule CuberacerLiveWeb.GameLive.Room do
 
           socket
           |> assign(:current_user, user)
+          |> fetch_room_server_pid(session_id)
           |> fetch_session(session_id)
           |> fetch_present_users()
           |> fetch_rounds()
@@ -45,15 +67,12 @@ defmodule CuberacerLiveWeb.GameLive.Room do
     {:ok, socket, temporary_assigns: [past_rounds: [], room_messages: []]}
   end
 
-  @impl true
-  def mount(_params, _session, socket) do
-    # TODO: How to make it redirect to room after login instead of /?
-    {:ok,
-     socket
-     |> redirect(to: Routes.user_session_path(@endpoint, :new))}
-  end
-
   ## Socket populators
+
+  defp fetch_room_server_pid(socket, session_id) do
+    pid = RoomServer.whereis(session_id)
+    assign(socket, :room_server_pid, pid)
+  end
 
   defp fetch_session(socket, session_id) do
     session = Sessions.get_session!(session_id)
@@ -103,7 +122,7 @@ defmodule CuberacerLiveWeb.GameLive.Room do
 
   @impl true
   def handle_event("new-round", _value, socket) do
-    Sessions.create_round_debounced(socket.assigns.session)
+    RoomServer.create_round(socket.assigns.room_server_pid)
 
     {:noreply, socket}
   end
@@ -112,20 +131,27 @@ defmodule CuberacerLiveWeb.GameLive.Room do
     Phoenix.PubSub.broadcast!(
       CuberacerLive.PubSub,
       pubsub_topic(socket.assigns.session_id),
-      {__MODULE__, :solving, socket.assigns.current_user.id}
+      {:solving, socket.assigns.current_user.id}
     )
 
     {:noreply, socket}
   end
 
   def handle_event("toggle-timer", _value, socket) do
-    {:noreply, update(socket, :time_entry, fn entry_method ->
-      if entry_method == :timer, do: :keyboard, else: :timer
-    end)}
+    {:noreply,
+     update(socket, :time_entry, fn entry_method ->
+       if entry_method == :timer, do: :keyboard, else: :timer
+     end)}
   end
 
   def handle_event("timer-submit", %{"time" => time}, socket) do
-    {:ok, solve} = Sessions.create_solve(socket.assigns.session, socket.assigns.current_user, time, :OK)
+    solve =
+      RoomServer.create_solve(
+        socket.assigns.room_server_pid,
+        socket.assigns.current_user,
+        time,
+        :OK
+      )
 
     {:noreply,
      socket
@@ -138,28 +164,36 @@ defmodule CuberacerLiveWeb.GameLive.Room do
 
     if Regex.match?(time_pattern, time) && !socket.assigns.current_solve do
       ms = keyboard_input_to_ms(time)
-      {:ok, solve} = Sessions.create_solve(socket.assigns.session, socket.assigns.current_user, ms, :OK)
+
+      solve =
+        RoomServer.create_solve(
+          socket.assigns.room_server_pid,
+          socket.assigns.current_user,
+          ms,
+          :OK
+        )
 
       {:noreply,
-      socket
-      |> assign(:current_solve, solve)
-      |> fetch_stats()}
+       socket
+       |> assign(:current_solve, solve)
+       |> fetch_stats()}
     else
       {:noreply, socket}
     end
   end
 
   def handle_event("change-penalty", %{"penalty" => penalty}, socket) do
-    # TODO: Does this need to pass an atom?
-    if solve = Sessions.get_current_solve(socket.assigns.session, socket.assigns.current_user) do
-      Sessions.change_penalty(solve, penalty)
-    end
+    RoomServer.change_penalty(
+      socket.assigns.room_server_pid,
+      socket.assigns.current_user,
+      penalty
+    )
 
     {:noreply, socket |> fetch_stats()}
   end
 
   def handle_event("send-message", %{"message" => message}, socket) do
-    Messaging.create_room_message(socket.assigns.session, socket.assigns.current_user, message)
+    RoomServer.send_message(socket.assigns.room_server_pid, socket.assigns.current_user, message)
 
     {:noreply, socket}
   end
@@ -175,7 +209,7 @@ defmodule CuberacerLiveWeb.GameLive.Room do
     {:noreply, socket |> fetch_present_users() |> fetch_rounds()}
   end
 
-  def handle_info({__MODULE__, :solving, user_id}, socket) do
+  def handle_info({:solving, user_id}, socket) do
     {:noreply, update(socket, :users_solving, fn solving -> MapSet.put(solving, user_id) end)}
   end
 
@@ -237,7 +271,7 @@ defmodule CuberacerLiveWeb.GameLive.Room do
   ## Helpers
 
   defp pubsub_topic(session_id) do
-    "room:" <> session_id
+    "room:#{session_id}"
   end
 
   defp track_presence(session_id, user_id) do
@@ -261,7 +295,7 @@ defmodule CuberacerLiveWeb.GameLive.Room do
       [minutes_str, rest] = String.split(input, ":")
       {minutes, ""} = Integer.parse(minutes_str)
       {sec, ""} = Float.parse(rest)
-      trunc(((minutes * 60) + sec) * 1000)
+      trunc((minutes * 60 + sec) * 1000)
     else
       {sec, _rest} = Float.parse(input)
       trunc(sec * 1000)
