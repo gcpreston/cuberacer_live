@@ -82,6 +82,8 @@ config :cuberacer_live, CuberacerLiveWeb.Endpoint,
     ]
   ]
 
+config :cuberacer_live, :empty_room_timeout_ms, :timer.seconds(10)
+
 # Do not include metadata nor timestamps in development logs
 config :logger, :console, format: "[$level] $message\n"
 

@@ -75,10 +75,8 @@ defmodule CuberacerLive.GameLive.LobbyTest do
       assert html =~ "Welcome"
       assert html =~ "Create a room to get things started!"
 
-      Phoenix.PubSub.subscribe(CuberacerLive.PubSub, inspect(CuberacerLive.LobbyServer))
       {:ok, pid, _session} = RoomCache.create_room("test room", :"3x3")
-
-      assert_receive {:room_created, _session_id}
+      :timer.sleep(2)
 
       html = render(live)
       assert_html(html, ".t_room-card", count: 1)
@@ -86,8 +84,7 @@ defmodule CuberacerLive.GameLive.LobbyTest do
       assert html =~ "Join a room below, or create your own!"
 
       GenServer.stop(pid)
-
-      assert_receive {:room_destroyed, _session_id}
+      :timer.sleep(2)
 
       html = render(live)
       refute_html(html, ".t_room-card")

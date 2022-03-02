@@ -11,6 +11,14 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
   alias CuberacerLive.{Repo, RoomCache, Sessions, Messaging}
   alias CuberacerLive.Sessions.Solve
 
+  ## Helpers
+
+  defp empty_room_timeout_ms do
+    Application.get_env(:cuberacer_live, :empty_room_timeout_ms)
+  end
+
+  ## Setup functions
+
   defp create_user(_) do
     user = user_fixture()
     %{user: user}
@@ -25,6 +33,8 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
   defp authenticate(%{conn: conn, user: user}) do
     %{conn: log_in_user(conn, user)}
   end
+
+  ## Tests
 
   setup [:create_user, :create_room]
 
@@ -663,6 +673,38 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       html = render(lv)
       assert html =~ "1 participant"
       refute html =~ other_user.username
+    end
+  end
+
+  describe "Lifecycle" do
+    setup [:authenticate]
+
+    test "room terminates after configured period of time", %{session: session} do
+      assert RoomCache.list_room_ids() == [session.id]
+
+      :timer.sleep(empty_room_timeout_ms() + 10)
+
+      assert RoomCache.list_room_ids() == []
+    end
+
+    test "room does not terminate if there is at least one participant", %{
+      conn: conn,
+      session: session
+    } do
+      assert RoomCache.list_room_ids() == [session.id]
+
+      {:ok, lv, _html} = live(conn, Routes.game_room_path(conn, :show, session.id))
+      :timer.sleep(empty_room_timeout_ms())
+
+      assert RoomCache.list_room_ids() == [session.id]
+
+      exit_liveview(lv)
+
+      assert RoomCache.list_room_ids() == [session.id]
+
+      :timer.sleep(empty_room_timeout_ms() * 2)
+
+      assert RoomCache.list_room_ids() == []
     end
   end
 end

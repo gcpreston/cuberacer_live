@@ -26,6 +26,8 @@ config :cuberacer_live, CuberacerLiveWeb.Endpoint,
 # In test we don't send emails.
 config :cuberacer_live, CuberacerLive.Mailer, adapter: Swoosh.Adapters.Test
 
+config :cuberacer_live, :empty_room_timeout_ms, 100
+
 # Print only warnings and errors during test
 config :logger, level: :warn
 
