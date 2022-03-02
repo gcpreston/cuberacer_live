@@ -97,11 +97,12 @@ defmodule CuberacerLiveWeb.GameLive.Room do
   end
 
   defp fetch_present_users(socket) do
-    present_users =
-      for {_user_id_str, info} <- Presence.list(pubsub_topic(socket.assigns.session_id)) do
-        info.user
-      end
-
+    # TODO: Replace with getting present users from room server
+    # present_users =
+    #   for {_user_id_str, info} <- Presence.list(pubsub_topic(socket.assigns.session_id)) do
+    #     info.user
+    #   end
+    present_users = RoomServer.get_present_users(socket.assigns.room_server_pid) |> IO.inspect(label: "got present users")
     assign(socket, :present_users, present_users)
   end
 
@@ -205,7 +206,7 @@ defmodule CuberacerLiveWeb.GameLive.Room do
   ## PubSub handlers
 
   @impl true
-  def handle_info(%Phoenix.Socket.Broadcast{event: "presence_diff"}, socket) do
+  def handle_info(:fetch_present_users, socket) do
     {:noreply, socket |> fetch_present_users() |> fetch_rounds()}
   end
 

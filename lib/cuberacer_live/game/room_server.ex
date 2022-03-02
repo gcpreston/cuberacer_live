@@ -45,6 +45,10 @@ defmodule CuberacerLive.RoomServer do
     GenServer.cast(room_server, {:send_message, user, message})
   end
 
+  def get_present_users(room_server) do
+    GenServer.call(room_server, :get_present_users)
+  end
+
   def get_participant_count(room_server) do
     GenServer.call(room_server, :get_participant_count)
   end
@@ -92,6 +96,10 @@ defmodule CuberacerLive.RoomServer do
     {:reply, :ok, state}
   end
 
+  def handle_call(:get_present_users, _from, state) do
+    {:reply, state.present_users, state}
+  end
+
   def handle_call(:get_participant_count, _from, state) do
     #  participant_count = length(state.present_users)
     participant_count = length(Map.keys(Presence.list(pubsub_topic(state.session.id))))
@@ -125,10 +133,10 @@ defmodule CuberacerLive.RoomServer do
 
     if present_users_count == 0 do
       send(self(), :set_empty_room_timeout)
-      {:noreply, new_state}
+      {:noreply, new_state, {:continue, :tell_room_to_fetch_present_users}}
     else
       send(self(), :cancel_empty_room_timeout)
-      {:noreply, new_state}
+      {:noreply, new_state, {:continue, :tell_room_to_fetch_present_users}}
     end
   end
 
@@ -154,8 +162,18 @@ defmodule CuberacerLive.RoomServer do
   end
 
   def handle_info(:timeout, state) do
-    IO.puts("got timeout")
     {:stop, :normal, state}
+  end
+
+  @impl true
+  def handle_continue(:tell_room_to_fetch_present_users, state) do
+    Phoenix.PubSub.broadcast!(
+      CuberacerLive.PubSub,
+      game_room_topic(state.session.id),
+      :fetch_present_users
+    )
+
+    {:noreply, state}
   end
 
   ## Helpers
@@ -165,6 +183,10 @@ defmodule CuberacerLive.RoomServer do
   end
 
   defp pubsub_topic(session_id) do
+    "#{inspect(__MODULE__)}:#{session_id}"
+  end
+
+  defp game_room_topic(session_id) do
     "room:#{session_id}"
   end
 
