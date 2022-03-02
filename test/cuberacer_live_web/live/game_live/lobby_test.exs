@@ -3,24 +3,42 @@ defmodule CuberacerLive.GameLive.LobbyTest do
   @moduletag ensure_presence_shutdown: true
 
   import Phoenix.LiveViewTest
-  import CuberacerLive.SessionsFixtures
   import CuberacerLive.AccountsFixtures
 
-  alias CuberacerLive.Sessions
+  alias CuberacerLive.RoomCache
 
   setup :register_and_log_in_user
 
   describe ":index" do
-    test "displays all sessions", %{conn: conn} do
-      session = session_fixture()
-      {:ok, _live, html} = live(conn, Routes.game_lobby_path(conn, :index))
+    test "displays only active rooms", %{conn: conn} do
+      {:ok, pid1, session1} = RoomCache.create_room("test room", :"3x3")
+
+      {:ok, lv, html} = live(conn, Routes.game_lobby_path(conn, :index))
 
       html
       |> assert_html(".t_room-card", count: 1)
-      |> assert_html("#t_room-card-#{session.id}", count: 1)
+      |> assert_html("#t_room-card-#{session1.id}", count: 1)
 
-      assert html =~ session.name
-      assert html =~ "#{session.puzzle_type}"
+      assert html =~ session1.name
+      assert html =~ "#{session1.puzzle_type}"
+
+      {:ok, _pid2, session2} = RoomCache.create_room("test room 2", :"2x2")
+      :timer.sleep(2)
+      html = render(lv)
+
+      html
+      |> assert_html(".t_room-card", count: 2)
+      |> assert_html("#t_room-card-#{session1.id}", count: 1)
+      |> assert_html("#t_room-card-#{session2.id}", count: 1)
+      assert html =~ session2.name
+      assert html =~ "#{session2.puzzle_type}"
+
+      GenServer.stop(pid1)
+      :timer.sleep(2)
+
+      render(lv)
+      |> assert_html(".t_room-card", count: 1)
+      |> assert_html("#t_room-card-#{session2.id}", count: 1)
     end
 
     test "patches to new room modal", %{conn: conn} do
@@ -42,7 +60,7 @@ defmodule CuberacerLive.GameLive.LobbyTest do
     end
 
     test "shows correct copy when there are rooms", %{conn: conn} do
-      _session = session_fixture()
+      {:ok, _pid, _session} = RoomCache.create_room("test room", :"3x3")
       {:ok, _live, html} = live(conn, Routes.game_lobby_path(conn, :index))
 
       assert_html(html, ".t_room-card", count: 1)
@@ -57,14 +75,19 @@ defmodule CuberacerLive.GameLive.LobbyTest do
       assert html =~ "Welcome"
       assert html =~ "Create a room to get things started!"
 
-      session = session_fixture()
+      Phoenix.PubSub.subscribe(CuberacerLive.PubSub, inspect(CuberacerLive.LobbyServer))
+      {:ok, pid, _session} = RoomCache.create_room("test room", :"3x3")
+
+      assert_receive {:room_created, _session_id}
 
       html = render(live)
       assert_html(html, ".t_room-card", count: 1)
       assert html =~ "Welcome"
       assert html =~ "Join a room below, or create your own!"
 
-      Sessions.delete_session(session)
+      GenServer.stop(pid)
+
+      assert_receive {:room_destroyed, _session_id}
 
       html = render(live)
       refute_html(html, ".t_room-card")
@@ -83,6 +106,35 @@ defmodule CuberacerLive.GameLive.LobbyTest do
       {:ok, _lv2, _html2} = live(conn2, Routes.game_lobby_path(conn2, :index))
 
       assert render(lv1) =~ "2 users in the lobby"
+    end
+
+    test "shows number of users in rooms", %{conn: conn1} do
+      user2 = user_fixture()
+      conn2 = Phoenix.ConnTest.build_conn() |> log_in_user(user2)
+
+      {:ok, _pid, %CuberacerLive.Sessions.Session{id: session_id}} =
+        RoomCache.create_room("test room", :"3x3")
+
+      {:ok, lv1, html1} = live(conn1, Routes.game_lobby_path(conn1, :index))
+
+      html1
+      |> assert_html(".t_room-card", count: 1)
+      |> assert_html(".t_room-participants", text: "0")
+      |> refute_html(".bg-green-500.h-3.w-3.rounded-full")
+
+      {:ok, lv2, _html2} = live(conn2, Routes.game_room_path(conn2, :show, session_id))
+
+      render(lv1)
+      |> assert_html(".t_room-participants", text: "1")
+      |> assert_html(".bg-green-500.h-3.w-3.rounded-full")
+
+      exit_liveview(lv2)
+
+      :timer.sleep(2)
+
+      render(lv1)
+      |> assert_html(".t_room-participants", text: "0")
+      |> refute_html(".bg-green-500.h-3.w-3.rounded-full")
     end
 
     test "redirects if user is not logged in" do

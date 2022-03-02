@@ -8,7 +8,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
   import CuberacerLive.SessionsFixtures
   import CuberacerLive.MessagingFixtures
 
-  alias CuberacerLive.{Repo, Sessions, Messaging}
+  alias CuberacerLive.{Repo, RoomCache, Sessions, Messaging}
   alias CuberacerLive.Sessions.Solve
 
   defp create_user(_) do
@@ -16,18 +16,17 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
     %{user: user}
   end
 
-  defp create_session_and_round(_) do
-    session = session_fixture()
-    round = round_fixture(session: session)
+  defp create_room(_) do
+    {:ok, pid, session} = RoomCache.create_room("test room", :"3x3")
 
-    %{session: session, round: round}
+    %{session: session, pid: pid}
   end
 
   defp authenticate(%{conn: conn, user: user}) do
     %{conn: log_in_user(conn, user)}
   end
 
-  setup [:create_user, :create_session_and_round]
+  setup [:create_user, :create_room]
 
   describe "mount" do
     test "redirects if no user token", %{conn: conn, session: session} do
@@ -45,6 +44,22 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
                live(conn, Routes.game_room_path(conn, :show, session.id))
     end
 
+    test "redirects if inactive session", %{conn: conn, user: user, session: session} do
+      conn = log_in_user(conn, user)
+      lobby_path = Routes.game_lobby_path(conn, :index)
+
+      {:error, {:live_redirect, %{flash: %{"error" => "Room is inactive"}, to: ^lobby_path}}} =
+        live(conn, Routes.game_room_path(conn, :show, session.id - 1))
+    end
+
+    test "redirects if invalid session ID", %{conn: conn, user: user} do
+      conn = log_in_user(conn, user)
+      lobby_path = Routes.game_lobby_path(conn, :index)
+
+      {:error, {:live_redirect, %{flash: %{"error" => "Invalid room ID"}, to: ^lobby_path}}} =
+        live(conn, Routes.game_room_path(conn, :show, "abc"))
+    end
+
     test "connects with valid user token", %{conn: conn, session: session, user: user} do
       conn = log_in_user(conn, user)
 
@@ -56,12 +71,8 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
   describe "interface" do
     setup [:authenticate]
 
-    test "displays solves for user in room", %{
-      conn: conn,
-      session: session,
-      round: round,
-      user: user
-    } do
+    test "displays solves for user in room", %{conn: conn, session: session, user: user} do
+      round = Sessions.get_current_round!(session)
       solve = solve_fixture(%{user_id: user.id, round_id: round.id})
 
       assert {:ok, _view, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
@@ -76,10 +87,10 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
     test "does not display solves for user not in room", %{
       conn: conn,
       session: session,
-      round: round,
       user: user
     } do
       other_user = user_fixture()
+      round = Sessions.get_current_round!(session)
 
       _solve = solve_fixture(%{user_id: other_user.id, round_id: round.id})
 
@@ -182,9 +193,9 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
     test "solving indicates that a user is solving", %{
       conn: conn,
       user: user,
-      session: session,
-      round: round
+      session: session
     } do
+      round = Sessions.get_current_round!(session)
       other_user = user_fixture()
       other_conn = Phoenix.ConnTest.build_conn() |> log_in_user(other_user)
 
@@ -231,9 +242,10 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
     test "timer-submit updates current stats", %{
       conn: conn,
       user: user,
-      session: session,
-      round: round1
+      session: session
     } do
+      round1 = Sessions.get_current_round!(session)
+
       _solve1 = solve_fixture(round_id: round1.id, user_id: user.id)
       round2 = round_fixture(session: session)
       _solve2 = solve_fixture(round_id: round2.id, user_id: user.id)
@@ -300,9 +312,10 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
     test "keyboard-submit creates a new solve", %{
       conn: conn,
       user: user,
-      session: session,
-      round: round
+      session: session
     } do
+      round = Sessions.get_current_round!(session)
+
       {:ok, lv, _html} = live(conn, Routes.game_room_path(conn, :show, session.id))
 
       num_solves_before = Enum.count(Sessions.list_solves_of_session(session))
@@ -334,9 +347,9 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
     test "change-penalty OK sets an OK penalty for the user's solve in the current round", %{
       conn: conn1,
       user: user1,
-      session: session,
-      round: round1
+      session: session
     } do
+      round1 = Sessions.get_current_round!(session)
       user2 = user_fixture()
       solve1 = solve_fixture(time: 42, user_id: user1.id, round_id: round1.id)
 
@@ -374,9 +387,9 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
     test "change-penalty OK does nothing if the user has no solve for the current round", %{
       conn: conn,
       user: user,
-      session: session,
-      round: round1
+      session: session
     } do
+      round1 = Sessions.get_current_round!(session)
       solve = solve_fixture(penalty: :"+2", user_id: user.id, round_id: round1.id)
       _round2 = round_fixture(session: session)
 
@@ -394,9 +407,9 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
     test "change-penalty +2 sets a +2 penalty for the user's solve in the current round", %{
       conn: conn1,
       user: user1,
-      session: session,
-      round: round1
+      session: session
     } do
+      round1 = Sessions.get_current_round!(session)
       user2 = user_fixture()
       solve1 = solve_fixture(time: 42, user_id: user1.id, round_id: round1.id)
 
@@ -426,9 +439,9 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
     test "change-penalty +2 does nothing if the user has no solve for the current round", %{
       conn: conn,
       user: user,
-      session: session,
-      round: round1
+      session: session
     } do
+      round1 = Sessions.get_current_round!(session)
       solve = solve_fixture(user_id: user.id, round_id: round1.id)
       _round2 = round_fixture(session: session)
 
@@ -446,9 +459,9 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
     test "change-penalty DNF sets a DNF penalty for the user's solve in the current round", %{
       conn: conn1,
       user: user1,
-      session: session,
-      round: round1
+      session: session
     } do
+      round1 = Sessions.get_current_round!(session)
       user2 = user_fixture()
       solve1 = solve_fixture(time: 42, user_id: user1.id, round_id: round1.id)
 
@@ -477,9 +490,9 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
     test "change-penalty DNF does nothing if the user has no solve for the current round", %{
       conn: conn,
       user: user,
-      session: session,
-      round: round1
+      session: session
     } do
+      round1 = Sessions.get_current_round!(session)
       solve = solve_fixture(user_id: user.id, round_id: round1.id)
       _round2 = round_fixture(session: session)
 
@@ -494,12 +507,8 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       assert html =~ Sessions.display_solve(nil)
     end
 
-    test "change-penalty fetches stats", %{
-      conn: conn,
-      user: user,
-      session: session,
-      round: round1
-    } do
+    test "change-penalty fetches stats", %{conn: conn, user: user, session: session} do
+      round1 = Sessions.get_current_round!(session)
       _solve1 = solve_fixture(user_id: user.id, round_id: round1.id)
       round2 = round_fixture(session: session)
       _solve2 = solve_fixture(user_id: user.id, round_id: round2.id)
@@ -510,11 +519,11 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       round5 = round_fixture(session: session)
       _solve5 = solve_fixture(user_id: user.id, round_id: round5.id)
 
-      {:ok, view, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
+      {:ok, lv, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
 
       refute_html(html, ".t_ao5", text: "DNF")
 
-      html = view |> render_click("change-penalty", %{"penalty" => "DNF"})
+      html = render_click(lv, "change-penalty", %{"penalty" => "DNF"})
 
       assert_html(html, ".t_ao5", text: "DNF")
     end
@@ -596,11 +605,8 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
   describe "Presence events" do
     setup [:authenticate]
 
-    test "on join, show times and update presence display", %{
-      conn: conn,
-      session: session,
-      round: round
-    } do
+    test "on join, show times and update presence display", %{conn: conn, session: session} do
+      round = Sessions.get_current_round!(session)
       other_user = user_fixture()
       other_conn = Phoenix.ConnTest.build_conn() |> log_in_user(other_user)
 
@@ -625,11 +631,11 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       assert html =~ Sessions.display_solve(solve)
     end
 
-    test "on leave, hide times and update presene display", %{
+    test "on leave, hide times and update presence display", %{
       conn: conn,
-      session: session,
-      round: round
+      session: session
     } do
+      round = Sessions.get_current_round!(session)
       other_user = user_fixture()
       other_conn = Phoenix.ConnTest.build_conn() |> log_in_user(other_user)
 

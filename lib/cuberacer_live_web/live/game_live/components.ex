@@ -21,8 +21,8 @@ defmodule CuberacerLiveWeb.GameLive.Components do
         </div>
         <hr class="my-2" />
         <ul class="text-center">
-          <li><span class="font-semibold">Puzzle: </span><%= @session.puzzle_type %></li>
-          <li><span class="font-semibold">Participants: </span><%= @participant_count %></li>
+          <li class="t_room-puzzle"><span class="font-semibold">Puzzle: </span><%= @session.puzzle_type %></li>
+          <li class="t_room-participants"><span class="font-semibold">Participants: </span><%= @participant_count %></li>
         </ul>
       </div>
     <% end %>
