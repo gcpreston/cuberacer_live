@@ -12,9 +12,9 @@ defmodule CuberacerLive.RoomServer do
   alias CuberacerLiveWeb.Presence
 
   @lobby_server_topic inspect(CuberacerLive.LobbyServer)
-  @inactivity_timeout :timer.minutes(1) # TODO: Update and make it so it doesn't exit if people are in the room
+  @empty_room_timeout_ms :timer.minutes(1)
 
-  defstruct [:session, messages: [], present_users: []]
+  defstruct [:session, messages: [], present_users: [], timeout_ref: nil]
 
   ## API
 
@@ -56,8 +56,9 @@ defmodule CuberacerLive.RoomServer do
     Logger.info("Creating room for session #{session.id}")
     subscribe_to_pubsub(session.id)
     notify_lobby_server(:room_created, session.id)
+    send(self(), :set_empty_room_timeout)
 
-    {:ok, %__MODULE__{session: session}, @inactivity_timeout}
+    {:ok, %__MODULE__{session: session}}
   end
 
   @impl true
@@ -69,8 +70,8 @@ defmodule CuberacerLive.RoomServer do
   @impl true
   def handle_call(:create_round, _from, %{session: session} = state) do
     case Sessions.create_round_debounced(session) do
-      {:ok, round} -> {:reply, round.scramble, state, @inactivity_timeout}
-      error -> {:reply, error, state, @inactivity_timeout}
+      {:ok, round} -> {:reply, round.scramble, state}
+      error -> {:reply, error, state}
     end
   end
 
@@ -80,7 +81,7 @@ defmodule CuberacerLive.RoomServer do
         %{session: session} = state
       ) do
     {:ok, solve} = Sessions.create_solve(session, user, time, penalty)
-    {:reply, solve, state, @inactivity_timeout}
+    {:reply, solve, state}
   end
 
   def handle_call({:change_penalty, %User{} = user, penalty}, _from, %{session: session} = state) do
@@ -88,7 +89,7 @@ defmodule CuberacerLive.RoomServer do
       Sessions.change_penalty(solve, penalty)
     end
 
-    {:reply, :ok, state, @inactivity_timeout}
+    {:reply, :ok, state}
   end
 
   def handle_call(:get_participant_count, _from, state) do
@@ -103,7 +104,7 @@ defmodule CuberacerLive.RoomServer do
         %{session: session, messages: messages} = state
       ) do
     {:ok, message} = Messaging.create_room_message(session, user, message)
-    {:noreply, %{state | messages: [message | messages]}, @inactivity_timeout}
+    {:noreply, %{state | messages: [message | messages]}}
   end
 
   @impl true
@@ -113,13 +114,22 @@ defmodule CuberacerLive.RoomServer do
         info.user
       end
 
+    present_users_count = length(present_users)
+    new_state = %{state | present_users: present_users}
+
     # Let the lobby know of the change
     notify_lobby_server(:update_participant_count, %{
       session_id: state.session.id,
-      participant_count: length(present_users)
+      participant_count: present_users_count
     })
 
-    {:noreply, %{state | present_users: present_users}}
+    if present_users_count == 0 do
+      send(self(), :set_empty_room_timeout)
+      {:noreply, new_state}
+    else
+      send(self(), :cancel_empty_room_timeout)
+      {:noreply, new_state}
+    end
   end
 
   def handle_info({:solving, _user_id}, state) do
@@ -127,6 +137,20 @@ defmodule CuberacerLive.RoomServer do
     # TODO: Move this to state here so you can see "Solving..." when you join a room
     # in the middle of someone solving
     {:noreply, state}
+  end
+
+  def handle_info(:set_empty_room_timeout, %{timeout_ref: nil} = state) do
+    {:noreply, _set_state_timeout_ref(state)}
+  end
+
+  def handle_info(:set_empty_room_timeout, %{timeout_ref: timeout_ref} = state) do
+    Process.cancel_timer(timeout_ref)
+    {:noreply, _set_state_timeout_ref(state)}
+  end
+
+  def handle_info(:cancel_empty_room_timeout, %{timeout_ref: timeout_ref} = state) do
+    Process.cancel_timer(timeout_ref)
+    {:noreply, _unset_state_timeout_ref(state)}
   end
 
   def handle_info(:timeout, state) do
@@ -149,7 +173,15 @@ defmodule CuberacerLive.RoomServer do
     CuberacerLiveWeb.Endpoint.subscribe(topic)
   end
 
-  def global_name(session_id) do
+  defp global_name(session_id) do
     {:global, {__MODULE__, session_id}}
+  end
+
+  defp _set_state_timeout_ref(state) do
+    %{state | timeout_ref: Process.send_after(self(), :timeout, @empty_room_timeout_ms)}
+  end
+
+  defp _unset_state_timeout_ref(state) do
+    %{state | timeout_ref: nil}
   end
 end
