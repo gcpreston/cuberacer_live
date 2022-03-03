@@ -376,7 +376,8 @@ defmodule CuberacerLive.Sessions do
   def create_round_debounced(%Session{} = session, scramble \\ nil) do
     current_round = get_current_round!(session)
 
-    if NaiveDateTime.diff(NaiveDateTime.utc_now(), current_round.inserted_at) < 2 do
+    if NaiveDateTime.diff(NaiveDateTime.utc_now(), current_round.inserted_at, :millisecond) <
+         new_round_debounce_ms() do
       {:error, :too_soon}
     else
       create_round(session, scramble)
@@ -660,6 +661,10 @@ defmodule CuberacerLive.Sessions do
       padded_seconds = String.pad_leading("#{seconds}", 2, "0")
       "#{minutes}:#{padded_seconds}.#{padded_milliseconds}"
     end
+  end
+
+  defp new_round_debounce_ms do
+    Application.get_env(:cuberacer_live, :new_round_debounce_ms)
   end
 
   ## Notify subscribers

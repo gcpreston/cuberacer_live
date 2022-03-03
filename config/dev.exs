@@ -82,6 +82,7 @@ config :cuberacer_live, CuberacerLiveWeb.Endpoint,
     ]
   ]
 
+config :cuberacer_live, :new_round_debounce_ms, :timer.seconds(2)
 config :cuberacer_live, :empty_room_timeout_ms, :timer.seconds(10)
 
 # Do not include metadata nor timestamps in development logs

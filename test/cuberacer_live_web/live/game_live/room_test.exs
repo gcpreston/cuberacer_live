@@ -13,6 +13,10 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
 
   ## Helpers
 
+  defp new_round_debounce_ms do
+    Application.get_env(:cuberacer_live, :new_round_debounce_ms)
+  end
+
   defp empty_room_timeout_ms do
     Application.get_env(:cuberacer_live, :empty_room_timeout_ms)
   end
@@ -185,8 +189,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
 
       assert_html(html1, "tr.t_round-row", count: num_rounds_before)
 
-      # Wait out the debounce timer
-      :timer.sleep(2000)
+      :timer.sleep(new_round_debounce_ms())
 
       render_click(lv1, "new-round")
       render_click(lv2, "new-round")
