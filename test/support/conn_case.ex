@@ -51,6 +51,12 @@ defmodule CuberacerLiveWeb.ConnCase do
       end)
     end
 
+    # Shut down room servers
+    for session_id <- CuberacerLive.RoomCache.list_room_ids() do
+      pid = CuberacerLive.RoomServer.whereis(session_id)
+      GenServer.stop(pid)
+    end
+
     {:ok, conn: Phoenix.ConnTest.build_conn()}
   end
 
@@ -78,5 +84,17 @@ defmodule CuberacerLiveWeb.ConnCase do
     conn
     |> Phoenix.ConnTest.init_test_session(%{})
     |> Plug.Conn.put_session(:user_token, token)
+  end
+
+  @doc """
+  Stops a LiveView process, as if the user closed the window.
+
+  Can sometimes take some time to propagate changes, which I'm not
+  sure why, because the same isn't true for starting a LiveView.
+  If this is the case, :timer.sleep(2) should solve the problem.
+  """
+  def exit_liveview(lv) do
+    %{proxy: {_ref, _topic, proxy_pid}} = lv
+    Phoenix.LiveViewTest.ClientProxy.stop(proxy_pid, :shutdown)
   end
 end

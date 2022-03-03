@@ -110,6 +110,29 @@ defmodule CuberacerLive.Sessions do
   def get_session!(id), do: Repo.get!(Session, id)
 
   @doc """
+  Gets a list of sessions, given a list of session IDs.
+
+  The returned list is not guaranteed to maintain the same session
+  order as the given list.
+
+  If a session ID does not exist, no such session is included
+  in the returned list.
+
+  ## Examples
+
+      iex> get_sessions([1, 2, 3])
+      [%Session{}, %Session{}, %Session]
+
+      iex> get_sessions([123, 456])
+      [%Session{id: 123}]
+
+  """
+  def get_sessions(ids) when is_list(ids) do
+    query = from s in Session, where: s.id in ^ids
+    Repo.all(query)
+  end
+
+  @doc """
   Gets a single session, fully preloaded with rounds, solves, messages, etc.
 
   Raises `Ecto.NoResultsError` if the Session does not exist.
@@ -353,7 +376,8 @@ defmodule CuberacerLive.Sessions do
   def create_round_debounced(%Session{} = session, scramble \\ nil) do
     current_round = get_current_round!(session)
 
-    if NaiveDateTime.diff(NaiveDateTime.utc_now(), current_round.inserted_at) < 2 do
+    if NaiveDateTime.diff(NaiveDateTime.utc_now(), current_round.inserted_at, :millisecond) <
+         new_round_debounce_ms() do
       {:error, :too_soon}
     else
       create_round(session, scramble)
@@ -637,6 +661,10 @@ defmodule CuberacerLive.Sessions do
       padded_seconds = String.pad_leading("#{seconds}", 2, "0")
       "#{minutes}:#{padded_seconds}.#{padded_milliseconds}"
     end
+  end
+
+  defp new_round_debounce_ms do
+    Application.get_env(:cuberacer_live, :new_round_debounce_ms)
   end
 
   ## Notify subscribers
