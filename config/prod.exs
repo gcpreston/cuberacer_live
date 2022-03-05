@@ -30,7 +30,7 @@ config :cuberacer_live, CuberacerLive.Mailer,
   api_key: "${SENDGRID_API_KEY}"
 
 config :cuberacer_live, :new_round_debounce_ms, :timer.seconds(2)
-config :cuberacer_live, :empty_room_timeout_ms, :timer.minutes(1)
+config :cuberacer_live, :empty_room_timeout_ms, :timer.seconds(30)
 
 config :swoosh, :api_client, Swoosh.ApiClient.Finch
 

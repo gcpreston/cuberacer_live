@@ -27,7 +27,7 @@ config :cuberacer_live, CuberacerLiveWeb.Endpoint,
 config :cuberacer_live, CuberacerLive.Mailer, adapter: Swoosh.Adapters.Test
 
 config :cuberacer_live, :new_round_debounce_ms, 1000
-config :cuberacer_live, :empty_room_timeout_ms, 100
+config :cuberacer_live, :empty_room_timeout_ms, 150
 
 # Print only warnings and errors during test
 config :logger, level: :warn
