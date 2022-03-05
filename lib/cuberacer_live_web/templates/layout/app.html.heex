@@ -1,5 +1,5 @@
-<main>
-  <p class="alert alert-info mt-5 mx-auto w-96 text-center" role="alert"><%= get_flash(@conn, :info) %></p>
-  <p class="alert alert-danger mt-5 mx-auto w-96 text-center" role="alert"><%= get_flash(@conn, :error) %></p>
+<main class="px-4">
+  <p class="alert alert-info mt-5 mx-auto max-w-sm text-center" role="alert"><%= get_flash(@conn, :info) %></p>
+  <p class="alert alert-danger mt-5 mx-auto max-w-sm text-center" role="alert"><%= get_flash(@conn, :error) %></p>
   <%= @inner_content %>
 </main>
