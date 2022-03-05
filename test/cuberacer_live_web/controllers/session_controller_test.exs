@@ -63,8 +63,8 @@ defmodule CuberacerLive.SessionControllerTest do
       assert html =~ "#{session.puzzle_type}"
       assert html =~ Calendar.strftime(session.inserted_at, "%c")
       assert html =~ "Chat log"
-      assert html =~ "#{user1.username}: hey everyone"
-      assert html =~ "#{user2.username}: hope this passes"
+      assert html =~ "hey everyone"
+      assert html =~ "hope this passes"
 
       html
       |> assert_html("tr td a[href='#{Routes.round_path(conn, :show, round1.id)}']",

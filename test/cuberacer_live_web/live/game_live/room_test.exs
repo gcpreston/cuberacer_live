@@ -117,17 +117,20 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       other_user = user_fixture()
       session2 = session_fixture()
       message1 = room_message_fixture(session: session1, user: user, message: "some text")
-      message2 = room_message_fixture(session: session1, user: other_user)
-      message3 = room_message_fixture(session: session2, user: user, message: "some other text")
+
+      message2 =
+        room_message_fixture(session: session1, user: other_user, message: "some other text")
+
+      message3 = room_message_fixture(session: session2, user: user, message: "some third text")
 
       assert {:ok, _view, html} = live(conn, Routes.game_room_path(conn, :show, session1.id))
 
       html
       |> assert_html(".t_room-message", count: 2)
 
-      assert html =~ Messaging.display_room_message(message1)
-      assert html =~ Messaging.display_room_message(message2)
-      refute html =~ Messaging.display_room_message(message3)
+      assert html =~ message1.message
+      assert html =~ message2.message
+      refute html =~ message3.message
     end
 
     test "displays ao5 and ao12", %{conn: conn, session: session} do
@@ -555,16 +558,25 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       render_click(view, "send-message", %{"message" => "hello world"})
       num_messages_after = Enum.count(Messaging.list_room_messages(session))
 
-      render(view)
-      |> assert_html(".t_room-message", count: 1, text: "#{user.username}: hello world")
+      assert view
+             |> element(~s{[id^="room-message-"] span:first-child()})
+             |> render() =~ user.username
+
+      assert view
+             |> element(~s{[id^="room-message-"] span:nth-child(2)})
+             |> render() =~ "hello world"
 
       assert num_messages_after == num_messages_before + 1
 
       render_click(view, "send-message", %{"message" => "second message"})
 
-      render(view)
-      |> assert_html(".t_room-message", count: 2)
-      |> assert_html(".t_room-message:nth-child(2)", text: "#{user.username}: second message")
+      assert view
+             |> element(~s{[id^="room-message-"]:nth-child(2) span:first-child()})
+             |> render() =~ user.username
+
+      assert view
+             |> element(~s{[id^="room-message-"]:nth-child(2) span:nth-child(2)})
+             |> render() =~ "second message"
     end
   end
 
@@ -605,13 +617,16 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
     test "reacts to room message created", %{conn: conn, session: session} do
       {:ok, view, _html} = live(conn, Routes.game_room_path(conn, :show, session.id))
 
-      room_message = room_message_fixture(session: session)
+      user = user_fixture()
+      room_message = room_message_fixture(session: session, user: user)
 
-      render(view)
-      |> assert_html(".t_room-message",
-        count: 1,
-        text: Messaging.display_room_message(room_message)
-      )
+      assert view
+             |> element("#room-message-#{room_message.id} span:first-child()")
+             |> render() =~ user.username
+
+      assert view
+             |> element("#room-message-#{room_message.id} span:nth-child(2)")
+             |> render() =~ room_message.message
     end
   end
 
