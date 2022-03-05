@@ -2,7 +2,8 @@ defmodule CuberacerLiveWeb.SessionView do
   use CuberacerLiveWeb, :view
 
   import CuberacerLiveWeb.SharedUtils, only: [format_datetime: 1]
-  
+  import CuberacerLiveWeb.SharedComponents, only: [chat_message: 1]
+
   alias CuberacerLiveWeb.Endpoint
   alias CuberacerLive.Sessions
   alias CuberacerLive.Sessions.{Session, Round}
@@ -93,7 +94,7 @@ defmodule CuberacerLiveWeb.SessionView do
         <div class="divide-y">
           <%= for message <- @messages do %>
             <div title={format_datetime(message.inserted_at)}>
-              <%= CuberacerLive.Messaging.display_room_message(message) %>
+              <.chat_message room_message={CuberacerLive.Repo.preload(message, :user)} color_seed={@color_seed} />
             </div>
           <% end %>
         </div>

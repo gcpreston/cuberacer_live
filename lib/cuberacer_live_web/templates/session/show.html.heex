@@ -20,7 +20,7 @@
         Chat log
       </div>
       <div class="my-8 max-h-72 overflow-auto">
-        <.messages_block messages={@session.room_messages} />
+        <.messages_block messages={@session.room_messages} color_seed={:rand.uniform()} />
       </div>
     </div>
   </div>

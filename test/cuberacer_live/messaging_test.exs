@@ -73,12 +73,5 @@ defmodule CuberacerLive.MessagingTest do
 
       refute_receive {Messaging, _, _}
     end
-
-    test "display_room_message/1 displays properly" do
-      room_message = room_message_fixture() |> Repo.preload(:user)
-
-      assert Messaging.display_room_message(room_message) ==
-               "#{room_message.user.username}: #{room_message.message}"
-    end
   end
 end

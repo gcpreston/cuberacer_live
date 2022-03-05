@@ -7,6 +7,12 @@ import Config
 # any compile-time configuration in here, as it won't be applied.
 # The block below contains prod specific runtime configuration.
 
+# Load front-end configuration
+with {:ok, body} <- File.read(Path.expand("../assets/app.config.json", __DIR__)),
+      json <- Jason.decode!(body) do
+  config :cuberacer_live, :frontend_config, json
+end
+
 # Start the phoenix server if environment is set and running in a  release
 if System.get_env("PHX_SERVER") && System.get_env("RELEASE_NAME") do
   config :cuberacer_live, CuberacerLiveWeb.Endpoint, server: true

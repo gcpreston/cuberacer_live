@@ -1,13 +1,12 @@
 defmodule CuberacerLiveWeb.GameLive.Components do
   use CuberacerLiveWeb, :component
 
-  import CuberacerLiveWeb.SharedUtils, only: [format_datetime: 1]
+  import CuberacerLiveWeb.SharedComponents, only: [chat_message: 1]
 
   alias CuberacerLiveWeb.Router.Helpers, as: Routes
   alias CuberacerLive.Sessions
   alias CuberacerLive.Sessions.Round
   alias CuberacerLive.Accounts.User
-
 
   def room_card(assigns) do
     ~H"""
@@ -76,13 +75,7 @@ defmodule CuberacerLiveWeb.GameLive.Components do
       <div class="flex-1 flex flex-col-reverse overflow-auto">
         <div id="room-messages" phx-update="append" class="divide-y">
           <%= for room_message <- @room_messages do %>
-            <div
-              id={"room-message-#{room_message.id}"}
-              class="px-2 t_room-message"
-              title={format_datetime(room_message.inserted_at)}
-            >
-              <%= CuberacerLive.Messaging.display_room_message(room_message) %>
-            </div>
+            <.chat_message room_message={CuberacerLive.Repo.preload(room_message, :user)} color_seed={@color_seed} />
           <% end %>
         </div>
       </div>

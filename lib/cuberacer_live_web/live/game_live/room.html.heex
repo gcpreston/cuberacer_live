@@ -93,6 +93,6 @@
   </div>
 
   <div class="w-full shrink-0 h-full hidden sm:block sm:w-80" :class="{ 'hidden': !mobileChatOpen }">
-    <.chat room_messages={@room_messages} />
+    <.chat room_messages={@room_messages} color_seed={@socket.id} />
   </div>
 </div>
