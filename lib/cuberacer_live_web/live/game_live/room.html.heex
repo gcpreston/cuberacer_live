@@ -1,7 +1,7 @@
 <div
   class="flex flex-row h-full relative"
   x-data="room"
-  x-init={"initializeRoom(#{length(@present_users)})"}
+  x-init={"initializeRoom(#{Enum.count(@participant_data)})"}
   @resize.window="calibratePagination"
 >
   <button
@@ -62,7 +62,7 @@
       <div class="flex flex-row h-full">
         <div class="flex flex-col justify-between border-r">
           <.stats stats={@stats} />
-          <.presence num_present_users={length(@present_users)} />
+          <.presence num_present_users={Enum.count(@participant_data)} />
         </div>
 
         <div
@@ -76,7 +76,7 @@
         </div>
 
         <div class="flex-1 h-full overflow-auto">
-          <.times_table users={@present_users} current_round={@current_round} past_rounds={@past_rounds} users_solving={@users_solving} />
+          <.times_table participant_data={@participant_data} current_round={@current_round} past_rounds={@past_rounds} />
         </div>
 
         <div
