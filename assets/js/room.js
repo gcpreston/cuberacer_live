@@ -76,7 +76,7 @@
 
     this.usersPerPage = Math.floor(timesTableWidth / cellWidth);
 
-    if (this.usersPage > this.numUsersPages) {
+    if (this.numUsersPages > 0 && this.usersPage > this.numUsersPages) {
       this.usersPage = this.numUsersPages;
     }
   }
