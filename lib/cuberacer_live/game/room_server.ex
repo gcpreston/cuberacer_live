@@ -6,14 +6,13 @@ defmodule CuberacerLive.RoomServer do
 
   require Logger
 
-  alias CuberacerLive.{Sessions, Messaging}
+  alias CuberacerLive.{Sessions, Messaging, Accounts}
   alias CuberacerLive.Sessions.Session
   alias CuberacerLive.Accounts.User
-  alias CuberacerLiveWeb.Presence
 
   @lobby_server_topic inspect(CuberacerLive.LobbyServer)
 
-  defstruct [:session, messages: [], present_users: [], timeout_ref: nil]
+  defstruct [:session, messages: [], participant_data: %{}, timeout_ref: nil]
 
   ## API
 
@@ -44,9 +43,12 @@ defmodule CuberacerLive.RoomServer do
     GenServer.cast(room_server, {:send_message, user, message})
   end
 
-  @spec get_participant_count(atom | pid | {atom, any} | {:via, atom, any}) :: any
   def get_participant_count(room_server) do
     GenServer.call(room_server, :get_participant_count)
+  end
+
+  def get_participant_data(room_server) do
+    GenServer.call(room_server, :get_participant_data)
   end
 
   ## Callbacks
@@ -79,8 +81,9 @@ defmodule CuberacerLive.RoomServer do
         _from,
         %{session: session} = state
       ) do
+    new_state = put_in(state.participant_data[user.id].meta.solving, false)
     {:ok, solve} = Sessions.create_solve(session, user, time, penalty)
-    {:reply, solve, state}
+    {:reply, solve, new_state}
   end
 
   def handle_call({:change_penalty, %User{} = user, penalty}, _from, %{session: session} = state) do
@@ -92,9 +95,12 @@ defmodule CuberacerLive.RoomServer do
   end
 
   def handle_call(:get_participant_count, _from, state) do
-    #  participant_count = length(state.present_users)
-    participant_count = length(Map.keys(Presence.list(pubsub_topic(state.session.id))))
+    participant_count = Enum.count(state.participant_data)
     {:reply, participant_count, state}
+  end
+
+  def handle_call(:get_participant_data, _from, state) do
+    {:reply, state.participant_data, state}
   end
 
   @impl true
@@ -107,14 +113,31 @@ defmodule CuberacerLive.RoomServer do
   end
 
   @impl true
-  def handle_info(%Phoenix.Socket.Broadcast{event: "presence_diff"}, state) do
-    present_users =
-      for {_user_id_str, info} <- Presence.list(pubsub_topic(state.session.id)) do
-        info.user
-      end
+  def handle_info(
+        %Phoenix.Socket.Broadcast{event: "presence_diff", payload: payload},
+        state
+      ) do
+    joins_participant_data =
+      Accounts.get_users(Map.keys(payload.joins))
+      |> Map.new(fn user ->
+        {user.id, participant_data_entry(user)}
+      end)
 
-    present_users_count = length(present_users)
-    new_state = %{state | present_users: present_users}
+    leaves_user_ids =
+      Enum.map(Map.keys(payload.leaves), fn id_str ->
+        {user_id, ""} = Integer.parse(id_str)
+        user_id
+      end)
+
+    new_participant_data =
+      Map.filter(state.participant_data, fn {user_id, _data} ->
+        not Enum.member?(leaves_user_ids, user_id)
+      end)
+      |> Map.merge(joins_participant_data)
+
+    new_state = %{state | participant_data: new_participant_data}
+
+    present_users_count = Enum.count(new_participant_data)
 
     # Let the lobby know of the change
     notify_lobby_server(:update_participant_count, %{
@@ -123,22 +146,38 @@ defmodule CuberacerLive.RoomServer do
     })
 
     if present_users_count == 0 do
-      {:noreply, new_state |> set_empty_room_timeout()}
+      {:noreply, new_state |> set_empty_room_timeout(),
+       {:continue, {:tell_game_room_to_fetch, :participants}}}
     else
-      {:noreply, new_state |> cancel_empty_room_timeout()}
+      {:noreply, new_state |> cancel_empty_room_timeout(),
+       {:continue, {:tell_game_room_to_fetch, :participants}}}
     end
   end
 
-  def handle_info({:solving, _user_id}, state) do
-    # Solving event for frontend.
-    # TODO: Move this to state here so you can see "Solving..." when you join a room
-    # in the middle of someone solving
-    {:noreply, state}
+  def handle_info({:solving, user_id}, state) do
+    {:noreply, put_in(state.participant_data[user_id].meta.solving, true),
+     {:continue, {:tell_game_room_to_fetch, :participant_data}}}
+  end
+
+  def handle_info({:set_time_entry, user_id, method}, state) do
+    {:noreply, put_in(state.participant_data[user_id].meta.time_entry, method),
+     {:continue, {:tell_game_room_to_fetch, :participant_data}}}
   end
 
   def handle_info(:timeout, state) do
     Logger.info("Room #{state.session.id} timed out")
     {:stop, :normal, state}
+  end
+
+  @impl true
+  def handle_continue({:tell_game_room_to_fetch, data}, state) do
+    Phoenix.PubSub.broadcast!(
+      CuberacerLive.PubSub,
+      game_room_topic(state.session.id),
+      {:fetch, data}
+    )
+
+    {:noreply, state}
   end
 
   ## Helpers
@@ -151,8 +190,12 @@ defmodule CuberacerLive.RoomServer do
     Phoenix.PubSub.broadcast!(CuberacerLive.PubSub, @lobby_server_topic, {event, result})
   end
 
-  defp pubsub_topic(session_id) do
+  defp game_room_topic(session_id) do
     "room:#{session_id}"
+  end
+
+  defp pubsub_topic(session_id) do
+    "#{inspect(__MODULE__)}:#{session_id}"
   end
 
   defp subscribe_to_pubsub(session_id) do
@@ -190,5 +233,9 @@ defmodule CuberacerLive.RoomServer do
   defp _cancel_timeout(state) do
     Logger.info("Cancelling empty room timeout for room #{state.session.id}")
     Process.cancel_timer(state.timeout_ref)
+  end
+
+  defp participant_data_entry(user) do
+    %{user: user, meta: %{solving: false, time_entry: :timer}}
   end
 end

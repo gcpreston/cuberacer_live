@@ -104,14 +104,18 @@ defmodule CuberacerLiveWeb.GameLive.Components do
     <table id="times-table" class="table-fixed w-full border-separate [border-spacing:0]" x-init="calibratePagination()">
       <thead class="bg-gray-50 sticky top-0">
         <tr class="flex">
-          <%= for {user, i} <- Enum.with_index(@users) do %>
+          <%= for {{user_id, data}, i} <- Enum.with_index(@participant_data) do %>
             <th
               scope="col"
+              id={"header-cell-user-#{user_id}"}
               class="w-28 border-y px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
               :class={"{ 'hidden': !isColShown(#{i}) }"}
             >
               <div class="truncate">
-                <%= link user.username, to: Routes.user_profile_path(CuberacerLiveWeb.Endpoint, :show, user.id), target: "_blank" %>
+                <%= link data.user.username, to: Routes.user_profile_path(CuberacerLiveWeb.Endpoint, :show, user_id), target: "_blank" %>
+                <%= if data.meta.time_entry == :keyboard do %>
+                  <i class="fas fa-keyboard" title="This player is using keyboard entry"></i>
+                <% end %>
               </div>
             </th>
           <% end %>
@@ -121,17 +125,17 @@ defmodule CuberacerLiveWeb.GameLive.Components do
       <tbody id="times-table-body" class="bg-white" phx-update="prepend">
         <%# Current round %>
         <tr id={"round-#{@current_round.id}"} class="flex t_round-row" title={@current_round.scramble}>
-          <%= for {user, i} <- Enum.with_index(@users) do %>
+          <%= for {{user_id, data}, i} <- Enum.with_index(@participant_data) do %>
             <td
-              id={"round-#{@current_round.id}-solve-user-#{user.id}"}
+              id={"round-#{@current_round.id}-solve-user-#{user_id}"}
               class="w-28 border-b px-2 py-4 whitespace-nowrap"
               x-show={"isColShown(#{i})"}
             >
-              <div id={"t_cell-round-#{@current_round.id}-user-#{user.id}"} class="text-sm font-medium text-center text-gray-900">
-                <%= if user_is_solving?(@users_solving, user) do %>
+              <div id={"t_cell-round-#{@current_round.id}-user-#{user_id}"} class="text-sm font-medium text-center text-gray-900">
+                <%= if data.meta.solving do %>
                   Solving...
                 <% else %>
-                  <%= user_solve_for_round(user, @current_round) |> Sessions.display_solve() %>
+                  <%= user_solve_for_round(data.user, @current_round) |> Sessions.display_solve() %>
                 <% end %>
               </div>
             </td>
@@ -141,14 +145,14 @@ defmodule CuberacerLiveWeb.GameLive.Components do
         <%# Past rounds %>
         <%= for round <- @past_rounds do %>
           <tr id={"round-#{round.id}"} class="flex t_round-row" title={round.scramble}>
-            <%= for {user, i} <- Enum.with_index(@users) do %>
+            <%= for {{user_id, data}, i} <- Enum.with_index(@participant_data) do %>
               <td
-                id={"round-#{round.id}-solve-user-#{user.id}"}
+                id={"round-#{round.id}-solve-user-#{user_id}"}
                 class="w-28 border-b px-2 py-4 whitespace-nowrap"
                 x-show={"isColShown(#{i})"}
               >
-                <div id={"t_cell-round-#{round.id}-user-#{user.id}"} class="text-sm font-medium text-center text-gray-900">
-                  <%= user_solve_for_round(user, round) |> Sessions.display_solve() %>
+                <div id={"t_cell-round-#{round.id}-user-#{user_id}"} class="text-sm font-medium text-center text-gray-900">
+                  <%= user_solve_for_round(data.user, round) |> Sessions.display_solve() %>
                 </div>
               </td>
             <% end %>
@@ -158,10 +162,6 @@ defmodule CuberacerLiveWeb.GameLive.Components do
       </tbody>
     </table>
     """
-  end
-
-  defp user_is_solving?(users_solving, %User{id: user_id}) do
-    MapSet.member?(users_solving, user_id)
   end
 
   defp user_solve_for_round(%User{} = user, %Round{} = round) do

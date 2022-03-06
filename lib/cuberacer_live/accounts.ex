@@ -79,6 +79,29 @@ defmodule CuberacerLive.Accounts do
   def get_user!(id), do: Repo.get!(User, id)
 
   @doc """
+  Gets a list of users, given a list of user IDs.
+
+  The returned list is not guaranteed to maintain the same session
+  order as the given list.
+
+  If a user ID does not exist, no such user is included
+  in the returned list.
+
+  ## Examples
+
+      iex> get_users([1, 2, 3])
+      [%User{}, %User{}, %User]
+
+      iex> get_users([123, 456])
+      [%User{id: 123}]
+
+  """
+  def get_users(ids) do
+    query = from u in User, where: u.id in ^ids
+    Repo.all(query)
+  end
+
+  @doc """
   Get a map of user IDs to user struct for the user IDs in `ids`.
 
   If an item of `ids` is not a valid user ID, a corresponding key

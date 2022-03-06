@@ -5,9 +5,7 @@ defmodule CuberacerLiveWeb.GameLive.Room do
   import CuberacerLiveWeb.GameLive.Components
 
   alias CuberacerLive.{RoomServer, Sessions, Accounts, Messaging}
-  alias CuberacerLiveWeb.Presence
-
-  @endpoint CuberacerLiveWeb.Endpoint
+  alias CuberacerLiveWeb.{Presence, Endpoint}
 
   @impl true
   def mount(%{"id" => session_id}, %{"user_token" => user_token}, socket) do
@@ -47,6 +45,7 @@ defmodule CuberacerLiveWeb.GameLive.Room do
         true ->
           if connected?(socket) do
             track_presence(session_id, user.id)
+            Endpoint.subscribe(pubsub_topic(session_id))
             Sessions.subscribe(session_id)
             Messaging.subscribe(session_id)
           end
@@ -55,12 +54,11 @@ defmodule CuberacerLiveWeb.GameLive.Room do
           |> assign(:current_user, user)
           |> fetch_room_server_pid(session_id)
           |> fetch_session(session_id)
-          |> fetch_present_users()
+          |> fetch_participant_data()
           |> fetch_rounds()
           |> fetch_current_solve()
           |> fetch_stats()
           |> fetch_room_messages()
-          |> initialize_users_solving()
           |> initialize_time_entry()
       end
 
@@ -96,22 +94,14 @@ defmodule CuberacerLiveWeb.GameLive.Room do
     assign(socket, stats: stats)
   end
 
-  defp fetch_present_users(socket) do
-    present_users =
-      for {_user_id_str, info} <- Presence.list(pubsub_topic(socket.assigns.session_id)) do
-        info.user
-      end
-
-    assign(socket, :present_users, present_users)
+  defp fetch_participant_data(socket) do
+    participant_data = RoomServer.get_participant_data(socket.assigns.room_server_pid)
+    assign(socket, :participant_data, participant_data)
   end
 
   defp fetch_room_messages(socket) do
     room_messages = Messaging.list_room_messages(socket.assigns.session)
     assign(socket, room_messages: room_messages)
-  end
-
-  defp initialize_users_solving(socket) do
-    assign(socket, users_solving: MapSet.new())
   end
 
   defp initialize_time_entry(socket) do
@@ -130,7 +120,7 @@ defmodule CuberacerLiveWeb.GameLive.Room do
   def handle_event("solving", _value, socket) do
     Phoenix.PubSub.broadcast!(
       CuberacerLive.PubSub,
-      pubsub_topic(socket.assigns.session_id),
+      room_server_topic(socket.assigns.session_id),
       {:solving, socket.assigns.current_user.id}
     )
 
@@ -138,10 +128,15 @@ defmodule CuberacerLiveWeb.GameLive.Room do
   end
 
   def handle_event("toggle-timer", _value, socket) do
-    {:noreply,
-     update(socket, :time_entry, fn entry_method ->
-       if entry_method == :timer, do: :keyboard, else: :timer
-     end)}
+    new_entry_method = if socket.assigns.time_entry == :timer, do: :keyboard, else: :timer
+
+    Phoenix.PubSub.broadcast!(
+      CuberacerLive.PubSub,
+      room_server_topic(socket.assigns.session_id),
+      {:set_time_entry, socket.assigns.current_user.id, new_entry_method}
+    )
+
+    {:noreply, assign(socket, :time_entry, new_entry_method)}
   end
 
   def handle_event("timer-submit", %{"time" => time}, socket) do
@@ -205,12 +200,16 @@ defmodule CuberacerLiveWeb.GameLive.Room do
   ## PubSub handlers
 
   @impl true
-  def handle_info(%Phoenix.Socket.Broadcast{event: "presence_diff"}, socket) do
-    {:noreply, socket |> fetch_present_users() |> fetch_rounds()}
+  def handle_info({:fetch, :participant_data}, socket) do
+    {:noreply, socket |> fetch_participant_data()}
   end
 
-  def handle_info({:solving, user_id}, socket) do
-    {:noreply, update(socket, :users_solving, fn solving -> MapSet.put(solving, user_id) end)}
+  def handle_info({:fetch, :participants}, socket) do
+    {:noreply, socket |> fetch_participant_data() |> fetch_rounds()}
+  end
+
+  def handle_info({:set_time_entry, _user_id, _method}, socket) do
+    {:noreply, socket |> fetch_participant_data()}
   end
 
   def handle_info({Sessions, [:session, :updated], session}, socket) do
@@ -242,7 +241,7 @@ defmodule CuberacerLiveWeb.GameLive.Room do
     {:noreply, socket}
   end
 
-  def handle_info({Sessions, [:solve, action], solve}, socket) do
+  def handle_info({Sessions, [:solve, _action], solve}, socket) do
     # The round preload should do nothing because notify_subscribers for solves
     # already handles it.
     # It will stay though in order to not rely on that function's implementation.
@@ -251,14 +250,8 @@ defmodule CuberacerLiveWeb.GameLive.Room do
 
     socket =
       socket
-      |> update(:users_solving, fn solving ->
-        if action == :created do
-          MapSet.delete(solving, solve.user_id)
-        else
-          solving
-        end
-      end)
       |> assign(:current_round, current_round)
+      |> fetch_participant_data()
 
     {:noreply, socket}
   end
@@ -274,9 +267,12 @@ defmodule CuberacerLiveWeb.GameLive.Room do
     "room:#{session_id}"
   end
 
+  defp room_server_topic(session_id) do
+   "#{inspect(RoomServer)}:#{session_id}"
+  end
+
   defp track_presence(session_id, user_id) do
-    topic = pubsub_topic(session_id)
-    @endpoint.subscribe(topic)
+    topic = room_server_topic(session_id)
     Presence.track(self(), topic, user_id, %{})
   end
 
