@@ -3,6 +3,20 @@ defmodule CuberacerLiveWeb.SharedComponents do
 
   import CuberacerLiveWeb.SharedUtils, only: [format_datetime: 1]
 
+  # Ensure that the safelist in tailwind.config.js is synchronized
+  # with this list.
+  @chat_username_colors [
+    "red-600",
+    "orange-500",
+    "yellow-500",
+    "emerald-600",
+    "sky-500",
+    "blue-600",
+    "indigo-600",
+    "fuchsia-600",
+    "pink-600"
+  ]
+
   def chat_message(assigns) do
     ~H"""
     <div
@@ -21,14 +35,9 @@ defmodule CuberacerLiveWeb.SharedComponents do
   end
 
   defp user_chat_color(user_id, color_seed) do
-    options = chat_username_colors()
+    options = @chat_username_colors
     color = Enum.at(options, :erlang.phash2({user_id, color_seed}, length(options)))
 
     "text-#{color}"
-  end
-
-  defp chat_username_colors do
-    config = Application.get_env(:cuberacer_live, :frontend_config)
-    config["chatUsernameColors"]
   end
 end
