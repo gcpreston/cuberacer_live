@@ -21,7 +21,7 @@ defmodule CuberacerLive.RoomCache do
     |> Enum.map(fn {RoomServer, session_id} -> session_id end)
   end
 
-  def create_room(name, puzzle_type) do
+  def create_room(name, puzzle_type, _unlisted) do
     case Sessions.create_session_and_round(name, puzzle_type) do
       {:ok, session, _round} ->
         {:ok, pid} =

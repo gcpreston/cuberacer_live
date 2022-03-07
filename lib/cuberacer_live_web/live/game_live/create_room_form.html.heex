@@ -20,6 +20,11 @@
       <%= select f, :puzzle_type, Whisk.puzzle_types(), class: "block mb-1 w-full appearance-none rounded-md mt-0.5 px-2 py-0.5 outline outline-1 outline-gray-600" %>
     </div>
 
+    <div class="mt-3">
+      <%= label f, :unlisted %>
+      <%= checkbox f, :unlisted  %>
+    </div>
+
     <div class="t_room-save mt-4">
       <%= submit "Save", phx_disable_with: "Saving...", class: "rounded-lg bg-green-400 hover:bg-green-500 active:bg-green-400 border border-green-500 w-full" %>
     </div>
