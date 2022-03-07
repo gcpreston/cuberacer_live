@@ -108,13 +108,17 @@ defmodule CuberacerLiveWeb.GameLive.Components do
             <th
               scope="col"
               id={"header-cell-user-#{user_id}"}
-              class="w-28 border-y px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
+              class="w-28 border-y px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider flex"
               :class={"{ 'hidden': !isColShown(#{i}) }"}
             >
-              <div class="truncate">
-                <%= link data.user.username, to: Routes.user_profile_path(CuberacerLiveWeb.Endpoint, :show, user_id), target: "_blank" %>
+              <div class="inline-flex max-w-full">
+                <span class="flex-1 truncate">
+                  <%= link data.user.username, to: Routes.user_profile_path(CuberacerLiveWeb.Endpoint, :show, user_id), target: "_blank" %>
+                </span>
                 <%= if data.meta.time_entry == :keyboard do %>
-                  <i class="fas fa-keyboard" title="This player is using keyboard entry"></i>
+                  <span class="text-center pl-1">
+                    <i class="fas fa-keyboard" title="This player is using keyboard entry"></i>
+                  </span>
                 <% end %>
               </div>
             </th>
