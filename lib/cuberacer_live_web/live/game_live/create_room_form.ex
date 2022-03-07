@@ -33,7 +33,7 @@ defmodule CuberacerLiveWeb.GameLive.CreateRoomForm do
       {:ok, _pid, _session} ->
         {:noreply,
          socket
-         |> put_flash(:info, "Session created successfully")
+         |> put_flash(:info, "Room created successfully")
          |> push_redirect(to: socket.assigns.return_to)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
