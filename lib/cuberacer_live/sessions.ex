@@ -75,7 +75,7 @@ defmodule CuberacerLive.Sessions do
   """
   def get_session!(id), do: Repo.get!(Session, id)
 
-    @doc """
+  @doc """
   Gets a single session.
 
   Returns `nil` if the Session does not exist.
@@ -160,15 +160,24 @@ defmodule CuberacerLive.Sessions do
 
   ## Examples
 
-      iex> create_session_and_round("my cool sesh", "3x3", false)
+      iex> create_session_and_round("my cool sesh", "3x3")
       {:ok, %Session{}, %Round{}}
 
-      iex> create_session_and_round(nil, %CubeType{}, true)
+      iex> create_session_and_round(nil, %CubeType{}, true, %User{})
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_session_and_round(name, puzzle_type, unlisted) do
-    with {:ok, session} <- create_session(%{name: name, puzzle_type: puzzle_type, unlisted?: unlisted}),
+  def create_session_and_round(name, puzzle_type, unlisted \\ false, host \\ nil) do
+    host_id = if match?(%User{}, host), do: host.id, else: nil
+
+    session_attrs = %{
+      host_id: host_id,
+      name: name,
+      puzzle_type: puzzle_type,
+      unlisted?: unlisted
+    }
+
+    with {:ok, session} <- create_session(session_attrs),
          {:ok, round} <- create_round(session) do
       {:ok, session, round}
     else
