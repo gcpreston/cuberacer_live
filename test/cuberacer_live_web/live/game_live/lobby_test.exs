@@ -30,6 +30,7 @@ defmodule CuberacerLive.GameLive.LobbyTest do
       |> assert_html(".t_room-card", count: 2)
       |> assert_html("#t_room-card-#{session1.id}", count: 1)
       |> assert_html("#t_room-card-#{session2.id}", count: 1)
+
       assert html =~ session2.name
       assert html =~ "#{session2.puzzle_type}"
 
@@ -94,7 +95,7 @@ defmodule CuberacerLive.GameLive.LobbyTest do
 
     test "shows number of users in lobby", %{conn: conn1} do
       user2 = user_fixture()
-      conn2 = Phoenix.ConnTest.build_conn() |> log_in_user(user2)
+      conn2 = build_conn() |> log_in_user(user2)
 
       {:ok, lv1, html1} = live(conn1, Routes.game_lobby_path(conn1, :index))
 
@@ -107,7 +108,7 @@ defmodule CuberacerLive.GameLive.LobbyTest do
 
     test "shows number of users in rooms", %{conn: conn1} do
       user2 = user_fixture()
-      conn2 = Phoenix.ConnTest.build_conn() |> log_in_user(user2)
+      conn2 = build_conn() |> log_in_user(user2)
 
       {:ok, _pid, %CuberacerLive.Sessions.Session{id: session_id}} =
         RoomCache.create_room("test room", :"3x3")
@@ -158,33 +159,76 @@ defmodule CuberacerLive.GameLive.LobbyTest do
 
     @tag :ensure_presence_shutdown
     test "create room modal creates a new room with an initial round", %{conn: conn} do
-      {:ok, live, html} = live(conn, Routes.game_lobby_path(conn, :new))
+      {:ok, lv, html} = live(conn, Routes.game_lobby_path(conn, :new))
 
       refute_html(html, ".t_room-card")
 
       result =
-        live
+        lv
         |> form("#create-room-form")
         |> render_submit(%{session: %{name: "new session", puzzle_type: :"2x2"}})
 
-      assert_redirect(live, Routes.game_lobby_path(conn, :index))
+      flash = assert_redirect(lv, Routes.game_lobby_path(conn, :index))
+      assert flash["info"] == "Room created successfully"
 
-      {:ok, lobby_live, html} = follow_redirect(result, conn)
+      {:ok, lv, html} = follow_redirect(result, conn)
 
       assert_html(html, ".t_room-card", count: 1)
 
       result =
-        lobby_live
+        lv
         |> element(".t_room-card")
         |> render_click()
 
-      assert_redirect(lobby_live)
+      assert_redirect(lv)
 
-      {:ok, _room_live, html} = follow_redirect(result, conn)
+      {:ok, _room_lv, html} = follow_redirect(result, conn)
 
       html
       |> assert_html(".t_round-row", count: 1)
       |> assert_html(".t_scramble")
+    end
+
+    @tag :ensure_presence_shutdown
+    test "create room modal creates a new unlisted room only visible to host", %{conn: conn1} do
+      user2 = user_fixture()
+      conn2 = build_conn() |> log_in_user(user2)
+
+      {:ok, lv, html} = live(conn1, Routes.game_lobby_path(conn1, :new))
+
+      refute_html(html, ".t_room-card")
+
+      result =
+        lv
+        |> form("#create-room-form")
+        |> render_submit(%{session: %{name: "new session", puzzle_type: :"2x2", unlisted: true}})
+
+      flash = assert_redirect(lv, Routes.game_lobby_path(conn1, :index))
+      assert flash["info"] == "Room created successfully"
+
+      # Shows up for user who created the room
+      {:ok, lv, html} = follow_redirect(result, conn1)
+
+      assert_html(html, ".t_room-card", count: 1)
+      assert lv |> element(".t_room-card") |> render() =~ "fa-lock"
+
+      result =
+        lv
+        |> element(".t_room-card")
+        |> render_click()
+
+      assert_redirect(lv)
+
+      {:ok, _room_lv, html} = follow_redirect(result, conn1)
+
+      html
+      |> assert_html(".t_round-row", count: 1)
+      |> assert_html(".t_scramble")
+
+      # Does not show up for other user
+      {:ok, _lv2, html2} = live(conn2, Routes.game_lobby_path(conn2, :index))
+
+      refute_html(html2, ".t_room-card")
     end
 
     test "displays error messages", %{conn: conn} do

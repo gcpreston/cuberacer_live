@@ -89,15 +89,19 @@ defmodule CuberacerLive.SessionsTest do
 
       assert session.name == "some name"
       assert session.puzzle_type == :"2x2"
+      refute session.unlisted?
+      assert session.host_id == nil
       assert round.session_id == session.id
     end
 
-    test "create_session_and_round/2 can be passed a cube type ID" do
+    test "create_session_and_round/2 can be passed params for unlisted and host" do
+      user = user_fixture()
       assert {:ok, %Session{} = session, %Round{} = round} =
-               Sessions.create_session_and_round("some name", :"4x4")
+               Sessions.create_session_and_round("some name", :"4x4", true, user)
 
       assert session.name == "some name"
       assert session.puzzle_type == :"4x4"
+      assert session.host_id == user.id
       assert round.session_id == session.id
     end
 

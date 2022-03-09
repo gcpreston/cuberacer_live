@@ -67,7 +67,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
         live(conn, Routes.game_room_path(conn, :show, session.id))
     end
 
-    test "redirects if invalid session ID", %{conn: conn, user: user} do
+    test "redirects if invalid room ID", %{conn: conn, user: user} do
       conn = log_in_user(conn, user)
       lobby_path = Routes.game_lobby_path(conn, :index)
 
@@ -75,10 +75,32 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
         live(conn, Routes.game_room_path(conn, :show, "abc"))
     end
 
-    test "connects with valid user token", %{conn: conn, session: session, user: user} do
+    test "redirects if unlisted and connecting with session ID", %{
+      conn: conn,
+      user: user
+    } do
+      {:ok, _pid, session} = RoomCache.create_room("unlisted room", :"3x3", true)
+      conn = log_in_user(conn, user)
+      lobby_path = Routes.game_lobby_path(conn, :index)
+
+      {:error, {:live_redirect, %{flash: %{"error" => "Unknown room"}, to: ^lobby_path}}} =
+        live(conn, Routes.game_room_path(conn, :show, session.id))
+    end
+
+    test "connects with valid user token", %{conn: conn, user: user, session: session} do
       conn = log_in_user(conn, user)
 
       assert {:ok, _lv, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
+      assert html =~ session.name
+    end
+
+    test "connects with valid hashed room ID", %{conn: conn, user: user, session: session} do
+      conn = log_in_user(conn, user)
+      s = Hashids.new(Application.fetch_env!(:cuberacer_live, :hashids_config))
+
+      assert {:ok, _lv, html} =
+               live(conn, Routes.game_room_path(conn, :show, Hashids.encode(s, session.id)))
+
       assert html =~ session.name
     end
   end
