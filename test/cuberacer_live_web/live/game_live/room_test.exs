@@ -58,19 +58,20 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
                live(conn, Routes.game_room_path(conn, :show, session.id))
     end
 
-    test "redirects if inactive session", %{conn: conn, user: user, session: session} do
+    test "redirects if inactive session", %{conn: conn, user: user, session: session, pid: pid} do
+      GenServer.stop(pid)
       conn = log_in_user(conn, user)
       lobby_path = Routes.game_lobby_path(conn, :index)
 
-      {:error, {:live_redirect, %{flash: %{"error" => "Room is inactive"}, to: ^lobby_path}}} =
-        live(conn, Routes.game_room_path(conn, :show, session.id - 1))
+      {:error, {:live_redirect, %{flash: %{"error" => "Room has terminated"}, to: ^lobby_path}}} =
+        live(conn, Routes.game_room_path(conn, :show, session.id))
     end
 
     test "redirects if invalid session ID", %{conn: conn, user: user} do
       conn = log_in_user(conn, user)
       lobby_path = Routes.game_lobby_path(conn, :index)
 
-      {:error, {:live_redirect, %{flash: %{"error" => "Invalid room ID"}, to: ^lobby_path}}} =
+      {:error, {:live_redirect, %{flash: %{"error" => "Unknown room"}, to: ^lobby_path}}} =
         live(conn, Routes.game_room_path(conn, :show, "abc"))
     end
 
