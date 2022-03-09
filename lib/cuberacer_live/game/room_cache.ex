@@ -17,16 +17,17 @@ defmodule CuberacerLive.RoomCache do
 
   def list_room_ids do
     :global.registered_names()
-    |> Enum.filter(fn name -> match?({RoomServer, _id}, name) end)
-    |> Enum.map(fn {RoomServer, session_id} -> session_id end)
+    |> Enum.filter(fn name -> match?({RoomServer, room_id} when is_integer(room_id), name) end)
+    |> Enum.map(fn {RoomServer, room_id} -> room_id end)
   end
 
-  def create_room(name, puzzle_type) do
-    case Sessions.create_session_and_round(name, puzzle_type) do
+  def create_room(name, puzzle_type, unlisted \\ false, host \\ nil) do
+    case Sessions.create_session_and_round(name, puzzle_type, unlisted, host) do
       {:ok, session, _round} ->
-        {:ok, pid} =
-          DynamicSupervisor.start_child(__MODULE__, {RoomServer, session})
-
+        s = hashids()
+        ext = Hashids.encode(s, session.id)
+        Logger.info("Session created, link: #{CuberacerLiveWeb.Endpoint.url()}/rooms/#{ext}")
+        {:ok, pid} = DynamicSupervisor.start_child(__MODULE__, {RoomServer, session})
         {:ok, pid, session}
 
       err ->
@@ -34,7 +35,7 @@ defmodule CuberacerLive.RoomCache do
     end
   end
 
-  def server_process(session_id) do
-    RoomServer.whereis(session_id)
+  defp hashids do
+    Hashids.new(Application.fetch_env!(:cuberacer_live, :hashids_config))
   end
 end

@@ -8,12 +8,26 @@ defmodule CuberacerLiveWeb.GameLive.Components do
   alias CuberacerLive.Sessions.Round
   alias CuberacerLive.Accounts.User
 
+  @hashids Hashids.new(Application.compile_env!(:cuberacer_live, :hashids_config))
+
   def room_card(assigns) do
+    room_ext =
+      if assigns.session.unlisted? do
+        Hashids.encode(@hashids, assigns.session.id)
+      else
+        assigns.session.id
+      end
+
     ~H"""
-    <%= live_redirect to: Routes.game_room_path(CuberacerLiveWeb.Endpoint, :show, @session.id), class: "t_room-card" do %>
+    <%= live_redirect to: Routes.game_room_path(CuberacerLiveWeb.Endpoint, :show, room_ext),
+      class: "t_room-card" do %>
       <div id={"t_room-card-#{@session.id}"} class="relative p-4 rounded-lg shadow-sm border bg-white transition-all hover:bg-gray-50 hover:shadow-md">
         <%= if @participant_count > 0 do %>
           <span class="absolute top-2 left-2 bg-green-500 h-3 w-3 rounded-full" />
+        <% end %>
+
+        <%= if @session.unlisted? do %>
+          <span class="absolute top-2 right-2"><i class="fas fa-lock"></i></span>
         <% end %>
         <div class="text-center">
          <span class="text-lg font-medium"><%= @session.name %></span>

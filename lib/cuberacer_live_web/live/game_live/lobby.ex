@@ -22,7 +22,8 @@ defmodule CuberacerLiveWeb.GameLive.Lobby do
         end
 
         socket
-        |> fetch()
+        |> assign(:current_user, user)
+        |> fetch_rooms()
         |> fetch_user_count()
       end
 
@@ -48,9 +49,15 @@ defmodule CuberacerLiveWeb.GameLive.Lobby do
 
   ## Socket populators
 
-  defp fetch(socket) do
+  defp fetch_rooms(socket) do
     participant_counts = LobbyServer.get_participant_counts()
-    rooms = Sessions.get_sessions(Map.keys(participant_counts))
+
+    rooms =
+      Sessions.get_sessions(Map.keys(participant_counts))
+      |> Enum.filter(fn session ->
+        (not session.unlisted?) or socket.assigns.current_user.id == session.host_id
+      end)
+
     assign(socket, rooms: rooms, participant_counts: participant_counts)
   end
 
@@ -67,11 +74,11 @@ defmodule CuberacerLiveWeb.GameLive.Lobby do
   end
 
   def handle_info(:fetch, socket) do
-    {:noreply, fetch(socket)}
+    {:noreply, fetch_rooms(socket)}
   end
 
   def handle_info({Sessions, [:session | _], _}, socket) do
-    {:noreply, fetch(socket)}
+    {:noreply, fetch_rooms(socket)}
   end
 
   ## Helpers

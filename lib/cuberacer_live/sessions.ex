@@ -18,9 +18,6 @@ defmodule CuberacerLive.Sessions do
   alias CuberacerLive.Sessions.{Session, Round, Solve}
   alias CuberacerLive.Accounts.User
 
-  # For now, any session created in the last 24 hours is active. This is
-  # a temporary solution while a more sophisticated one is in the works.
-  @session_active_lifetime_ms 60 * 60 * 24
   @topic inspect(__MODULE__)
 
   def subscribe do
@@ -45,24 +42,6 @@ defmodule CuberacerLive.Sessions do
     Repo.all(query)
   end
 
-  defp active_cutoff do
-    NaiveDateTime.utc_now() |> NaiveDateTime.add(-@session_active_lifetime_ms)
-  end
-
-  @doc """
-  Returns a list of currently active sessions.
-  """
-  def list_active_sessions do
-    cutoff_time = active_cutoff()
-
-    query =
-      from s in Session,
-        where: s.inserted_at > ^cutoff_time,
-        order_by: [desc: s.inserted_at]
-
-    Repo.all(query)
-  end
-
   @doc """
   Returns a list of sessions (past and current) which the given
   user has participated in.
@@ -81,19 +60,6 @@ defmodule CuberacerLive.Sessions do
   end
 
   @doc """
-  Determine if a given session is active.
-  """
-  def session_is_active?(%Session{id: session_id}) do
-    session_is_active?(session_id)
-  end
-
-  def session_is_active?(session_id) do
-    cutoff_time = active_cutoff()
-    query = from s in Session, where: s.inserted_at > ^cutoff_time, where: s.id == ^session_id
-    Repo.exists?(query)
-  end
-
-  @doc """
   Gets a single session.
 
   Raises `Ecto.NoResultsError` if the Session does not exist.
@@ -108,6 +74,22 @@ defmodule CuberacerLive.Sessions do
 
   """
   def get_session!(id), do: Repo.get!(Session, id)
+
+  @doc """
+  Gets a single session.
+
+  Returns `nil` if the Session does not exist.
+
+  ## Examples
+
+      iex> get_session(123)
+      %Session{}
+
+      iex> get_session(456)
+      nil
+
+  """
+  def get_session(id), do: Repo.get(Session, id)
 
   @doc """
   Gets a list of sessions, given a list of session IDs.
@@ -181,12 +163,21 @@ defmodule CuberacerLive.Sessions do
       iex> create_session_and_round("my cool sesh", "3x3")
       {:ok, %Session{}, %Round{}}
 
-      iex> create_session_and_round(nil, %CubeType{})
+      iex> create_session_and_round(nil, %CubeType{}, true, %User{})
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_session_and_round(name, puzzle_type) do
-    with {:ok, session} <- create_session(%{name: name, puzzle_type: puzzle_type}),
+  def create_session_and_round(name, puzzle_type, unlisted \\ false, host \\ nil) do
+    host_id = if match?(%User{}, host), do: host.id, else: nil
+
+    session_attrs = %{
+      host_id: host_id,
+      name: name,
+      puzzle_type: puzzle_type,
+      unlisted?: unlisted
+    }
+
+    with {:ok, session} <- create_session(session_attrs),
          {:ok, round} <- create_round(session) do
       {:ok, session, round}
     else

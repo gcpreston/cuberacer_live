@@ -8,17 +8,34 @@ defmodule CuberacerLiveWeb.GameLive.Room do
   alias CuberacerLiveWeb.{Presence, Endpoint}
 
   @impl true
-  def mount(%{"id" => session_id}, %{"user_token" => user_token}, socket) do
-    case Integer.parse(session_id) do
-      {session_id, ""} ->
-        build_socket(session_id, user_token, socket)
+  def mount(%{"id" => room_id}, %{"user_token" => user_token}, socket)
+      when not is_nil(user_token) do
+    {used_session_id, session_id} = parse_room_id(room_id)
 
-      _ ->
-        {:ok,
-         socket
-         |> put_flash(:error, "Invalid room ID")
-         |> push_redirect(to: Routes.game_lobby_path(socket, :index))}
-    end
+    socket =
+      if is_nil(session_id) do
+        push_redirect_to_lobby(socket, "Unknown room")
+      else
+        session = Sessions.get_session(session_id)
+        user = Accounts.get_user_by_session_token(user_token)
+
+        cond do
+          user == nil ->
+            redirect(socket, to: Routes.user_session_path(socket, :new))
+
+          session == nil or (used_session_id and session.unlisted?) ->
+            push_redirect_to_lobby(socket, "Unknown room")
+
+          !RoomServer.whereis(session.id) ->
+            push_redirect_to_lobby(socket, "Room has terminated")
+
+          true ->
+            track_and_subscribe(socket, user, session)
+            socket_pipeline(socket, user, session)
+        end
+      end
+
+    {:ok, socket, temporary_assigns: [past_rounds: [], room_messages: []]}
   end
 
   @impl true
@@ -29,40 +46,47 @@ defmodule CuberacerLiveWeb.GameLive.Room do
      |> redirect(to: Routes.user_session_path(socket, :new))}
   end
 
-  defp build_socket(session_id, user_token, socket) when is_integer(session_id) do
-    user = user_token && Accounts.get_user_by_session_token(user_token)
+  defp parse_room_id(room_id) do
+    case Integer.parse(room_id) do
+      {session_id, ""} ->
+        {true, session_id}
 
-    socket =
-      cond do
-        user == nil ->
-          redirect(socket, to: Routes.user_session_path(socket, :new))
+      _ ->
+        s = hashids()
 
-        !RoomServer.whereis(session_id) ->
-          socket
-          |> put_flash(:error, "Room is inactive")
-          |> push_redirect(to: Routes.game_lobby_path(socket, :index))
+        case Hashids.decode(s, room_id) do
+          {:ok, [session_id]} -> {false, session_id}
+          _ -> {false, nil}
+        end
+    end
+  end
 
-        true ->
-          if connected?(socket) do
-            track_presence(session_id, user.id)
-            Endpoint.subscribe(pubsub_topic(session_id))
-            Sessions.subscribe(session_id)
-            Messaging.subscribe(session_id)
-          end
+  defp push_redirect_to_lobby(socket, flash_error) do
+    socket
+    |> put_flash(:error, flash_error)
+    |> push_redirect(to: Routes.game_lobby_path(socket, :index))
+  end
 
-          socket
-          |> assign(:current_user, user)
-          |> fetch_room_server_pid(session_id)
-          |> fetch_session(session_id)
-          |> fetch_participant_data()
-          |> fetch_rounds()
-          |> fetch_current_solve()
-          |> fetch_stats()
-          |> fetch_room_messages()
-          |> initialize_time_entry()
-      end
+  defp track_and_subscribe(socket, user, session) do
+    if connected?(socket) do
+      track_presence(session.id, user.id)
+      Endpoint.subscribe(pubsub_topic(session.id))
+      Sessions.subscribe(session.id)
+      Messaging.subscribe(session.id)
+    end
+  end
 
-    {:ok, socket, temporary_assigns: [past_rounds: [], room_messages: []]}
+  defp socket_pipeline(socket, current_user, session) do
+    socket
+    |> assign(:session, session)
+    |> assign(:current_user, current_user)
+    |> fetch_room_server_pid(session.id)
+    |> fetch_participant_data()
+    |> fetch_rounds()
+    |> fetch_current_solve()
+    |> fetch_stats()
+    |> fetch_room_messages()
+    |> initialize_time_entry()
   end
 
   ## Socket populators
@@ -70,11 +94,6 @@ defmodule CuberacerLiveWeb.GameLive.Room do
   defp fetch_room_server_pid(socket, session_id) do
     pid = RoomServer.whereis(session_id)
     assign(socket, :room_server_pid, pid)
-  end
-
-  defp fetch_session(socket, session_id) do
-    session = Sessions.get_session!(session_id)
-    assign(socket, %{session_id: session_id, session: session})
   end
 
   defp fetch_rounds(socket) do
@@ -120,7 +139,7 @@ defmodule CuberacerLiveWeb.GameLive.Room do
   def handle_event("solving", _value, socket) do
     Phoenix.PubSub.broadcast!(
       CuberacerLive.PubSub,
-      room_server_topic(socket.assigns.session_id),
+      room_server_topic(socket.assigns.session.id),
       {:solving, socket.assigns.current_user.id}
     )
 
@@ -132,7 +151,7 @@ defmodule CuberacerLiveWeb.GameLive.Room do
 
     Phoenix.PubSub.broadcast!(
       CuberacerLive.PubSub,
-      room_server_topic(socket.assigns.session_id),
+      room_server_topic(socket.assigns.session.id),
       {:set_time_entry, socket.assigns.current_user.id, new_entry_method}
     )
 
@@ -263,12 +282,16 @@ defmodule CuberacerLiveWeb.GameLive.Room do
 
   ## Helpers
 
+  defp hashids do
+    Hashids.new(Application.fetch_env!(:cuberacer_live, :hashids_config))
+  end
+
   defp pubsub_topic(session_id) do
     "room:#{session_id}"
   end
 
   defp room_server_topic(session_id) do
-   "#{inspect(RoomServer)}:#{session_id}"
+    "#{inspect(RoomServer)}:#{session_id}"
   end
 
   defp track_presence(session_id, user_id) do

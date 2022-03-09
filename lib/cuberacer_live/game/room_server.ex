@@ -16,6 +16,9 @@ defmodule CuberacerLive.RoomServer do
 
   ## API
 
+  @doc """
+  Gets the pid of room server.
+  """
   def whereis(session_id) do
     case :global.whereis_name({__MODULE__, session_id}) do
       :undefined -> nil
@@ -24,7 +27,7 @@ defmodule CuberacerLive.RoomServer do
   end
 
   def start_link(%Session{} = session) do
-    GenServer.start_link(__MODULE__, session, name: global_name(session.id))
+    GenServer.start_link(__MODULE__, session, name: global_name(session))
   end
 
   def create_round(room_server) do
@@ -203,8 +206,8 @@ defmodule CuberacerLive.RoomServer do
     CuberacerLiveWeb.Endpoint.subscribe(topic)
   end
 
-  defp global_name(session_id) do
-    {:global, {__MODULE__, session_id}}
+  defp global_name(%Session{} = session) do
+    {:global, {__MODULE__, session.id}}
   end
 
   defp set_empty_room_timeout(%{timeout_ref: nil} = state) do

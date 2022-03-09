@@ -54,7 +54,8 @@ defmodule CuberacerLive.MixProject do
       {:whisk, "~> 0.1.0"},
       {:distillery, "~> 2.1"},
       {:finch, "~> 0.10.2"},
-      {:inflex, "~> 2.1.0"}
+      {:inflex, "~> 2.1"},
+      {:hashids, "~>2.0"}
     ]
   end
 
