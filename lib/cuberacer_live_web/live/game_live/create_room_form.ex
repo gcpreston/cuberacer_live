@@ -33,7 +33,7 @@ defmodule CuberacerLiveWeb.GameLive.CreateRoomForm do
          "puzzle_type" => puzzle_type,
          "unlisted" => unlisted
        }) do
-    case RoomCache.create_room(name, puzzle_type, unlisted) do
+    case RoomCache.create_room(name, puzzle_type, unlisted, socket.assigns.current_user) do
       {:ok, _pid, _session} ->
         {:noreply,
          socket

@@ -5,6 +5,7 @@
       id={@session.id || :new}
       title={@page_title}
       action={@live_action}
+      current_user={@current_user}
       session={@session}
       return_to={Routes.game_lobby_path(@socket, :index)}
     />
