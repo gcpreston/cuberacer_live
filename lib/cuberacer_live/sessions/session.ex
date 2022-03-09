@@ -5,7 +5,7 @@ defmodule CuberacerLive.Sessions.Session do
   schema "sessions" do
     field :name, :string
     field :host_id, :id
-    field :unlisted, :boolean, default: false
+    field :unlisted?, :boolean, default: false, source: :unlisted
 
     field :puzzle_type, Ecto.Enum,
       values: [
@@ -31,7 +31,7 @@ defmodule CuberacerLive.Sessions.Session do
   @doc false
   def changeset(session, attrs) do
     session
-    |> cast(attrs, [:name, :puzzle_type, :unlisted])
+    |> cast(attrs, [:name, :puzzle_type, :unlisted?])
     |> validate_required([:name, :puzzle_type])
     |> validate_length(:name, max: 100)
   end

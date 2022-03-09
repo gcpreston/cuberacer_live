@@ -50,7 +50,11 @@ defmodule CuberacerLiveWeb.GameLive.Lobby do
 
   defp fetch(socket) do
     participant_counts = LobbyServer.get_participant_counts()
-    rooms = Sessions.get_sessions(Map.keys(participant_counts))
+
+    rooms =
+      Sessions.get_sessions(Map.keys(participant_counts))
+      |> Enum.filter(fn session -> not session.unlisted? end)
+
     assign(socket, rooms: rooms, participant_counts: participant_counts)
   end
 

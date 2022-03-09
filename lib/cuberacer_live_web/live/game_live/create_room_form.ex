@@ -28,7 +28,11 @@ defmodule CuberacerLiveWeb.GameLive.CreateRoomForm do
     save_session(socket, socket.assigns.action, session_params)
   end
 
-  defp save_session(socket, :new, %{"name" => name, "puzzle_type" => puzzle_type, "unlisted" => unlisted}) do
+  defp save_session(socket, :new, %{
+         "name" => name,
+         "puzzle_type" => puzzle_type,
+         "unlisted" => unlisted
+       }) do
     case RoomCache.create_room(name, puzzle_type, unlisted) do
       {:ok, _pid, _session} ->
         {:noreply,
