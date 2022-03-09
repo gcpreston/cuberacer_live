@@ -10,18 +10,30 @@ defmodule CuberacerLiveWeb.GameLive.Room do
   @impl true
   def mount(%{"id" => room_id}, %{"user_token" => user_token}, socket)
       when not is_nil(user_token) do
-    socket =
-      case Integer.parse(room_id) do
-        {session_id, ""} ->
-          session_id
+    {used_session_id, session_id} = parse_room_id(room_id)
 
-        _ ->
-          # TODO: Handle errors
-          s = hashids()
-          {:ok, [session_id]} = Hashids.decode(s, room_id)
-          session_id
+    socket =
+      if is_nil(session_id) do
+        push_redirect_to_lobby(socket, "Unknown room")
+      else
+        session = Sessions.get_session(session_id)
+        user = Accounts.get_user_by_session_token(user_token)
+
+        cond do
+          user == nil ->
+            redirect(socket, to: Routes.user_session_path(socket, :new))
+
+          session == nil or (used_session_id and session.unlisted?) ->
+            push_redirect_to_lobby(socket, "Unknown room")
+
+          !RoomServer.whereis(session.id) ->
+            push_redirect_to_lobby(socket, "Room has terminated")
+
+          true ->
+            track_and_subscribe(socket, user, session)
+            socket_pipeline(socket, user, session)
+        end
       end
-      |> build_socket(user_token, socket)
 
     {:ok, socket, temporary_assigns: [past_rounds: [], room_messages: []]}
   end
@@ -34,46 +46,47 @@ defmodule CuberacerLiveWeb.GameLive.Room do
      |> redirect(to: Routes.user_session_path(socket, :new))}
   end
 
-  defp build_socket(session_id, user_token, socket) when is_integer(session_id) do
-    session = Sessions.get_session(session_id)
-    user = Accounts.get_user_by_session_token(user_token)
+  defp parse_room_id(room_id) do
+    case Integer.parse(room_id) do
+      {session_id, ""} ->
+        {true, session_id}
 
-    socket =
-      cond do
-        user == nil ->
-          redirect(socket, to: Routes.user_session_path(socket, :new))
+      _ ->
+        s = hashids()
 
-        session == nil ->
-          socket
-          |> put_flash(:error, "Unknown room")
-          |> push_redirect(to: Routes.game_lobby_path(socket, :index))
+        case Hashids.decode(s, room_id) do
+          {:ok, [session_id]} -> {false, session_id}
+          _ -> {false, nil}
+        end
+    end
+  end
 
-        !RoomServer.whereis(session.id) ->
-          socket
-          |> put_flash(:error, "This room has terminated")
-          |> push_redirect(to: Routes.game_lobby_path(socket, :index))
-
-        true ->
-          if connected?(socket) do
-            track_presence(session.id, user.id)
-            Endpoint.subscribe(pubsub_topic(session.id))
-            Sessions.subscribe(session.id)
-            Messaging.subscribe(session.id)
-          end
-
-          socket
-          |> assign(:session, session)
-          |> assign(:current_user, user)
-          |> fetch_room_server_pid(session.id)
-          |> fetch_participant_data()
-          |> fetch_rounds()
-          |> fetch_current_solve()
-          |> fetch_stats()
-          |> fetch_room_messages()
-          |> initialize_time_entry()
-      end
-
+  defp push_redirect_to_lobby(socket, flash_error) do
     socket
+    |> put_flash(:error, flash_error)
+    |> push_redirect(to: Routes.game_lobby_path(socket, :index))
+  end
+
+  defp track_and_subscribe(socket, user, session) do
+    if connected?(socket) do
+      track_presence(session.id, user.id)
+      Endpoint.subscribe(pubsub_topic(session.id))
+      Sessions.subscribe(session.id)
+      Messaging.subscribe(session.id)
+    end
+  end
+
+  defp socket_pipeline(socket, current_user, session) do
+    socket
+    |> assign(:session, session)
+    |> assign(:current_user, current_user)
+    |> fetch_room_server_pid(session.id)
+    |> fetch_participant_data()
+    |> fetch_rounds()
+    |> fetch_current_solve()
+    |> fetch_stats()
+    |> fetch_room_messages()
+    |> initialize_time_entry()
   end
 
   ## Socket populators
