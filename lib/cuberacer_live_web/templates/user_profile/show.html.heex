@@ -52,7 +52,7 @@
     <h2 class="text-2xl font-medium">Sessions</h2>
 
     <div class="mt-4 grid grid-cols-1 gap-3">
-      <%= for session <- Sessions.list_user_sessions(@user) do %>
+      <%= for session <- @visible_sessions do %>
         <.session_block session={session} />
       <% end %>
     </div>

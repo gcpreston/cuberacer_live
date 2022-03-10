@@ -5,12 +5,15 @@ defmodule CuberacerLiveWeb.UserProfileView do
 
   alias CuberacerLive.CountryUtils
   alias CuberacerLive.Accounts
-  alias CuberacerLive.Sessions
 
   defp session_block(assigns) do
     ~H"""
     <%= link to: Routes.session_path(CuberacerLiveWeb.Endpoint, :show, @session.id) do %>
-      <div class="p-4 rounded-lg shadow-sm border bg-white transition-all hover:bg-gray-50 hover:shadow-md">
+      <div class="relative p-4 rounded-lg shadow-sm border bg-white transition-all hover:bg-gray-50 hover:shadow-md">
+        <%= if @session.unlisted? do %>
+          <span class="absolute top-2 right-2"><i class="fas fa-lock"></i></span>
+        <% end %>
+
         <div>
           <span class="font-medium"><%= @session.name %></span> | <span><%= @session.puzzle_type %></span>
         </div>

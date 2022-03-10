@@ -50,9 +50,12 @@ defmodule CuberacerLive.Sessions do
     query =
       from session in Session,
         distinct: true,
-        join: round in assoc(session, :rounds),
-        join: solve in assoc(round, :solves),
+        left_join: round in assoc(session, :rounds),
+        left_join: solve in assoc(round, :solves),
+        left_join: message in assoc(session, :room_messages),
         where: solve.user_id == ^user_id,
+        or_where: message.user_id == ^user_id,
+        or_where: session.host_id == ^user_id,
         order_by: [desc: session.id],
         select: session
 
