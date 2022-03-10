@@ -8,6 +8,7 @@ defmodule CuberacerLive.SessionsTest do
 
     import CuberacerLive.AccountsFixtures
     import CuberacerLive.SessionsFixtures
+    import CuberacerLive.MessagingFixtures
 
     @invalid_attrs %{name: nil}
 
@@ -26,10 +27,22 @@ defmodule CuberacerLive.SessionsTest do
       round2 = round_fixture(session: session3)
       _solve2 = solve_fixture(round_id: round2.id, user_id: user.id)
 
-      assert Enum.map(Sessions.list_user_sessions(user), fn s -> s.id end) == [
-               session3.id,
-               session1.id
-             ]
+      assert Sessions.list_user_sessions(user) == [session3, session1]
+    end
+
+    test "list_user_sessions/1 returns sessions where user has sent a message" do
+      user = user_fixture()
+      session = session_fixture()
+      _message = room_message_fixture(session: session, user: user)
+
+      assert Sessions.list_user_sessions(user) == [session]
+    end
+
+    test "list_user_sessions/1 returns sessions where user is host" do
+      user = user_fixture()
+      session = session_fixture(host_id: user.id)
+
+      assert Sessions.list_user_sessions(user) == [session]
     end
 
     test "get_session!/1 returns the session with given id" do
@@ -96,6 +109,7 @@ defmodule CuberacerLive.SessionsTest do
 
     test "create_session_and_round/2 can be passed params for unlisted and host" do
       user = user_fixture()
+
       assert {:ok, %Session{} = session, %Round{} = round} =
                Sessions.create_session_and_round("some name", :"4x4", true, user)
 
