@@ -58,6 +58,36 @@ defmodule CuberacerLiveWeb.UserProfileControllerTest do
       assert html =~ "4x4"
     end
 
+    test "shows unlisted sessions on your own profile", %{conn: conn, user: user} do
+      _session = session_fixture(name: "unlisted session", unlisted?: true, host_id: user.id)
+
+      conn =
+        conn
+        |> log_in_user(user)
+        |> get(Routes.user_profile_path(conn, :show, user.id))
+
+      html = html_response(conn, 200)
+
+      assert html =~ "unlisted session"
+      assert html =~ "fas fa-lock"
+    end
+
+    test "does not show unlisted sessions on someone else's profile", %{conn: conn, user: user1} do
+      user2 = user_fixture()
+      session = session_fixture(name: "unlisted session", unlisted?: true, host_id: user2.id)
+      round = round_fixture(session: session)
+      _user1_solve = solve_fixture(round_id: round.id, user_id: user1.id)
+
+      conn =
+        conn
+        |> log_in_user(user1)
+        |> get(Routes.user_profile_path(conn, :show, user2.id))
+
+      html = html_response(conn, 200)
+
+      refute html =~ "unlisted session"
+    end
+
     test "shows Edit profile button on your own profile", %{conn: conn, user: user} do
       conn =
         conn
