@@ -59,6 +59,8 @@ defmodule CuberacerLive.SessionControllerTest do
       html = html_response(conn, 200)
 
       assert html =~ "Session</h1>"
+      assert html =~ session.name
+      refute html =~ "fas fa-lock"
       assert html =~ SharedUtils.format_datetime(session.inserted_at)
       assert html =~ "#{session.puzzle_type}"
       assert html =~ Calendar.strftime(session.inserted_at, "%c")
@@ -91,6 +93,29 @@ defmodule CuberacerLive.SessionControllerTest do
       |> assert_html("tr td a[href='#{Routes.solve_path(conn, :show, solve5.id)}']",
         text: Sessions.display_solve(solve5)
       )
+    end
+
+    test "indicates that a session is unlisted", %{conn: conn, user: user} do
+      session = session_fixture(unlisted?: true)
+      ext = Sessions.session_locator(session)
+      conn = conn |> log_in_user(user) |> get(Routes.session_path(conn, :show, ext))
+      html = html_response(conn, 200)
+
+      assert html =~ "fas fa-lock"
+    end
+
+    test "does not allow access to an unlisted session via session ID", %{conn: conn, user: user} do
+      session = session_fixture(unlisted?: true)
+      conn = conn |> log_in_user(user) |> get(Routes.session_path(conn, :show, session.id))
+
+      assert html_response(conn, 404)
+    end
+
+    test "404s for non-existing unlisted session", %{conn: conn, user: user} do
+      _session = session_fixture(unlisted: true)
+      conn = conn |> log_in_user(user) |> get(Routes.session_path(conn, :show, "fdklasfjdlsafjdsal"))
+
+      assert html_response(conn, 404)
     end
 
     test "redirects if not logged in", %{conn: conn, session: session} do

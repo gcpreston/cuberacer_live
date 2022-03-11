@@ -2,7 +2,12 @@
   <div class="sm:grid grid-cols-2">
     <div class="p-6">
       <h1 class="text-4xl text-gray-800 font-semibold">Session</h1>
-      <div class="mt-8 text-2xl text-gray-800 font-medium"><%= @session.name %></div>
+      <div class="mt-8 text-2xl text-gray-800 font-medium">
+        <%= @session.name %>
+        <%= if @session.unlisted? do %>
+          <span class="ml-1 text-lg"><i class="fas fa-lock"></i></span>
+        <% end %>
+      </div>
       <ul class="my-8 fa-ul">
         <li>
           <span class="fa-li"><i class="fas fa-cube"></i></span>
