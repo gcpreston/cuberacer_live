@@ -139,6 +139,27 @@ defmodule CuberacerLive.Sessions do
     Repo.one!(query)
   end
 
+  def session_locator(%Session{} = session) do
+    if session.unlisted? do
+      Hashids.encode(CuberacerLive.Hashids.new(), session.id)
+    else
+      session.id
+    end
+  end
+
+  def parse_session_locator(room_id) do
+    case Integer.parse(room_id) do
+      {session_id, ""} ->
+        {true, session_id}
+
+      _ ->
+        case Hashids.decode(CuberacerLive.Hashids.new(), room_id) do
+          {:ok, [session_id]} -> {false, session_id}
+          _ -> {false, nil}
+        end
+    end
+  end
+
   @doc """
   Creates a session.
 
@@ -302,10 +323,11 @@ defmodule CuberacerLive.Sessions do
   def get_loaded_round!(id) do
     query =
       from round in Round,
+        join: session in assoc(round, :session),
         left_join: solve in assoc(round, :solves),
         left_join: user in assoc(solve, :user),
         where: round.id == ^id,
-        preload: [solves: {solve, user: user}]
+        preload: [session: session, solves: {solve, user: user}]
 
     Repo.one!(query)
   end
@@ -452,10 +474,11 @@ defmodule CuberacerLive.Sessions do
       from solve in Solve,
         join: user in assoc(solve, :user),
         join: round in assoc(solve, :round),
+        join: session in assoc(solve, :session),
         where: solve.id == ^id,
         preload: [
-          round: round,
-          user: user
+          user: user,
+          round: {round, session: session}
         ]
 
     Repo.one!(query)

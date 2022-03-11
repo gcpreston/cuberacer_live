@@ -8,9 +8,9 @@ defmodule CuberacerLiveWeb.GameLive.Room do
   alias CuberacerLiveWeb.{Presence, Endpoint}
 
   @impl true
-  def mount(%{"id" => room_id}, %{"user_token" => user_token}, socket)
+  def mount(%{"id" => locator}, %{"user_token" => user_token}, socket)
       when not is_nil(user_token) do
-    {used_session_id, session_id} = parse_room_id(room_id)
+    {used_session_id, session_id} = Sessions.parse_session_locator(locator)
 
     socket =
       if is_nil(session_id) do
@@ -44,21 +44,6 @@ defmodule CuberacerLiveWeb.GameLive.Room do
     {:ok,
      socket
      |> redirect(to: Routes.user_session_path(socket, :new))}
-  end
-
-  defp parse_room_id(room_id) do
-    case Integer.parse(room_id) do
-      {session_id, ""} ->
-        {true, session_id}
-
-      _ ->
-        s = hashids()
-
-        case Hashids.decode(s, room_id) do
-          {:ok, [session_id]} -> {false, session_id}
-          _ -> {false, nil}
-        end
-    end
   end
 
   defp push_redirect_to_lobby(socket, flash_error) do
@@ -281,10 +266,6 @@ defmodule CuberacerLiveWeb.GameLive.Room do
   end
 
   ## Helpers
-
-  defp hashids do
-    Hashids.new(Application.fetch_env!(:cuberacer_live, :hashids_config))
-  end
 
   defp pubsub_topic(session_id) do
     "room:#{session_id}"
