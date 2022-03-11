@@ -23,9 +23,11 @@
         </li>
         <li>
           <span class="font-semibold text-gray-800">Session: </span>
-          <%= link @solve.round.session_id,
-            to: Routes.session_path(@conn, :show, @solve.round.session_id),
-            class: "text-blue-500 hover:underline" %>
+          <.session_link session={@solve.session}>
+            <span class="text-blue-500 hover:underline">
+              <%= session_locator(@solve.session) %>
+            </span>
+          </.session_link>
         </li>
       </ul>
     </div>

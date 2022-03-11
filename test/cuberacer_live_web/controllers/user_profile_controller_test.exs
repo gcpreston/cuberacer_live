@@ -4,7 +4,7 @@ defmodule CuberacerLiveWeb.UserProfileControllerTest do
   import CuberacerLive.AccountsFixtures
   import CuberacerLive.SessionsFixtures
 
-  alias CuberacerLive.CountryUtils
+  alias CuberacerLive.{CountryUtils, Sessions}
 
   setup do
     %{user: user_fixture()}
@@ -59,7 +59,7 @@ defmodule CuberacerLiveWeb.UserProfileControllerTest do
     end
 
     test "shows unlisted sessions on your own profile", %{conn: conn, user: user} do
-      _session = session_fixture(name: "unlisted session", unlisted?: true, host_id: user.id)
+      session = session_fixture(name: "unlisted session", unlisted?: true, host_id: user.id)
 
       conn =
         conn
@@ -70,6 +70,7 @@ defmodule CuberacerLiveWeb.UserProfileControllerTest do
 
       assert html =~ "unlisted session"
       assert html =~ "fas fa-lock"
+      assert html =~ ~s(<a href="/sessions/#{Sessions.session_locator(session)}">)
     end
 
     test "does not show unlisted sessions on someone else's profile", %{conn: conn, user: user1} do

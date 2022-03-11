@@ -8,12 +8,10 @@ defmodule CuberacerLiveWeb.GameLive.Components do
   alias CuberacerLive.Sessions.Round
   alias CuberacerLive.Accounts.User
 
-  @hashids Hashids.new(Application.compile_env!(:cuberacer_live, :hashids_config))
-
   def room_card(assigns) do
     room_ext =
       if assigns.session.unlisted? do
-        Hashids.encode(@hashids, assigns.session.id)
+        Hashids.encode(CuberacerLive.Hashids.new(), assigns.session.id)
       else
         assigns.session.id
       end

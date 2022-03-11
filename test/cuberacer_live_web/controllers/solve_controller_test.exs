@@ -22,11 +22,11 @@ defmodule CuberacerLiveWeb.SolveControllerTest do
       assert html =~ SharedUtils.format_datetime(solve.inserted_at)
       assert html =~ solve.round.scramble
       assert html =~ Sessions.display_solve(solve)
+      assert html =~ ~s(<a href="/sessions/#{Sessions.session_locator(solve.session)}">)
 
       html
       |> assert_html("a[href='#{Routes.user_profile_path(conn, :show, user.id)}']", text: user.username)
       |> assert_html("a[href='#{Routes.round_path(conn, :show, solve.round_id)}']", text: solve.round_id)
-      |> assert_html("a[href='#{Routes.session_path(conn, :show, solve.round.session_id)}']", text: solve.round.session_id)
     end
 
     test "redirects if not logged in", %{conn: conn, solve: solve} do
