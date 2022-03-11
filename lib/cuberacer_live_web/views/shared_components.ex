@@ -3,6 +3,8 @@ defmodule CuberacerLiveWeb.SharedComponents do
 
   import CuberacerLiveWeb.SharedUtils, only: [format_datetime: 1]
 
+  alias CuberacerLive.Sessions
+
   # Ensure that the safelist in tailwind.config.js is synchronized
   # with this list.
   @chat_username_colors [
@@ -39,5 +41,15 @@ defmodule CuberacerLiveWeb.SharedComponents do
     color = Enum.at(options, :erlang.phash2({user_id, color_seed}, length(options)))
 
     "text-#{color}"
+  end
+
+  def session_link(assigns) do
+    ext = Sessions.session_locator(assigns.session)
+
+    ~H"""
+    <%= link to: Routes.session_path(CuberacerLiveWeb.Endpoint, :show, ext) do %>
+      <%= render_slot(@inner_block) %>
+    <% end %>
+    """
   end
 end

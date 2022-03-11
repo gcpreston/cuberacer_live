@@ -478,7 +478,8 @@ defmodule CuberacerLive.Sessions do
         where: solve.id == ^id,
         preload: [
           user: user,
-          round: {round, session: session}
+          round: round,
+          session: session
         ]
 
     Repo.one!(query)

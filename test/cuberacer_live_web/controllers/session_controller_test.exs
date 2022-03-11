@@ -113,7 +113,8 @@ defmodule CuberacerLive.SessionControllerTest do
 
     test "404s for non-existing unlisted session", %{conn: conn, user: user} do
       _session = session_fixture(unlisted: true)
-      conn = conn |> log_in_user(user) |> get(Routes.session_path(conn, :show, "fdklasfjdlsafjdsal"))
+
+      conn = conn |> log_in_user(user) |> get(Routes.session_path(conn, :show, "fjdkalfjda"))
 
       assert html_response(conn, 404)
     end

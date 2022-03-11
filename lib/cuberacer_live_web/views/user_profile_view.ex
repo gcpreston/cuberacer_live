@@ -2,13 +2,14 @@ defmodule CuberacerLiveWeb.UserProfileView do
   use CuberacerLiveWeb, :view
 
   import CuberacerLiveWeb.SharedUtils, only: [format_datetime: 1]
+  import CuberacerLiveWeb.SharedComponents, only: [session_link: 1]
 
   alias CuberacerLive.CountryUtils
   alias CuberacerLive.Accounts
 
   defp session_block(assigns) do
     ~H"""
-    <%= link to: Routes.session_path(CuberacerLiveWeb.Endpoint, :show, @session.id) do %>
+    <.session_link session={@session}>
       <div class="relative p-4 rounded-lg shadow-sm border bg-white transition-all hover:bg-gray-50 hover:shadow-md">
         <%= if @session.unlisted? do %>
           <span class="absolute top-2 right-2"><i class="fas fa-lock"></i></span>
@@ -21,7 +22,7 @@ defmodule CuberacerLiveWeb.UserProfileView do
           <span class="text-gray-500 italic text-sm"><%= format_datetime(@session.inserted_at) %></span>
         </div>
       </div>
-    <% end %>
+    </.session_link>
     """
   end
 end

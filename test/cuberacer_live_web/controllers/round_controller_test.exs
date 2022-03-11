@@ -13,6 +13,7 @@ defmodule CuberacerLive.RoundControllerTest do
 
   describe "GET /rounds/:id" do
     test "empty case", %{conn: conn, user: user, round: round} do
+      session = Sessions.get_session!(round.session_id)
       conn = conn |> log_in_user(user) |> get(Routes.round_path(conn, :show, round.id))
       html = html_response(conn, 200)
 
@@ -20,17 +21,14 @@ defmodule CuberacerLive.RoundControllerTest do
       assert html =~ SharedUtils.format_datetime(round.inserted_at)
       assert html =~ round.scramble
       assert html =~ "No solves"
-
-      html
-      |> assert_html("a[href='#{Routes.session_path(conn, :show, round.session_id)}']",
-        text: round.session_id
-      )
+      assert html =~ ~s(<a href="/sessions/#{Sessions.session_locator(session)}">)
     end
 
     test "displays round data", %{conn: conn, user: user1, round: round} do
       user2 = user_fixture()
       user3 = user_fixture()
       solve1 = solve_fixture(round_id: round.id, user_id: user1.id, time: 1234)
+      session = Sessions.get_session!(round.session_id)
 
       solve2 =
         solve_fixture(
@@ -54,11 +52,9 @@ defmodule CuberacerLive.RoundControllerTest do
       assert html =~ "Round</h1>"
       assert html =~ SharedUtils.format_datetime(round.inserted_at)
       assert html =~ round.scramble
+      assert html =~ ~s(<a href="/sessions/#{Sessions.session_locator(session)}">)
 
       html
-      |> assert_html("a[href='#{Routes.session_path(conn, :show, round.session_id)}']",
-        text: round.session_id
-      )
       |> assert_html("tr", count: 4)
       |> assert_html("tr td a[href='#{Routes.user_profile_path(conn, :show, solve1.user_id)}']",
         text: user1.username
