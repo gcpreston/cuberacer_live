@@ -62,6 +62,14 @@ export default () => ({
     );
   },
 
+  toggleMobileChat() {
+    if (!this.mobileChatOpen) {
+      this.$store.unreadChat = false;
+    }
+
+    this.mobileChatOpen = !this.mobileChatOpen;
+  },
+
   // Pagination
 
   numPresentUsers: 0,
@@ -111,6 +119,12 @@ export default () => ({
     this.numPresentUsers = numPresentUsers;
     this.calibratePagination();
     this.maybeToggleChatSidebar();
+
+    window.addEventListener('phx:unread-chat', (_e) => {
+      if (!(this.chatSidebarShow || this.mobileChatOpen)) {
+        window.Alpine.store('unreadChat', true);
+      }
+    });
   },
 
   handleWindowResize() {
