@@ -9,7 +9,9 @@ import room from './room';
 
 Alpine.data('timer', timer);
 Alpine.data('room', room);
+
 Alpine.store('inputFocused', false);
+Alpine.store('unreadChat', false);
 
 window.Alpine = Alpine;
 Alpine.start();
@@ -64,7 +66,7 @@ Hooks.ChatInput = {
   }
 };
 
-let liveSocket = new LiveSocket("/live", Socket, {
+let liveSocket = new LiveSocket('/live', Socket, {
   params: { _csrf_token: csrfToken },
   hooks: Hooks,
   dom: {

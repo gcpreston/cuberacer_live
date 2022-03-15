@@ -9,6 +9,7 @@ const BottomBarStates = {
 };
 
 export default () => ({
+  chatSidebarShow: true,
   mobileChatOpen: false,
   bottomBarState: BottomBarStates.NORMAL,
   bottomBarTapped: null,
@@ -61,6 +62,14 @@ export default () => ({
     );
   },
 
+  toggleMobileChat() {
+    if (!this.mobileChatOpen) {
+      this.$store.unreadChat = false;
+    }
+
+    this.mobileChatOpen = !this.mobileChatOpen;
+  },
+
   // Pagination
 
   numPresentUsers: 0,
@@ -109,6 +118,29 @@ export default () => ({
   initializeRoom(numPresentUsers) {
     this.numPresentUsers = numPresentUsers;
     this.calibratePagination();
+    this.maybeToggleChatSidebar();
+
+    window.addEventListener('phx:unread-chat', (_e) => {
+      if (!(this.chatSidebarShow || this.mobileChatOpen)) {
+        window.Alpine.store('unreadChat', true);
+      }
+    });
+  },
+
+  handleWindowResize() {
+    this.calibratePagination();
+    this.maybeToggleChatSidebar();
+  },
+
+  maybeToggleChatSidebar() {
+    const bodyEl = document.querySelector('body');
+
+    if (bodyEl.clientWidth >= 640) { // Tailwind sm
+      this.chatSidebarShow = true;
+      this.mobileChatOpen = false;
+    } else {
+      this.chatSidebarShow = false;
+    }
   },
 
   calibratePagination() {

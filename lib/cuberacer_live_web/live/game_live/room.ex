@@ -262,7 +262,14 @@ defmodule CuberacerLiveWeb.GameLive.Room do
 
   def handle_info({Messaging, [:room_message, _], room_message}, socket) do
     room_message = preload(room_message, :user)
-    {:noreply, update(socket, :room_messages, fn msgs -> [room_message | msgs] end)}
+
+    {:noreply,
+     if room_message.user_id != socket.assigns.current_user.id do
+       push_event(socket, "unread-chat", %{id: room_message.id})
+     else
+       socket
+     end
+     |> update(:room_messages, fn msgs -> [room_message | msgs] end)}
   end
 
   ## Helpers
