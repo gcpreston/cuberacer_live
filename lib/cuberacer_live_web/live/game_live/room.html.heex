@@ -11,9 +11,9 @@
     <i class="relative fas fa-comment"></i>
   </button>
 
-  <div class="flex-1 flex flex-col" x-show="!mobileChatOpen">
+  <div class="relative flex-1" x-show="!mobileChatOpen">
     <div
-      class="p-4 static sm:relative"
+      class="h-full p-4 static sm:relative overflow-auto"
       id="timer-area"
       x-data="timer"
       @keydown.space.window="handlePointDown"
@@ -41,7 +41,7 @@
         </button>
       </div>
 
-      <div class="my-3 mx-auto text-center">
+      <div class="mt-3 mb-9 mx-auto text-center">
         <div class={"#{scramble_text_size(@current_round.scramble)} #{if @current_solve, do: "text-gray-300", else: "text-gray-900"}"}>
           <span class="t_scramble"><%= @current_round.scramble %></span>
         </div>
@@ -58,7 +58,7 @@
       </div>
     </div>
 
-    <div class="flex-1 overflow-auto">
+    <div class="absolute bottom-0 inset-x-0 w-full overflow-auto bg-white" :class="bottomRowHeight">
       <div class="flex flex-row h-full">
         <div class="flex flex-col justify-between border-r">
           <.stats stats={@stats} />

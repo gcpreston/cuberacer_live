@@ -138,7 +138,7 @@ defmodule CuberacerLiveWeb.GameLive.Components do
           <th class="flex-1 border-y"></th>
         </tr>
       </thead>
-      <tbody id="times-table-body" class="bg-white" phx-update="prepend">
+      <tbody id="times-table-body" class="bg-white" x-show="bottomBarShow" phx-update="prepend">
         <%# Current round %>
         <tr id={"round-#{@current_round.id}"} class="flex t_round-row" title={@current_round.scramble}>
           <%= for {{user_id, data}, i} <- Enum.with_index(@participant_data) do %>
@@ -185,16 +185,20 @@ defmodule CuberacerLiveWeb.GameLive.Components do
   end
 
   def stats(assigns) do
+    # Taps into 'room' Alpine data
     ~H"""
     <table class="w-full" id="stats">
-      <thead class="bg-gray-50">
+      <thead class="bg-gray-50" @touchstart="handleBottomBarTap" @dblclick="bottomBarFull">
         <tr>
           <th scope="col" class="border-y px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            Stats
+            <span class="inline-block mr-1" @click="bottomBarCollapse">
+              <i class="fas" :class="bottomBarShow ? 'fa-chevron-circle-down' : 'fa-chevron-circle-up'"></i>
+            </span>
+            <span>Stats</span>
           </th>
         </tr>
       </thead>
-      <tbody class="bg-white">
+      <tbody class="bg-white" x-show="bottomBarShow">
         <tr>
           <td class="px-6 whitespace-nowrap">ao5: <span class="t_ao5"><%= Sessions.display_stat(@stats.ao5) %></span></td>
         </tr>
@@ -209,7 +213,7 @@ defmodule CuberacerLiveWeb.GameLive.Components do
   def presence(assigns) do
     # Taps into 'room' Alpine data
     ~H"""
-    <table class="w-full mb-4">
+    <table class="w-full mb-4" x-show="bottomBarShow">
       <thead class="bg-gray-50">
         <tr>
           <th scope="col" class="border-y px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
