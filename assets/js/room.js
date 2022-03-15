@@ -9,6 +9,7 @@ const BottomBarStates = {
 };
 
 export default () => ({
+  chatSidebarShow: true,
   mobileChatOpen: false,
   bottomBarState: BottomBarStates.NORMAL,
   bottomBarTapped: null,
@@ -109,6 +110,23 @@ export default () => ({
   initializeRoom(numPresentUsers) {
     this.numPresentUsers = numPresentUsers;
     this.calibratePagination();
+    this.maybeToggleChatSidebar();
+  },
+
+  handleWindowResize() {
+    this.calibratePagination();
+    this.maybeToggleChatSidebar();
+  },
+
+  maybeToggleChatSidebar() {
+    const bodyEl = document.querySelector('body');
+
+    if (bodyEl.clientWidth >= 640) { // Tailwind sm
+      this.chatSidebarShow = true;
+      this.mobileChatOpen = false;
+    } else {
+      this.chatSidebarShow = false;
+    }
   },
 
   calibratePagination() {
