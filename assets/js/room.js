@@ -2,8 +2,58 @@
  * Room frontend state, for Alpine x-data directive.
  */
 
- export default () => ({
+const BottomBarStates = {
+  NORMAL: Symbol('normal'),
+  FULL: Symbol('full'),
+  COLLAPSED: Symbol('collapsed')
+};
+
+export default () => ({
   mobileChatOpen: false,
+  bottomBarState: BottomBarStates.NORMAL,
+  bottomBarTapped: null,
+
+  bottomBarFull() {
+    this.toggleBetweenBottomBarStates(BottomBarStates.NORMAL, BottomBarStates.FULL);
+  },
+
+  bottomBarCollapse() {
+    this.toggleBetweenBottomBarStates(BottomBarStates.NORMAL, BottomBarStates.COLLAPSED);
+  },
+
+  toggleBetweenBottomBarStates(state1, state2) {
+    if (this.bottomBarState === state2) {
+      this.bottomBarState = state1;
+    } else {
+      this.bottomBarState = state2;
+    }
+  },
+
+  get bottomRowHeight() {
+    switch (this.bottomBarState) {
+      case BottomBarStates.NORMAL: return 'h-60';
+      case BottomBarStates.FULL: return 'h-full';
+      case BottomBarStates.COLLAPSED: return '';
+    }
+  },
+
+  get bottomBarShow() {
+    return this.bottomBarState != BottomBarStates.COLLAPSED;
+  },
+
+  handleBottomBarTap() {
+    if (!this.bottomBarTapped) {
+      // First tap
+      this.bottomBarTapped = setTimeout(() => {
+        this.bottomBarTapped = null
+      }, 300);
+    } else {
+      // Second tap
+      clearTimeout(this.bottomBarTapped);
+      this.bottomBarTapped = null
+      this.bottomBarFull();
+    }
+  },
 
   addTouchPropagationStoppers() {
     this.$el.querySelectorAll('button').forEach(
@@ -80,4 +130,4 @@
       this.usersPage = this.numUsersPages;
     }
   }
- });
+});
