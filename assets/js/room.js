@@ -32,7 +32,7 @@ export default () => ({
 
   get bottomRowHeight() {
     switch (this.bottomBarState) {
-      case BottomBarStates.NORMAL: return 'h-60';
+      case BottomBarStates.NORMAL: return 'h-2/5';
       case BottomBarStates.FULL: return 'h-full';
       case BottomBarStates.COLLAPSED: return '';
     }
