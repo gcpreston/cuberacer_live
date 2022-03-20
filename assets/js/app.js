@@ -4,9 +4,11 @@
 
 // AlpineJS
 import Alpine from 'alpinejs';
+import howTo from './howTo';
 import timer from './timer';
 import room from './room';
 
+Alpine.data('howTo', howTo);
 Alpine.data('timer', timer);
 Alpine.data('room', room);
 

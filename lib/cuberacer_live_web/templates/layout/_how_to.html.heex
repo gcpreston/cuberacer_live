@@ -1,19 +1,19 @@
-<div x-data="{ open: false }">
+<div x-data="howTo">
   <!-- Button -->
-  <button x-on:click="open = true" type="button">
+  <button @click="openModal" type="button">
     <span class="text-purple-500 text-2xl">
       <i class="fas fa-question"></i>
     </span>
   </button>
 
   <!-- Modal -->
-  <div x-show="open" x-on:keydown.escape.prevent.stop="open = false" role="dialog" aria-modal="true"
+  <div x-show="modalOpen" x-on:keydown.escape.prevent.stop="closeModal" role="dialog" aria-modal="true"
     x-id="['modal-title']" :aria-labelledby="$id('modal-title')" class="fixed inset-0 overflow-y-auto z-10">
     <!-- Overlay -->
-    <div x-show="open" x-transition.opacity class="fixed inset-0 bg-black bg-opacity-50"></div>
+    <div x-show="modalOpen" x-transition.opacity class="fixed inset-0 bg-black bg-opacity-50"></div>
 
     <!-- Panel -->
-    <div x-show="open" x-transition x-on:click="open = false"
+    <div x-show="modalOpen" x-transition x-on:click="closeModal"
       class="relative min-h-screen flex items-center justify-center p-4">
       <div x-on:click.stop x-trap.noscroll.inert="open"
         class="relative max-w-2xl w-full bg-white rounded-lg border border-black p-8 overflow-y-auto">
@@ -24,34 +24,67 @@
         </h1>
         <!-- How To Play -->
         <h2 class="mt-3 text-xl font-medium text-center">How To Play</h2>
-        <p class="mt-2 text-gray-600">
-          1. Click or tap a room from the lobby to join, or use the "Create Room" button at the bottom to create your own.
-        </p>
-        <p class="mt-2 text-gray-600">
-          2. Follow the given scramble.
-        </p>
-        <p class="mt-2 text-gray-600">
-          3. Hold space to tap and hold the timer to get ready.
-        </p>
-        <p class="mt-2 text-gray-600">
-          4. When the time is green, release and start solving.
-        </p>
-        <p class="mt-2 text-gray-600">
-          5. Once finished, tap space or the time again to stop the timer.
-        </p>
-        <p class="mt-2 text-gray-600">
-          6. Add a penalty, if necessary.
-        </p>
-        <p class="mt-2 text-gray-600">
-          7. Once everyone is ready, use the "New Round" button to generate the next scramble.
-        </p>
 
-        <p class="mt-6 text-gray-600 text-center">
-          Happy solving!
-        </p>
+        <div class="py-6 flex justify-center">
+          <button
+            class="w-1/12 text-2xl"
+            :class="showPrevArrow ? 'visible' : 'invisible'"
+            @click="prevPage"
+          >
+            <i class="fas fa-chevron-left"></i>
+          </button>
+
+          <div class="w-10/12">
+            <img src={Routes.static_path(@conn, "/images/how-to-create.png")} alt="How to create a room" x-show="currentPage === 1">
+            <img src={Routes.static_path(@conn, "/images/how-to-join.png")} alt="How to join a room" x-show="currentPage === 2">
+            <img src={Routes.static_path(@conn, "/images/how-to-time.png")} alt="How to start the timer" x-show="currentPage === 3">
+            <img src={Routes.static_path(@conn, "/images/how-to-keyboard.png")} alt="How to use keyboard input" x-show="currentPage === 4">
+            <img src={Routes.static_path(@conn, "/images/how-to-enjoy.png")} alt="Enjoy!" x-show="currentPage === 5">
+          </div>
+
+          <button
+            class="w-1/12 text-2xl"
+            :class="showNextArrow ? 'visible' : 'invisible'"
+            @click="nextPage"
+          >
+            <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
+
+        <div class="sm:mx-6">
+          <div class="text-center" x-show="currentPage === 1">
+            Start by clicking "Create Room"
+          </div>
+
+          <div class="text-center" x-show="currentPage === 2">
+            Join the room by clicking or tapping on it
+          </div>
+
+          <div class="text-center" x-show="currentPage === 3">
+            Follow the given scramble and start the timer by holding space or touching and
+            holding within the timer box until the time turns green
+          </div>
+
+          <div class="text-center" x-show="currentPage === 4">
+            Alternatively, a keyboard input can be toggled with the keyboard/stopwatch button
+            in the top-right
+          </div>
+
+          <div class="text-center" x-show="currentPage === 5">
+            Happy solving! Some additional tips and tricks:
+
+            <ul class="text-left list-disc">
+              <li>Chat by using the input box on the left</li>
+              <li>Toggle chat on small devices using the message bubble in the top right corner</li>
+              <li>The time table can be collapsed with the down arrow to the left of "Stats"</li>
+              <li>The time table can be maximized by double clicking/tapping within the "Stats" header</li>
+            </ul>
+          </div>
+        </div>
+
         <!-- Buttons -->
         <div class="mt-4 flex space-x-2">
-          <button type="button" x-on:click="open = false"
+          <button type="button" x-on:click="closeModal"
             class="text-sm bg-white rounded-md border border-black px-2 py-1 focus:outline-none focus:ring-4 focus:ring-aqua-400">
             Close
           </button>
