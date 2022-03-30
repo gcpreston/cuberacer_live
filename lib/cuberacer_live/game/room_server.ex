@@ -6,8 +6,8 @@ defmodule CuberacerLive.RoomServer do
 
   require Logger
 
-  alias CuberacerLive.{Sessions, Messaging, Accounts}
-  alias CuberacerLive.Sessions.Session
+  alias CuberacerLive.{RoomSessions, Messaging, Accounts}
+  alias CuberacerLive.RoomSessions.RoomSession
   alias CuberacerLive.Accounts.User
 
   @lobby_server_topic inspect(CuberacerLive.LobbyServer)
@@ -26,7 +26,7 @@ defmodule CuberacerLive.RoomServer do
     end
   end
 
-  def start_link(%Session{} = session) do
+  def start_link(%RoomSession{} = session) do
     GenServer.start_link(__MODULE__, session, name: global_name(session))
   end
 
@@ -57,26 +57,24 @@ defmodule CuberacerLive.RoomServer do
   ## Callbacks
 
   @impl true
-  def init(%Session{} = session) do
-    Logger.info("Creating room for session #{session.id}")
-    subscribe_to_pubsub(session.id)
-    notify_lobby_server(:room_created, session.id)
+  def init(%RoomSession{} = session) do
+    Logger.info("Creating room for session #{session.uuid}")
+    subscribe_to_pubsub(session.uuid)
+    notify_lobby_server(:room_created, session.uuid)
 
     {:ok, %__MODULE__{session: session} |> set_empty_room_timeout()}
   end
 
   @impl true
   def terminate(reason, state) do
-    Logger.info("Terminating session #{state.session.id}, reason: #{inspect(reason)}")
-    notify_lobby_server(:room_destroyed, state.session.id)
+    Logger.info("Terminating session #{state.session.uuid}, reason: #{inspect(reason)}")
+    notify_lobby_server(:room_destroyed, state.session.uuid)
   end
 
   @impl true
   def handle_call(:create_round, _from, %{session: session} = state) do
-    case Sessions.create_round_debounced(session) do
-      {:ok, round} -> {:reply, round.scramble, state}
-      error -> {:reply, error, state}
-    end
+    new_session = RoomSessions.add_round(session)
+    %{state | session: new_session}
   end
 
   def handle_call(
@@ -85,16 +83,14 @@ defmodule CuberacerLive.RoomServer do
         %{session: session} = state
       ) do
     new_state = put_in(state.participant_data[user.id].meta.solving, false)
-    {:ok, solve} = Sessions.create_solve(session, user, time, penalty)
-    {:reply, solve, new_state}
+    solve = RoomSessions.new_solve(user, time, penalty)
+    new_session = RoomSessions.add_solve(session, solve)
+    {:reply, solve, %{new_state | session: new_session}}
   end
 
   def handle_call({:change_penalty, %User{} = user, penalty}, _from, %{session: session} = state) do
-    if solve = Sessions.get_current_solve(session, user) do
-      Sessions.change_penalty(solve, penalty)
-    end
-
-    {:reply, :ok, state}
+    new_session = RoomSessions.change_penalty(session, user, penalty)
+    {:reply, :ok, %{state | session: new_session}}
   end
 
   def handle_call(:get_participant_count, _from, state) do
@@ -144,7 +140,7 @@ defmodule CuberacerLive.RoomServer do
 
     # Let the lobby know of the change
     notify_lobby_server(:update_participant_count, %{
-      session_id: state.session.id,
+      uuid: state.session.uuid,
       participant_count: present_users_count
     })
 
@@ -168,7 +164,7 @@ defmodule CuberacerLive.RoomServer do
   end
 
   def handle_info(:timeout, state) do
-    Logger.info("Room #{state.session.id} timed out")
+    Logger.info("Room #{state.session.uuid} timed out")
     {:stop, :normal, state}
   end
 
@@ -176,7 +172,7 @@ defmodule CuberacerLive.RoomServer do
   def handle_continue({:tell_game_room_to_fetch, data}, state) do
     Phoenix.PubSub.broadcast!(
       CuberacerLive.PubSub,
-      game_room_topic(state.session.id),
+      game_room_topic(state.session.uuid),
       {:fetch, data}
     )
 
@@ -206,8 +202,8 @@ defmodule CuberacerLive.RoomServer do
     CuberacerLiveWeb.Endpoint.subscribe(topic)
   end
 
-  defp global_name(%Session{} = session) do
-    {:global, {__MODULE__, session.id}}
+  defp global_name(%RoomSession{} = session) do
+    {:global, {__MODULE__, session.uuid}}
   end
 
   defp set_empty_room_timeout(%{timeout_ref: nil} = state) do
@@ -229,12 +225,12 @@ defmodule CuberacerLive.RoomServer do
   end
 
   defp _set_timeout(state) do
-    Logger.info("Setting empty room timeout for room #{state.session.id}")
+    Logger.info("Setting empty room timeout for room #{state.session.uuid}")
     %{state | timeout_ref: Process.send_after(self(), :timeout, empty_room_timeout_ms())}
   end
 
   defp _cancel_timeout(state) do
-    Logger.info("Cancelling empty room timeout for room #{state.session.id}")
+    Logger.info("Cancelling empty room timeout for room #{state.session.uuid}")
     Process.cancel_timer(state.timeout_ref)
   end
 

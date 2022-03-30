@@ -1,5 +1,6 @@
 defmodule CuberacerLive.RoomCache do
-  alias CuberacerLive.{RoomServer, Sessions}
+  alias CuberacerLive.{RoomServer, RoomSessions}
+  alias CuberacerLive.Accounts.User
 
   require Logger
 
@@ -21,14 +22,10 @@ defmodule CuberacerLive.RoomCache do
     |> Enum.map(fn {RoomServer, room_id} -> room_id end)
   end
 
-  def create_room(name, puzzle_type, unlisted \\ false, host \\ nil) do
-    case Sessions.create_session_and_round(name, puzzle_type, unlisted, host) do
-      {:ok, session, _round} ->
-        {:ok, pid} = DynamicSupervisor.start_child(__MODULE__, {RoomServer, session})
-        {:ok, pid, session}
+  def create_room(name, puzzle_type, unlisted?, %User{} = host) do
+    session = RoomSessions.new_session_and_round(name, puzzle_type, unlisted?, host)
+    {:ok, pid} = DynamicSupervisor.start_child(__MODULE__, {RoomServer, session})
 
-      err ->
-        err
-    end
+    {:ok, pid, session}
   end
 end

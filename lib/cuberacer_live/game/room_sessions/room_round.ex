@@ -7,8 +7,12 @@ defmodule CuberacerLive.RoomSessions.RoomRound do
 
   defstruct [:scramble, room_solves: []]
 
-  def new(puzzle_type) do
+  def new(puzzle_type) when is_atom(puzzle_type) do
     scramble = Whisk.scramble(puzzle_type)
+    %__MODULE__{scramble: scramble}
+  end
+
+  def new(scramble) when is_binary(scramble) do
     %__MODULE__{scramble: scramble}
   end
 

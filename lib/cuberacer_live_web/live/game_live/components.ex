@@ -9,30 +9,23 @@ defmodule CuberacerLiveWeb.GameLive.Components do
   alias CuberacerLive.Accounts.User
 
   def room_card(assigns) do
-    room_ext =
-      if assigns.session.unlisted? do
-        Hashids.encode(CuberacerLive.Hashids.new(), assigns.session.id)
-      else
-        assigns.session.id
-      end
-
     ~H"""
-    <%= live_redirect to: Routes.game_room_path(CuberacerLiveWeb.Endpoint, :show, room_ext),
+    <%= live_redirect to: Routes.game_room_path(CuberacerLiveWeb.Endpoint, :show, @room_session.uuid),
       class: "t_room-card" do %>
-      <div id={"t_room-card-#{@session.id}"} class="relative p-4 rounded-lg shadow-sm border bg-white transition-all hover:bg-gray-50 hover:shadow-md">
+      <div id={"t_room-card-#{@room_session.uuid}"} class="relative p-4 rounded-lg shadow-sm border bg-white transition-all hover:bg-gray-50 hover:shadow-md">
         <%= if @participant_count > 0 do %>
           <span class="absolute top-2 left-2 bg-green-500 h-3 w-3 rounded-full" />
         <% end %>
 
-        <%= if @session.unlisted? do %>
+        <%= if @room_session.unlisted? do %>
           <span class="absolute top-2 right-2"><i class="fas fa-lock"></i></span>
         <% end %>
         <div class="text-center">
-         <span class="text-lg font-medium"><%= @session.name %></span>
+         <span class="text-lg font-medium"><%= @room_session.name %></span>
         </div>
         <hr class="my-2" />
         <ul class="text-center">
-          <li class="t_room-puzzle"><span class="font-semibold">Puzzle: </span><%= @session.puzzle_type %></li>
+          <li class="t_room-puzzle"><span class="font-semibold">Puzzle: </span><%= @room_session.puzzle_type %></li>
           <li class="t_room-participants"><span class="font-semibold">Participants: </span><%= @participant_count %></li>
         </ul>
       </div>

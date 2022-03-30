@@ -31,17 +31,13 @@ defmodule CuberacerLiveWeb.GameLive.CreateRoomForm do
   defp save_session(socket, :new, %{
          "name" => name,
          "puzzle_type" => puzzle_type,
-         "unlisted" => unlisted
+         "unlisted" => unlisted?
        }) do
-    case RoomCache.create_room(name, puzzle_type, unlisted, socket.assigns.current_user) do
-      {:ok, _pid, _session} ->
-        {:noreply,
-         socket
-         |> put_flash(:info, "Room created successfully")
-         |> push_redirect(to: socket.assigns.return_to)}
+    {:ok, _pid, _session} = RoomCache.create_room(name, puzzle_type, unlisted?, socket.assigns.current_user)
 
-      {:error, %Ecto.Changeset{} = changeset} ->
-        {:noreply, assign(socket, changeset: changeset)}
-    end
+    {:noreply,
+      socket
+      |> put_flash(:info, "Room created successfully")
+      |> push_redirect(to: socket.assigns.return_to)}
   end
 end

@@ -18,8 +18,8 @@
     <p>Join a room below, or create your own!</p>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mt-6">
-      <%= for session <- @rooms do %>
-        <.room_card session={session} participant_count={@participant_counts[session.id]} />
+      <%= for room_session <- @rooms do %>
+        <.room_card room_session={room_session} participant_count={@participant_counts[room_session.uuid]} />
       <% end %>
     </div>
   <% else %>

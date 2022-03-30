@@ -39,25 +39,25 @@ defmodule CuberacerLive.LobbyServer do
   end
 
   @impl true
-  def handle_info({:room_created, session_id}, state) do
-    {:noreply, %{state | rooms: Map.put(state.rooms, session_id, %{participant_count: 0})},
+  def handle_info({:room_created, room_session_uuid}, state) do
+    {:noreply, %{state | rooms: Map.put(state.rooms, room_session_uuid, %{participant_count: 0})},
      {:continue, :tell_game_lobby_to_fetch}}
   end
 
-  def handle_info({:room_destroyed, session_id}, state) do
-    {:noreply, %{state | rooms: Map.delete(state.rooms, session_id)},
+  def handle_info({:room_destroyed, room_session_uuid}, state) do
+    {:noreply, %{state | rooms: Map.delete(state.rooms, room_session_uuid)},
      {:continue, :tell_game_lobby_to_fetch}}
   end
 
   def handle_info(
         {:update_participant_count,
-         %{session_id: session_id, participant_count: participant_count}},
+         %{uuid: room_session_uuid, participant_count: participant_count}},
         state
       ) do
+    # This conditional should only fail if the room process has crashed
     new_state =
-      # This conditional should only fail if the room process has crashed
-      if Map.has_key?(state.rooms, session_id) do
-        put_in(state.rooms[session_id].participant_count, participant_count)
+      if Map.has_key?(state.rooms, room_session_uuid) do
+        put_in(state.rooms[room_session_uuid].participant_count, participant_count)
       else
         state
       end
@@ -74,8 +74,8 @@ defmodule CuberacerLive.LobbyServer do
   @impl true
   def handle_call(:get_participant_counts, _from, state) do
     counts =
-      Enum.reduce(state.rooms, %{}, fn {session_id, metadata}, acc ->
-        Map.put(acc, session_id, metadata.participant_count)
+      Enum.reduce(state.rooms, %{}, fn {room_session_uuid, metadata}, acc ->
+        Map.put(acc, room_session_uuid, metadata.participant_count)
       end)
 
     {:reply, counts, state}

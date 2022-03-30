@@ -136,6 +136,8 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       refute html =~ other_user.username
     end
 
+    # TODO: Write test(s) for 2 connections from same user to one room
+
     test "displays messages in appropriate room", %{conn: conn, session: session1, user: user} do
       other_user = user_fixture()
       session2 = session_fixture()
