@@ -7,6 +7,7 @@ import { Stackmat } from 'stackmat';
 const READY_HOLD_TIME_MS = 500;
 const PREPARING_COLOR = 'text-red-500';
 const READY_COLOR = 'text-green-400';
+const TIME_ENTRY_METHODS = ['timer', 'keyboard', 'stackmat'];
 
 export default () => ({
   clock: 0,
@@ -15,7 +16,7 @@ export default () => ({
   readyTimeout: null,
   ready: false,
   stackmatListener: null,
-  timeEntry: 'stackmat', // 'timer', 'keyboard', 'stackmat' (?)
+  timeEntry: TIME_ENTRY_METHODS[0],
   hasCurrentSolve: null, // shadows assign has_current_solve?
 
   get formattedTime() {
@@ -53,6 +54,30 @@ export default () => ({
 
   get isPreparing() {
     return Boolean(this.readyTimeout);
+  },
+
+  get nextTimeEntryMethod() {
+    const currentEntryIndex = TIME_ENTRY_METHODS.indexOf(this.timeEntry);
+    const newEntryIndex = (currentEntryIndex + 1) % TIME_ENTRY_METHODS.length;
+    return TIME_ENTRY_METHODS[newEntryIndex];
+  },
+
+  get timeEntryChangeIcon() {
+    switch (this.nextTimeEntryMethod) {
+      case 'keyboard': return 'fa-keyboard';
+      case 'stackmat': return 'fa-biohazard';
+      case 'timer': return 'fa-stopwatch';
+    }
+  },
+
+  changeTimeEntry() {
+    this.timeEntry = this.nextTimeEntryMethod;
+
+    if (this.timeEntry === 'stackmat') {
+      this.stackmatListener.start();
+    } else {
+      this.stackmatListener.stop();
+    }
   },
 
   setPreparing() {
@@ -161,16 +186,5 @@ export default () => ({
     });
 
     this.stackmatListener = stackmat;
-    this.enableStackmat();
   },
-
-  enableStackmat() {
-    this.stackmatListener.start();
-    this.timeEntry = 'stackmat';
-  },
-
-  disableStackmat() {
-    this.stackmatListener.stop();
-    this.timeEntry = 'timer';
-  }
 });

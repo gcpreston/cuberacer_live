@@ -132,18 +132,6 @@ defmodule CuberacerLiveWeb.GameLive.Room do
     {:noreply, socket}
   end
 
-  def handle_event("toggle-timer", _value, socket) do
-    new_entry_method = if socket.assigns.time_entry == :timer, do: :keyboard, else: :timer
-
-    Phoenix.PubSub.broadcast!(
-      CuberacerLive.PubSub,
-      room_server_topic(socket.assigns.session.id),
-      {:set_time_entry, socket.assigns.current_user.id, new_entry_method}
-    )
-
-    {:noreply, assign(socket, :time_entry, new_entry_method)}
-  end
-
   def handle_event("timer-submit", %{"time" => time}, socket) do
     solve =
       RoomServer.create_solve(

@@ -29,9 +29,9 @@
       <div class="absolute top-2 right-2 grid grid-flow-col gap-3">
         <button
           class="h-11 w-11 border border-gray-300 rounded-md shadow-sm bg-white hover:bg-gray-50"
-          phx-click="toggle-timer"
+          @click="changeTimeEntry"
         >
-          <i class={"fas fa-#{if @time_entry == :timer, do: "keyboard", else: "stopwatch"}"}></i>
+          <i class="fas" :class="timeEntryChangeIcon"></i>
         </button>
         <button
           class="relative h-11 w-11 border border-gray-300 rounded-md shadow-sm text-sm font-medium bg-white hover:bg-gray-50 sm:hidden"
@@ -50,17 +50,15 @@
         <div class={"#{scramble_text_size(@current_round.scramble)} #{if @current_solve, do: "text-gray-300", else: "text-gray-900"}"}>
           <span class="t_scramble"><%= @current_round.scramble %></span>
         </div>
+        <div x-text="timeEntry"></div>
         <div class="text-6xl my-4">
-          <div x-show="timeEntry !== 'stackmat'">
-            <%= if @time_entry == :timer do %>
-              <.timer current_solve={@current_solve} />
-            <% else %>
-              <.keyboard_input current_solve={@current_solve} />
-            <% end %>
+          <div x-show="timeEntry === 'timer'">
+            <.timer current_solve={@current_solve} />
           </div>
-
+          <div x-show="timeEntry === 'keyboard'">
+             <.keyboard_input current_solve={@current_solve} />
+          </div>
           <div x-show="timeEntry === 'stackmat'" x-init="initStackmatListener">
-            <p>This is the stackmat timer</p>
             <.timer current_solve={@current_solve} />
           </div>
         </div>
