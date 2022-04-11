@@ -2,6 +2,8 @@
  * Timer state, for Alpine x-data directive.
  */
 
+import { Stackmat } from 'stackmat';
+
 const READY_HOLD_TIME_MS = 500;
 const PREPARING_COLOR = 'text-red-500';
 const READY_COLOR = 'text-green-400';
@@ -12,6 +14,8 @@ export default () => ({
   interval: null,
   readyTimeout: null,
   ready: false,
+  stackmatListener: null,
+  timeEntry: 'stackmat', // 'timer', 'keyboard', 'stackmat' (?)
   hasCurrentSolve: null, // shadows assign has_current_solve?
 
   get formattedTime() {
@@ -43,26 +47,50 @@ export default () => ({
     return '';
   },
 
+  get isRunning() {
+    return Boolean(this.interval);
+  },
+
+  get isPreparing() {
+    return Boolean(this.readyTimeout);
+  },
+
+  setPreparing() {
+    this.readyTimeout = setTimeout(() => {
+      this.resetTime();
+      this.setReady();
+    }, READY_HOLD_TIME_MS);
+  },
+
+  unsetPreparing() {
+    clearTimeout(this.readyTimeout);
+    this.readyTimeout = null;
+  },
+
+  get isReady() {
+    return this.ready;
+  },
+
+  setReady() {
+    this.ready = true;
+  },
+
   handlePointDown() {
-    if (!this.$store.inputFocused && !this.hasCurrentSolve) {
-      if (this.interval) {
+    if (!this.$store.inputFocused && !this.hasCurrentSolve) { // allow timer stuff (+ stopping time)
+      if (this.isRunning) { // running
         this.stopTime();
-      } else if (!this.readyTimeout) {
-        this.readyTimeout = setTimeout(() => {
-          this.resetTime();
-          this.ready = true;
-        }, READY_HOLD_TIME_MS);
+      } else if (!this.isPreparing) { // not preparing -> start preparing
+        this.setPreparing();
       }
     }
   },
 
   handlePointUp() {
-    if (!this.$store.inputFocused) {
-      if (this.ready) {
+    if (!this.$store.inputFocused) { // allow starting time
+      if (this.isReady) { // ready
         this.startTime();
-      } else {
-        clearTimeout(this.readyTimeout);
-        this.readyTimeout = null;
+      } else { // let go before ready
+        this.unsetPreparing();
       }
     }
   },
@@ -101,5 +129,48 @@ export default () => ({
   presetTime(clock) {
     this.clock = clock;
     this.hasCurrentSolve = true;
+  },
+
+  initStackmatListener() {
+    const stackmat = new Stackmat();
+
+    stackmat.on('ready', () => {
+      this.setPreparing();
+    });
+
+    stackmat.on('unready', () => {
+      this.unsetPreparing();
+    });
+
+    stackmat.on('starting', () => {
+      this.setReady();
+    });
+
+    stackmat.on('started', () => {
+      console.log('Timer started');
+      this.startTime();
+    });
+
+    stackmat.on('stopped', (packet) => {
+      console.log('Timer stopped at: ' + packet.timeAsString);
+      this.stopTime();
+    });
+
+    stackmat.on('reset', () => {
+      this.resetTime();
+    });
+
+    this.stackmatListener = stackmat;
+    this.enableStackmat();
+  },
+
+  enableStackmat() {
+    this.stackmatListener.start();
+    this.timeEntry = 'stackmat';
+  },
+
+  disableStackmat() {
+    this.stackmatListener.stop();
+    this.timeEntry = 'timer';
   }
 });

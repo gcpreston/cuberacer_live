@@ -51,11 +51,18 @@
           <span class="t_scramble"><%= @current_round.scramble %></span>
         </div>
         <div class="text-6xl my-4">
-          <%= if @time_entry == :timer do %>
+          <div x-show="timeEntry !== 'stackmat'">
+            <%= if @time_entry == :timer do %>
+              <.timer current_solve={@current_solve} />
+            <% else %>
+              <.keyboard_input current_solve={@current_solve} />
+            <% end %>
+          </div>
+
+          <div x-show="timeEntry === 'stackmat'" x-init="initStackmatListener">
+            <p>This is the stackmat timer</p>
             <.timer current_solve={@current_solve} />
-          <% else %>
-            <.keyboard_input current_solve={@current_solve} />
-          <% end %>
+          </div>
         </div>
         <.penalty_input />
 
