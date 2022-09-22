@@ -2,7 +2,6 @@ defmodule CuberacerLiveWeb.RoundView do
   use CuberacerLiveWeb, :view
 
   import CuberacerLiveWeb.SharedUtils, only: [format_datetime: 1]
-  import CuberacerLiveWeb.SharedComponents, only: [session_link: 1]
   import CuberacerLive.Sessions, only: [display_solve: 1, session_locator: 1]
 
   def solves_table(assigns) do
@@ -26,10 +25,14 @@ defmodule CuberacerLiveWeb.RoundView do
             <%= for solve <- @solves do %>
               <tr>
                 <td class="px-6 py-4 whitespace-nowrap">
-                  <%= link solve.user.username, to: Routes.user_profile_path(CuberacerLiveWeb.Endpoint, :show, solve.user_id) %>
+                  <.link href={Routes.user_profile_path(CuberacerLiveWeb.Endpoint, :show, solve.user_id)}>
+                    <%= solve.user.username %>
+                  </.link>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
-                  <%= link display_solve(solve), to: Routes.solve_path(CuberacerLiveWeb.Endpoint, :show, solve.id) %>
+                  <.link href={Routes.solve_path(CuberacerLiveWeb.Endpoint, :show, solve.id)}>
+                    <%= display_solve(solve) %>
+                  </.link>
                 </td>
               </tr>
             <% end %>
