@@ -35,8 +35,8 @@ defmodule CuberacerLiveWeb.UserRegistrationControllerTest do
       conn = get(conn, "/lobby")
       response = html_response(conn, 200)
       assert response =~ username
-      assert response =~ "Settings</a>"
-      assert response =~ "Log out</a>"
+      assert response =~ "Settings"
+      assert response =~ "Log out"
     end
 
     test "render errors for invalid data", %{conn: conn} do

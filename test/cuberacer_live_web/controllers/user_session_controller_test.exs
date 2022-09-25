@@ -37,8 +37,8 @@ defmodule CuberacerLiveWeb.UserSessionControllerTest do
       conn = get(conn, "/users/settings")
       response = html_response(conn, 200)
       assert response =~ user.username
-      assert response =~ "Settings</a>"
-      assert response =~ "Log out</a>"
+      assert response =~ "Settings"
+      assert response =~ "Log out"
     end
 
     test "logs the user in via email", %{conn: conn, user: user} do
@@ -54,8 +54,8 @@ defmodule CuberacerLiveWeb.UserSessionControllerTest do
       conn = get(conn, "/users/settings")
       response = html_response(conn, 200)
       assert response =~ user.username
-      assert response =~ "Settings</a>"
-      assert response =~ "Log out</a>"
+      assert response =~ "Settings"
+      assert response =~ "Log out"
     end
 
     test "logs the user in with remember me", %{conn: conn, user: user} do
