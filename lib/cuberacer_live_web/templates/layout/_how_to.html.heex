@@ -8,7 +8,7 @@
 
   <!-- Modal -->
   <div x-show="modalOpen" x-on:keydown.escape.prevent.stop="closeModal" role="dialog" aria-modal="true"
-    x-id="['modal-title']" :aria-labelledby="$id('modal-title')" class="fixed inset-0 overflow-y-auto z-10">
+    x-id="['modal-title']" x-bind:aria-labelledby="$id('modal-title')" class="fixed inset-0 overflow-y-auto z-10">
     <!-- Overlay -->
     <div x-show="modalOpen" x-transition.opacity class="fixed inset-0 bg-black bg-opacity-50"></div>
 
@@ -17,7 +17,7 @@
       class="relative min-h-screen flex items-center justify-center p-4">
       <div x-on:click.stop x-trap.noscroll.inert="open"
         class="relative max-w-2xl w-full bg-white rounded-lg border border-black p-8 overflow-y-auto">
-        <h1 class="text-center":id="$id('modal-title')">
+        <h1 class="text-center" x-bind:id="$id('modal-title')">
           <span class="text-purple-500 text-2xl">
             <i class="fas fa-question"></i>
           </span>
@@ -28,7 +28,7 @@
         <div class="py-6 flex justify-center">
           <button
             class="w-1/12 text-2xl"
-            :class="showPrevArrow ? 'visible' : 'invisible'"
+            x-bind:class="showPrevArrow ? 'visible' : 'invisible'"
             @click="prevPage"
           >
             <i class="fas fa-chevron-left"></i>
@@ -44,7 +44,7 @@
 
           <button
             class="w-1/12 text-2xl"
-            :class="showNextArrow ? 'visible' : 'invisible'"
+            x-bind:class="showNextArrow ? 'visible' : 'invisible'"
             @click="nextPage"
           >
             <i class="fas fa-chevron-right"></i>

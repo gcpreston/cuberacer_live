@@ -2,7 +2,6 @@ defmodule CuberacerLiveWeb.UserProfileView do
   use CuberacerLiveWeb, :view
 
   import CuberacerLiveWeb.SharedUtils, only: [format_datetime: 1]
-  import CuberacerLiveWeb.SharedComponents, only: [session_link: 1]
 
   alias CuberacerLive.CountryUtils
   alias CuberacerLive.Accounts

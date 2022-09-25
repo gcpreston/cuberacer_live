@@ -63,7 +63,7 @@
       </div>
     </div>
 
-    <div class="absolute bottom-0 inset-x-0 w-full overflow-auto bg-white" :class="bottomRowHeight">
+    <div class="absolute bottom-0 inset-x-0 w-full overflow-auto bg-white" x-bind:class="bottomRowHeight">
       <div class="flex flex-row h-full">
         <div class="flex flex-col justify-between border-r">
           <.stats stats={@stats} />
@@ -97,7 +97,7 @@
     </div>
   </div>
 
-  <div class="w-full sm:w-80 shrink-0 h-full" :class="{ 'hidden': !(chatSidebarShow || mobileChatOpen) }">
+  <div class="w-full sm:w-80 shrink-0 h-full" x-bind:class="{ 'hidden': !(chatSidebarShow || mobileChatOpen) }">
     <.chat room_messages={@room_messages} color_seed={@socket.id} />
   </div>
 </div>

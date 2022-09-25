@@ -7,9 +7,9 @@
       <ul class="my-8">
         <li>
           <span class="font-semibold text-gray-800">User: </span>
-          <%= link @solve.user.username,
-            to: Routes.user_profile_path(@conn, :show, @solve.user_id),
-            class: "text-blue-500 hover:underline" %>
+          <.link href={Routes.user_profile_path(@conn, :show, @solve.user_id)} class="text-blue-500 hover:underline">
+            <%= @solve.user.username %>
+          </.link>
         </li>
         <li>
           <span class="font-semibold text-gray-800">Scramble: </span>
@@ -17,9 +17,9 @@
         </li>
         <li>
           <span class="font-semibold text-gray-800">Round: </span>
-          <%= link @solve.round_id,
-            to: Routes.round_path(@conn, :show, @solve.round_id),
-            class: "text-blue-500 hover:underline" %>
+          <.link href={Routes.round_path(@conn, :show, @solve.round_id)} class="text-blue-500 hover:underline">
+            <%= @solve.round_id %>
+          </.link>
         </li>
         <li>
           <span class="font-semibold text-gray-800">Session: </span>

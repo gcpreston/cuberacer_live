@@ -1,9 +1,6 @@
 defmodule CuberacerLiveWeb.GameLive.Components do
   use CuberacerLiveWeb, :component
 
-  import CuberacerLiveWeb.SharedComponents, only: [chat_message: 1]
-
-  alias CuberacerLiveWeb.Router.Helpers, as: Routes
   alias CuberacerLive.Sessions
   alias CuberacerLive.Sessions.Round
   alias CuberacerLive.Accounts.User
@@ -17,8 +14,8 @@ defmodule CuberacerLiveWeb.GameLive.Components do
       end
 
     ~H"""
-    <%= live_redirect to: Routes.game_room_path(CuberacerLiveWeb.Endpoint, :show, room_ext),
-      class: "t_room-card" do %>
+    <.link navigate={Routes.game_room_path(CuberacerLiveWeb.Endpoint, :show, room_ext)}
+      class="t_room-card">
       <div id={"t_room-card-#{@session.id}"} class="relative p-4 rounded-lg shadow-sm border bg-white transition-all hover:bg-gray-50 hover:shadow-md">
         <%= if @participant_count > 0 do %>
           <span class="absolute top-2 left-2 bg-green-500 h-3 w-3 rounded-full" />
@@ -36,7 +33,7 @@ defmodule CuberacerLiveWeb.GameLive.Components do
           <li class="t_room-participants"><span class="font-semibold">Participants: </span><%= @participant_count %></li>
         </ul>
       </div>
-    <% end %>
+    </.link>
     """
   end
 
@@ -46,7 +43,7 @@ defmodule CuberacerLiveWeb.GameLive.Components do
       id="timer"
       x-init={if @current_solve, do: "presetTime(#{@current_solve.time})", else: "hasCurrentSolve = false"}
     >
-      <span id="time" x-text="formattedTime" :class="timeColor"></span>
+      <span id="time" x-text="formattedTime" x-bind:class="timeColor"></span>
     </div>
     """
   end
@@ -121,11 +118,13 @@ defmodule CuberacerLiveWeb.GameLive.Components do
               scope="col"
               id={"header-cell-user-#{user_id}"}
               class="w-28 border-y px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider flex"
-              :class={"{ 'hidden': !isColShown(#{i}) }"}
+              x-bind:class={"{ 'hidden': !isColShown(#{i}) }"}
             >
               <div class="inline-flex max-w-full">
                 <span class="flex-1 truncate">
-                  <%= link data.user.username, to: Routes.user_profile_path(CuberacerLiveWeb.Endpoint, :show, user_id), target: "_blank" %>
+                  <.link href={Routes.user_profile_path(CuberacerLiveWeb.Endpoint, :show, user_id)} target="_blank">
+                    <%=  data.user.username %>
+                  </.link>
                 </span>
                 <%= if data.meta.time_entry == :keyboard do %>
                   <span class="text-center pl-1">
@@ -192,7 +191,7 @@ defmodule CuberacerLiveWeb.GameLive.Components do
         <tr>
           <th scope="col" class="border-y px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
             <span class="inline-block mr-1" @click="bottomBarCollapse">
-              <i class="fas" :class="bottomBarShow ? 'fa-chevron-circle-down' : 'fa-chevron-circle-up'"></i>
+              <i class="fas" x-bind:class="bottomBarShow ? 'fa-chevron-circle-down' : 'fa-chevron-circle-up'"></i>
             </span>
             <span>Stats</span>
           </th>

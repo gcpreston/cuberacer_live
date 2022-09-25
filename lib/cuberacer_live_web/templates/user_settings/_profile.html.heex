@@ -1,9 +1,11 @@
 <div class="relative">
   <h2 class="my-2 text-2xl font-medium">Profile</h2>
 
-  <%= link "Go to profile", to: Routes.user_profile_path(@conn, :show, @current_user.id),
-    class: "absolute top-0 right-0 px-2 py-0.5 text-center text-gray-800 font-medium rounded-md border py-0.5 bg-gray-50 shadow-xs hover:bg-gray-100 hover:shadow-sm active:bg-gray-200 transition-all",
-    id: "profile-edit" %>
+  <.link href={Routes.user_profile_path(@conn, :show, @current_user.id)}
+    class="absolute top-0 right-0 px-2 py-0.5 text-center text-gray-800 font-medium rounded-md border bg-gray-50 shadow-xs hover:bg-gray-100 hover:shadow-sm active:bg-gray-200 transition-all",
+    id="profile-edit">
+    Go to profile
+  </.link>
 
   <div class="text-gray-500">Optional.</div>
 </div>

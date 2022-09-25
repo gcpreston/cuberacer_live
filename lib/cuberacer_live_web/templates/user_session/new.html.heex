@@ -16,7 +16,7 @@
         <%= label f, :password %>
         <%= password_input f, :password, required: true, class: "block mb-1 w-full rounded-md mt-0.5 px-2 py-0.5" %>
         <div class="text-right w-full">
-          <%= link "Forgot password?", to: Routes.user_reset_password_path(@conn, :new), class: "text-sm text-blue-500 hover:underline" %>
+          <.link href={Routes.user_reset_password_path(@conn, :new)} class="text-sm text-blue-500 hover:underline">Forgot password?</.link>
         </div>
       </div>
 
@@ -32,6 +32,6 @@
     </div>
 
   <div class="mt-4 text-center">
-    Need an account? <%= link "Sign up", to: Routes.user_registration_path(@conn, :new), class: "text-blue-500 hover:underline" %>
+    Need an account? <.link href={Routes.user_registration_path(@conn, :new)} class="text-blue-500 hover:underline">Sign up</.link>
   </div>
 </div>

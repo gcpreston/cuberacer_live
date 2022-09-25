@@ -2,7 +2,6 @@ defmodule CuberacerLiveWeb.SessionView do
   use CuberacerLiveWeb, :view
 
   import CuberacerLiveWeb.SharedUtils, only: [format_datetime: 1]
-  import CuberacerLiveWeb.SharedComponents, only: [chat_message: 1]
 
   alias CuberacerLiveWeb.Endpoint
   alias CuberacerLive.Sessions
@@ -35,7 +34,9 @@ defmodule CuberacerLiveWeb.SessionView do
 
           <%= for user <- @users do %>
             <th scope="col" class="border-y px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              <%= link user.username, to: Routes.user_profile_path(Endpoint, :show, user.id) %>
+              <.link href={Routes.user_profile_path(Endpoint, :show, user.id)}>
+                <%= user.username %>
+              </.link>
             </th>
           <% end %>
         </tr>
@@ -47,7 +48,9 @@ defmodule CuberacerLiveWeb.SessionView do
             <td class="border-b px-6 py-4">
               <div class="ml-4">
                 <div class="text-sm font-medium text-gray-900">
-                  <%= link round.scramble, to: Routes.round_path(Endpoint, :show, round.id) %>
+                  <.link href={Routes.round_path(Endpoint, :show, round.id)}>
+                    <%= round.scramble %>
+                  </.link>
                 </div>
               </div>
             </td>
@@ -71,7 +74,9 @@ defmodule CuberacerLiveWeb.SessionView do
       <div class="ml-4">
         <div class="text-sm font-medium text-gray-900">
           <%= if solve do %>
-            <%= link text, to: Routes.solve_path(Endpoint, :show, solve.id) %>
+            <.link href={Routes.solve_path(Endpoint, :show, solve.id)}>
+              <%= text %>
+            </.link>
           <% else %>
             <%= text %>
           <% end %>
