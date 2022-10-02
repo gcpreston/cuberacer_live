@@ -123,7 +123,7 @@ defmodule CuberacerLiveWeb.GameLive.Components do
               <div class="inline-flex max-w-full">
                 <span class="flex-1 truncate">
                   <.link href={Routes.user_profile_path(CuberacerLiveWeb.Endpoint, :show, user_id)} target="_blank">
-                    <%=  data.user.username %>
+                    <%= data.user.username %>
                   </.link>
                 </span>
                 <%= if data.meta.time_entry == :keyboard do %>
