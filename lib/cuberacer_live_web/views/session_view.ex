@@ -66,19 +66,19 @@ defmodule CuberacerLiveWeb.SessionView do
   end
 
   defp solve_cell(assigns) do
-    solve = user_solve_for_round(assigns.user, assigns.round)
-    text = Sessions.display_solve(solve)
+    assigns = assign(assigns, :solve, user_solve_for_round(assigns.user, assigns.round))
+    assigns = assign(assigns, :text, Sessions.display_solve(assigns.solve))
 
     ~H"""
     <td id={"round-#{@round.id}-solve-user-#{@user.id}"} class="border-b px-6 py-4 whitespace-nowrap">
       <div class="ml-4">
         <div class="text-sm font-medium text-gray-900">
-          <%= if solve do %>
-            <.link href={Routes.solve_path(Endpoint, :show, solve.id)}>
-              <%= text %>
+          <%= if @solve do %>
+            <.link href={Routes.solve_path(Endpoint, :show, @solve.id)}>
+              <%= @text %>
             </.link>
           <% else %>
-            <%= text %>
+            <%= @text %>
           <% end %>
         </div>
       </div>
