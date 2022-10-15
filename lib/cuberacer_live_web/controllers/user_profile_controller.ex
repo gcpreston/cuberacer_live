@@ -19,7 +19,7 @@ defmodule CuberacerLiveWeb.UserProfileController do
       if user_id == current_user_id do
         true
       else
-        not s.unlisted?
+        not Sessions.private?(s)
       end
     end)
   end

@@ -21,8 +21,8 @@ defmodule CuberacerLive.RoomCache do
     |> Enum.map(fn {RoomServer, room_id} -> room_id end)
   end
 
-  def create_room(name, puzzle_type, unlisted \\ false, host \\ nil) do
-    case Sessions.create_session_and_round(name, puzzle_type, unlisted, host) do
+  def create_room(name, puzzle_type, password \\ nil, host \\ nil) do
+    case Sessions.create_session_and_round(name, puzzle_type, password, host) do
       {:ok, session, _round} ->
         {:ok, pid} = DynamicSupervisor.start_child(__MODULE__, {RoomServer, session})
         {:ok, pid, session}

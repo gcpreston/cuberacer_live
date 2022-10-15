@@ -153,7 +153,7 @@ defmodule CuberacerLive.Sessions do
   """
   def create_session(attrs \\ %{}) do
     %Session{}
-    |> Session.changeset(attrs)
+    |> Session.create_changeset(attrs)
     |> Repo.insert()
     |> notify_subscribers([:session, :created])
   end
@@ -166,18 +166,18 @@ defmodule CuberacerLive.Sessions do
       iex> create_session_and_round("my cool sesh", "3x3")
       {:ok, %Session{}, %Round{}}
 
-      iex> create_session_and_round(nil, %CubeType{}, true, %User{})
+      iex> create_session_and_round(nil, %CubeType{}, "strongpassword123", %User{})
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_session_and_round(name, puzzle_type, unlisted \\ false, host \\ nil) do
+  def create_session_and_round(name, puzzle_type, password \\ nil, host \\ nil) do
     host_id = if match?(%User{}, host), do: host.id, else: nil
 
     session_attrs = %{
       host_id: host_id,
       name: name,
       puzzle_type: puzzle_type,
-      unlisted?: unlisted
+      password: password
     }
 
     with {:ok, session} <- create_session(session_attrs),
@@ -235,6 +235,13 @@ defmodule CuberacerLive.Sessions do
   """
   def change_session(%Session{} = session, attrs \\ %{}) do
     Session.changeset(session, attrs)
+  end
+
+  @doc """
+  Determine if the passed session is private.
+  """
+  def private?(%Session{} = session) do
+    !!session.hashed_password
   end
 
   @doc """

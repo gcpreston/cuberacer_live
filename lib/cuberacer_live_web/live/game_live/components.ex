@@ -16,7 +16,7 @@ defmodule CuberacerLiveWeb.GameLive.Components do
           <span class="absolute top-2 left-2 bg-green-500 h-3 w-3 rounded-full" />
         <% end %>
 
-        <%= if @session.unlisted? do %>
+        <%= if Sessions.private?(@session) do %>
           <span class="absolute top-2 right-2"><i class="fas fa-lock"></i></span>
         <% end %>
         <div class="text-center">

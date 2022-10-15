@@ -4,7 +4,6 @@ defmodule CuberacerLiveWeb.Components do
   import CuberacerLiveWeb.SharedUtils, only: [format_datetime: 1]
 
   alias Phoenix.LiveView.JS
-  alias CuberacerLive.Sessions
 
   @doc """
   Renders a live component inside a modal.

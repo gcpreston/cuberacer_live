@@ -190,7 +190,7 @@ defmodule CuberacerLive.GameLive.LobbyTest do
     end
 
     @tag :ensure_presence_shutdown
-    test "create room modal creates a new unlisted room only visible to host", %{conn: conn1} do
+    test "create room modal creates a new private room", %{conn: conn1} do
       user2 = user_fixture()
       conn2 = build_conn() |> log_in_user(user2)
 
@@ -201,34 +201,22 @@ defmodule CuberacerLive.GameLive.LobbyTest do
       result =
         lv
         |> form("#create-room-form")
-        |> render_submit(%{session: %{name: "new session", puzzle_type: :"2x2", unlisted: true}})
+        |> render_submit(%{session: %{name: "new session", puzzle_type: :"2x2", password: "hello"}})
 
       flash = assert_redirect(lv, ~p"/lobby")
       assert flash["info"] == "Room created successfully"
 
       # Shows up for user who created the room
-      {:ok, lv, html} = follow_redirect(result, conn1)
+      {:ok, lv1, html1} = follow_redirect(result, conn1)
 
-      assert_html(html, ".t_room-card", count: 1)
-      assert lv |> element(".t_room-card") |> render() =~ "fa-lock"
+      assert_html(html1, ".t_room-card", count: 1)
+      assert lv1 |> element(".t_room-card") |> render() =~ "fa-lock"
 
-      result =
-        lv
-        |> element(".t_room-card")
-        |> render_click()
+      # Shows up for other user as well
+      {:ok, lv2, html2} = live(conn2, ~p"/lobby")
 
-      assert_redirect(lv)
-
-      {:ok, _room_lv, html} = follow_redirect(result, conn1)
-
-      html
-      |> assert_html(".t_round-row", count: 1)
-      |> assert_html(".t_scramble")
-
-      # Does not show up for other user
-      {:ok, _lv2, html2} = live(conn2, ~p"/lobby")
-
-      refute_html(html2, ".t_room-card")
+      assert_html(html2, ".t_room-card", count: 1)
+      assert lv2 |> element(".t_room-card") |> render() =~ "fa-lock"
     end
 
     test "displays error messages", %{conn: conn} do

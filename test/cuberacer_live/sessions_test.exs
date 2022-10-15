@@ -102,19 +102,21 @@ defmodule CuberacerLive.SessionsTest do
 
       assert session.name == "some name"
       assert session.puzzle_type == :"2x2"
-      refute session.unlisted?
+      refute Sessions.private?(session)
       assert session.host_id == nil
       assert round.session_id == session.id
     end
 
-    test "create_session_and_round/2 can be passed params for unlisted and host" do
+    test "create_session_and_round/2 can be passed params for password and host" do
       user = user_fixture()
 
       assert {:ok, %Session{} = session, %Round{} = round} =
-               Sessions.create_session_and_round("some name", :"4x4", true, user)
+               Sessions.create_session_and_round("some name", :"4x4", "password123", user)
 
       assert session.name == "some name"
       assert session.puzzle_type == :"4x4"
+      assert Sessions.private?(session)
+      assert Session.valid_password?(session, "password123")
       assert session.host_id == user.id
       assert round.session_id == session.id
     end
@@ -143,6 +145,14 @@ defmodule CuberacerLive.SessionsTest do
       {:error, _reason} = Sessions.create_session_and_round("some name", nil)
 
       refute_receive {Sessions, _, _}
+    end
+
+    test "private?/1 determines if a session is private" do
+      public_session = session_fixture(password: nil)
+      private_session = session_fixture(password: "hello")
+
+      refute Sessions.private?(public_session)
+      assert Sessions.private?(private_session)
     end
 
     test "update_session/2 with valid data updates the session" do
