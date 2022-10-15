@@ -5,16 +5,20 @@ defmodule CuberacerLiveWeb.GameLive.Components do
   alias CuberacerLive.Sessions.Round
   alias CuberacerLive.Accounts.User
 
+  attr :participant_count, :integer, required: true
+  attr :session, :any, required: true, doc: "The Sessions.Session to display."
+
   def room_card(assigns) do
-    room_ext =
+    assigns = assign(assigns, :room_ext,
       if assigns.session.unlisted? do
         Hashids.encode(CuberacerLive.Hashids.new(), assigns.session.id)
       else
         assigns.session.id
       end
+    )
 
     ~H"""
-    <.link navigate={Routes.game_room_path(CuberacerLiveWeb.Endpoint, :show, room_ext)}
+    <.link navigate={Routes.game_room_path(CuberacerLiveWeb.Endpoint, :show, @room_ext)}
       class="t_room-card">
       <div id={"t_room-card-#{@session.id}"} class="relative p-4 rounded-lg shadow-sm border bg-white transition-all hover:bg-gray-50 hover:shadow-md">
         <%= if @participant_count > 0 do %>
@@ -36,6 +40,8 @@ defmodule CuberacerLiveWeb.GameLive.Components do
     </.link>
     """
   end
+
+  attr :current_solve, :any, required: true, doc: "See Sessions.get_current_solve/2."
 
   def timer(assigns) do
     ~H"""
@@ -68,6 +74,9 @@ defmodule CuberacerLiveWeb.GameLive.Components do
     </div>
     """
   end
+
+  attr :room_messages, :list, required: true, doc: "See Messaging.list_room_messages/1."
+  attr :color_seed, :any, required: true
 
   def chat(assigns) do
     ~H"""
@@ -106,6 +115,10 @@ defmodule CuberacerLiveWeb.GameLive.Components do
     </div>
     """
   end
+
+  attr :participant_data, :list, required: true, doc: "See RoomServer.participant_data_entry/1."
+  attr :current_round, :any, required: true, doc: "The current Sessions.Round for this session."
+  attr :past_rounds, :list, required: true, doc: "The previous Sessions.Rounds for this session."
 
   def times_table(assigns) do
     # Taps into 'room' Alpine data
@@ -183,6 +196,9 @@ defmodule CuberacerLiveWeb.GameLive.Components do
     Enum.find(round.solves, fn solve -> solve.user_id == user.id end)
   end
 
+  attr :ao5, :float, required: true
+  attr :ao12, :float, required: true
+
   def stats(assigns) do
     # Taps into 'room' Alpine data
     ~H"""
@@ -199,15 +215,17 @@ defmodule CuberacerLiveWeb.GameLive.Components do
       </thead>
       <tbody class="bg-white" x-show="bottomBarShow">
         <tr>
-          <td class="px-6 whitespace-nowrap">ao5: <span class="t_ao5"><%= Sessions.display_stat(@stats.ao5) %></span></td>
+          <td class="px-6 whitespace-nowrap">ao5: <span class="t_ao5"><%= Sessions.display_stat(@ao5) %></span></td>
         </tr>
         <tr>
-          <td class="px-6 whitespace-nowrap">ao12: <span class="t_ao12"><%= Sessions.display_stat(@stats.ao12) %></span></td>
+          <td class="px-6 whitespace-nowrap">ao12: <span class="t_ao12"><%= Sessions.display_stat(@ao12) %></span></td>
         </tr>
       </tbody>
     </table>
     """
   end
+
+  attr :num_present_users, :integer, required: true
 
   def presence(assigns) do
     # Taps into 'room' Alpine data
