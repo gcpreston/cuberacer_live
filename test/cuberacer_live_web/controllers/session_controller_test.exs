@@ -97,8 +97,7 @@ defmodule CuberacerLive.SessionControllerTest do
 
     test "indicates that a session is unlisted", %{conn: conn, user: user} do
       session = session_fixture(unlisted?: true)
-      ext = Sessions.session_locator(session)
-      conn = conn |> log_in_user(user) |> get(~p"/sessions/#{ext}")
+      conn = conn |> log_in_user(user) |> get(~p"/sessions/#{session.id}")
       html = html_response(conn, 200)
 
       assert html =~ "fas fa-lock"

@@ -70,7 +70,7 @@ defmodule CuberacerLiveWeb.UserProfileControllerTest do
 
       assert html =~ "unlisted session"
       assert html =~ "fas fa-lock"
-      assert html =~ ~s(<a href="/sessions/#{Sessions.session_locator(session)}">)
+      assert html =~ ~s(<a href="/sessions/#{session.id}">)
     end
 
     test "does not show unlisted sessions on someone else's profile", %{conn: conn, user: user1} do

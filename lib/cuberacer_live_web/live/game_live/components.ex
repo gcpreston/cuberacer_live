@@ -9,23 +9,9 @@ defmodule CuberacerLiveWeb.GameLive.Components do
   attr :session, :any, required: true, doc: "The Sessions.Session to display."
 
   def room_card(assigns) do
-    assigns =
-      assign(
-        assigns,
-        :room_ext,
-        if assigns.session.unlisted? do
-          Hashids.encode(CuberacerLive.Hashids.new(), assigns.session.id)
-        else
-          assigns.session.id
-        end
-      )
-
     ~H"""
-    <.link navigate={~p"/rooms/#{@room_ext}"} class="t_room-card">
-      <div
-        id={"t_room-card-#{@session.id}"}
-        class="relative p-4 rounded-lg shadow-sm border bg-white transition-all hover:bg-gray-50 hover:shadow-md"
-      >
+    <.link navigate={~p"/rooms/#{@session.id}"} class="t_room-card">
+      <div id={"t_room-card-#{@session.id}"} class="relative p-4 rounded-lg shadow-sm border bg-white transition-all hover:bg-gray-50 hover:shadow-md">
         <%= if @participant_count > 0 do %>
           <span class="absolute top-2 left-2 bg-green-500 h-3 w-3 rounded-full" />
         <% end %>

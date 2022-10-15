@@ -8,31 +8,24 @@ defmodule CuberacerLiveWeb.GameLive.Room do
   alias CuberacerLiveWeb.{Presence, Endpoint}
 
   @impl true
-  def mount(%{"id" => locator}, %{"user_token" => user_token}, socket)
-      when not is_nil(user_token) do
-    {used_session_id, session_id} = Sessions.parse_session_locator(locator)
+  def mount(%{"id" => session_id}, %{"user_token" => user_token}, socket) when not is_nil(user_token) do
+    session = Sessions.get_session(session_id)
+    user = Accounts.get_user_by_session_token(user_token)
 
     socket =
-      if is_nil(session_id) do
-        push_redirect_to_lobby(socket, "Unknown room")
-      else
-        session = Sessions.get_session(session_id)
-        user = Accounts.get_user_by_session_token(user_token)
+      cond do
+        user == nil ->
+          redirect(socket, to: ~p"/login")
 
-        cond do
-          user == nil ->
-            redirect(socket, to: ~p"/login")
+        session == nil ->
+          push_redirect_to_lobby(socket, "Unknown room")
 
-          session == nil or (used_session_id and session.unlisted?) ->
-            push_redirect_to_lobby(socket, "Unknown room")
+        !RoomServer.whereis(session.id) ->
+          push_redirect_to_lobby(socket, "Room has terminated")
 
-          !RoomServer.whereis(session.id) ->
-            push_redirect_to_lobby(socket, "Room has terminated")
-
-          true ->
-            track_and_subscribe(socket, user, session)
-            socket_pipeline(socket, user, session)
-        end
+        true ->
+          track_and_subscribe(socket, user, session)
+          socket_pipeline(socket, user, session)
       end
 
     {:ok, socket, temporary_assigns: [past_rounds: [], room_messages: []]}

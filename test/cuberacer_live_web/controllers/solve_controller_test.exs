@@ -22,7 +22,7 @@ defmodule CuberacerLiveWeb.SolveControllerTest do
       assert html =~ SharedUtils.format_datetime(solve.inserted_at)
       assert html =~ solve.round.scramble
       assert html =~ Sessions.display_solve(solve)
-      assert html =~ ~s(<a href="/sessions/#{Sessions.session_locator(solve.session)}">)
+      assert html =~ ~s(<a href="/sessions/#{solve.session.id}">)
 
       html
       |> assert_html("a[href='#{~p"/users/#{user.id}"}']",

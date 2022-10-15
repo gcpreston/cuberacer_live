@@ -2,7 +2,7 @@ defmodule CuberacerLiveWeb.RoundView do
   use CuberacerLiveWeb, :view
 
   import CuberacerLiveWeb.SharedUtils, only: [format_datetime: 1]
-  import CuberacerLive.Sessions, only: [display_solve: 1, session_locator: 1]
+  import CuberacerLive.Sessions, only: [display_solve: 1]
 
   def solves_table(assigns) do
     ~H"""

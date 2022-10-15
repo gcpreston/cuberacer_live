@@ -139,27 +139,6 @@ defmodule CuberacerLive.Sessions do
     Repo.one!(query)
   end
 
-  def session_locator(%Session{} = session) do
-    if session.unlisted? do
-      Hashids.encode(CuberacerLive.Hashids.new(), session.id)
-    else
-      session.id
-    end
-  end
-
-  def parse_session_locator(room_id) do
-    case Integer.parse(room_id) do
-      {session_id, ""} ->
-        {true, session_id}
-
-      _ ->
-        case Hashids.decode(CuberacerLive.Hashids.new(), room_id) do
-          {:ok, [session_id]} -> {false, session_id}
-          _ -> {false, nil}
-        end
-    end
-  end
-
   @doc """
   Creates a session.
 

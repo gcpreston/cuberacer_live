@@ -91,15 +91,6 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       assert {:ok, _lv, html} = live(conn, ~p"/rooms/#{session.id}")
       assert html =~ session.name
     end
-
-    test "connects with valid hashed room ID", %{conn: conn, user: user, session: session} do
-      conn = log_in_user(conn, user)
-      s = Hashids.new(Application.fetch_env!(:cuberacer_live, :hashids_config))
-
-      assert {:ok, _lv, html} = live(conn, ~p"/rooms/#{Hashids.encode(s, session.id)}")
-
-      assert html =~ session.name
-    end
   end
 
   describe "interface" do
