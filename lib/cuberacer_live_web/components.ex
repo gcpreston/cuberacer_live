@@ -79,6 +79,8 @@ defmodule CuberacerLiveWeb.Components do
     "pink-600"
   ]
 
+  attr :room_message, :any, required: true, doc: "The Messaging.RoomMessage to display."
+
   def chat_message(assigns) do
     ~H"""
     <div
@@ -103,11 +105,12 @@ defmodule CuberacerLiveWeb.Components do
     "text-#{color}"
   end
 
-  def session_link(assigns) do
-    ext = Sessions.session_locator(assigns.session)
+  attr :session, :any, required: true, doc: "The Sessions.Session to link to."
+  slot :inner_block, requied: true
 
+  def session_link(assigns) do
     ~H"""
-    <.link href={Routes.session_path(CuberacerLiveWeb.Endpoint, :show, ext)}>
+    <.link href={Routes.session_path(CuberacerLiveWeb.Endpoint, :show, Sessions.session_locator(assigns.session))}>
       <%= render_slot(@inner_block) %>
     </.link>
     """
