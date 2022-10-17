@@ -16,6 +16,7 @@ defmodule CuberacerLive.Sessions do
   alias CuberacerLive.Repo
   alias CuberacerLive.Stats
   alias CuberacerLive.Sessions.{Session, Round, Solve}
+  alias CuberacerLive.Accounts
   alias CuberacerLive.Accounts.User
 
   @topic inspect(__MODULE__)
@@ -92,7 +93,16 @@ defmodule CuberacerLive.Sessions do
       nil
 
   """
-  def get_session(id), do: Repo.get(Session, id)
+  def get_session(id) when is_integer(id) do
+    Repo.get(Session, id)
+  end
+
+  def get_session(id) when is_binary(id) do
+    case Integer.parse(id) do
+      {int_id, ""} -> get_session(int_id)
+      _ -> nil
+    end
+  end
 
   @doc """
   Gets a list of sessions, given a list of session IDs.
@@ -182,6 +192,10 @@ defmodule CuberacerLive.Sessions do
 
     with {:ok, session} <- create_session(session_attrs),
          {:ok, round} <- create_round(session) do
+      if password && host do
+        Accounts.create_user_room_auth(%{user_id: host.id, session_id: session.id})
+      end
+
       {:ok, session, round}
     else
       err -> err

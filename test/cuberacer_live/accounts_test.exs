@@ -604,4 +604,53 @@ defmodule CuberacerLive.AccountsTest do
       refute inspect(%User{password: "123456"}) =~ "password: \"123456\""
     end
   end
+
+  describe "create_user_room_auth/1" do
+    import CuberacerLive.SessionsFixtures
+    alias CuberacerLive.Accounts.UserRoomAuth
+
+    test "with valid data creates an authorization" do
+      user = user_fixture()
+      session = session_fixture(password: "hello")
+
+      assert %UserRoomAuth{} = user_room_auth = Accounts.create_user_room_auth(%{user_id: user.id, session_id: session.id})
+      assert user_room_auth.user_id == user.id
+      assert user_room_auth.session_id == session.id
+    end
+
+    test "with invalid data raises" do
+      user = user_fixture()
+      session = session_fixture(password: "hello")
+
+      assert_raise Ecto.InvalidChangesetError, fn -> Accounts.create_user_room_auth(%{user_id: nil, session_id: nil}) end
+      assert_raise Ecto.InvalidChangesetError, fn -> Accounts.create_user_room_auth(%{user_id: user.id, session_id: nil}) end
+      assert_raise Ecto.InvalidChangesetError, fn -> Accounts.create_user_room_auth(%{user_id: nil, session_id: session.id}) end
+    end
+  end
+
+  describe "user_authorized_for_room?/2" do
+    import CuberacerLive.SessionsFixtures
+
+    test "returns true if room is public" do
+      user = user_fixture()
+      session = session_fixture(password: nil)
+
+      assert Accounts.user_authorized_for_room?(user, session)
+    end
+
+    test "returns false if user is not authorized for private room" do
+      user = user_fixture()
+      session = session_fixture(password: "mystery")
+
+      refute Accounts.user_authorized_for_room?(user, session)
+    end
+
+    test "returns true if user is authorized for private room" do
+      user = user_fixture()
+      session = session_fixture(password: "mystery")
+      _user_room_auth = Accounts.create_user_room_auth(%{user_id: user.id, session_id: session.id})
+
+      assert Accounts.user_authorized_for_room?(user, session)
+    end
+  end
 end

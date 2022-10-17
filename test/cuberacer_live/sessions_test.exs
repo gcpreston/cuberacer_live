@@ -4,6 +4,8 @@ defmodule CuberacerLive.SessionsTest do
   alias CuberacerLive.Sessions
 
   describe "sessions" do
+    alias CuberacerLive.Accounts
+    alias CuberacerLive.Accounts.UserRoomAuth
     alias CuberacerLive.Sessions.{Session, Round}
 
     import CuberacerLive.AccountsFixtures
@@ -48,6 +50,17 @@ defmodule CuberacerLive.SessionsTest do
     test "get_session!/1 returns the session with given id" do
       session = session_fixture()
       assert Sessions.get_session!(session.id) == session
+    end
+
+    test "get_session/1 returns the session with the given id" do
+      session = session_fixture()
+      assert Sessions.get_session(session.id) == session
+    end
+
+    test "get_session/1 returns nil if the session is not found" do
+      assert Sessions.get_session(0) == nil
+      assert Sessions.get_session("abc") == nil
+      assert Sessions.get_session("abc123hi") == nil
     end
 
     test "create_session/1 with valid data creates a session" do
@@ -119,6 +132,24 @@ defmodule CuberacerLive.SessionsTest do
       assert Session.valid_password?(session, "password123")
       assert session.host_id == user.id
       assert round.session_id == session.id
+    end
+
+    test "create_session_and_round/2 auto-authorizes the host of a private session" do
+      user = user_fixture()
+      {:ok, session, _round} = Sessions.create_session_and_round("some name", :"4x4", "password123", user)
+
+      assert Accounts.user_authorized_for_room?(user, session)
+    end
+
+    test "create_session_and_round/2 does not create UserRoomAuth unless passed both password and host" do
+      user = user_fixture()
+
+      user_room_auth_count_before = Repo.one(from a in UserRoomAuth, select: count(a.id))
+      {:ok, _session, _round} = Sessions.create_session_and_round("some name", :"4x4", "password123", nil)
+      {:ok, _session, _round} = Sessions.create_session_and_round("some name", :"4x4", nil, user)
+      user_room_auth_count_after = Repo.one(from a in UserRoomAuth, select: count(a.id))
+
+      assert user_room_auth_count_before == user_room_auth_count_after
     end
 
     test "create_session_and_round/2 with no name returns error changeset" do

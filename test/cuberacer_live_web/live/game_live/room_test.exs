@@ -8,7 +8,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
   import CuberacerLive.SessionsFixtures
   import CuberacerLive.MessagingFixtures
 
-  alias CuberacerLive.{Repo, RoomCache, Sessions, Messaging}
+  alias CuberacerLive.{Repo, RoomCache, Sessions, Messaging, Accounts}
   alias CuberacerLive.Sessions.Solve
 
   ## Helpers
@@ -73,16 +73,23 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
         live(conn, ~p"/rooms/abc")
     end
 
-    test "redirects if unlisted and connecting with session ID", %{
-      conn: conn,
-      user: user
-    } do
-      {:ok, _pid, session} = RoomCache.create_room("unlisted room", :"3x3", true)
+    test "redirects to connect if user not authorized", %{conn: conn, user: user} do
       conn = log_in_user(conn, user)
-      lobby_path = ~p"/lobby"
+      user2 = user_fixture()
+      {:ok, _pid, private_session} = RoomCache.create_room("private room", :"3x3", "secret", user2)
+      room_join_path = ~p"/lobby/join/#{private_session.id}"
 
-      {:error, {:live_redirect, %{flash: %{"error" => "Unknown room"}, to: ^lobby_path}}} =
-        live(conn, ~p"/rooms/#{session.id}")
+      {:error, {:live_redirect, %{to: ^room_join_path}}} =
+        live(conn, ~p"/rooms/#{private_session.id}")
+    end
+
+    test "connects if user is authorized", %{conn: conn, user: user} do
+      conn = log_in_user(conn, user)
+      user2 = user_fixture()
+      {:ok, _pid, private_session} = RoomCache.create_room("private room", :"3x3", "secret", user2)
+      Accounts.create_user_room_auth(%{user_id: user.id, session_id: private_session.id})
+
+      assert {:ok, _lv, _html} = live(conn, ~p"/rooms/#{private_session.id}")
     end
 
     test "connects with valid user token", %{conn: conn, user: user, session: session} do

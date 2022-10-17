@@ -1,0 +1,21 @@
+<div>
+  <h2 class="text-xl"><%= @title %></h2>
+
+  <.form
+    let={f}
+    for={@changeset}
+    id="join-room-form"
+    phx-target={@myself}
+    phx-submit="join">
+
+    <div class="mt-3">
+      <%= label f, :password %>
+      <%= text_input f, :password %>
+      <%= error_tag f, :password %>
+    </div>
+
+    <div class="mt-4">
+      <%= submit "Join", phx_disable_with: "Joining...", class: "rounded-lg bg-green-400 hover:bg-green-500 active:bg-green-400 border border-green-500 w-full" %>
+    </div>
+  </.form>
+</div>

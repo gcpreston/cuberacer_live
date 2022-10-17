@@ -1,15 +1,31 @@
-<%= if @live_action == :new do %>
-  <.modal return_to={~p"/lobby"}>
-    <.live_component
-      module={CuberacerLiveWeb.GameLive.CreateRoomForm}
-      id={@session.id || :new}
-      title={@page_title}
-      action={@live_action}
-      current_user={@current_user}
-      session={@session}
-      return_to={~p"/lobby"}
-    />
-  </.modal>
+<%= case @live_action do %>
+  <% :new -> %>
+    <.modal return_to={~p"/lobby"}>
+      <.live_component
+        module={CuberacerLiveWeb.GameLive.CreateRoomForm}
+        id={@session.id || :new}
+        title={@page_title}
+        action={@live_action}
+        current_user={@current_user}
+        session={@session}
+        return_to={~p"/lobby"}
+      />
+    </.modal>
+
+  <% :join -> %>
+    <.modal return_to={~p"/lobby"}>
+      <.live_component
+        module={CuberacerLiveWeb.GameLive.JoinRoomForm}
+        id={@session.id}
+        title={@page_title}
+        action={@live_action}
+        current_user={@current_user}
+        session={@session}
+        return_to={~p"/lobby"}
+      />
+    </.modal>
+
+  <% _ -> %>
 <% end %>
 
 <div class="p-6 container m-auto">
@@ -19,7 +35,9 @@
 
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mt-6">
       <%= for session <- @rooms do %>
-        <.room_card session={session} participant_count={@participant_counts[session.id]} />
+        <button class="t_room-card-button" phx-click="join-room" phx-value-session_id={session.id}>
+          <.room_card session={session} participant_count={@participant_counts[session.id]} />
+        </button>
       <% end %>
     </div>
   <% else %>
