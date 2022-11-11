@@ -14,7 +14,7 @@ defmodule CuberacerLiveWeb.GameLive.Lobby do
 
     socket =
       if !user do
-        redirect(socket, to: Routes.user_session_path(Endpoint, :new))
+        redirect(socket, to: ~p"/login")
       else
         if connected?(socket) do
           track_presence(user.id)

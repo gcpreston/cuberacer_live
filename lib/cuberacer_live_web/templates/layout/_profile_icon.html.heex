@@ -12,14 +12,14 @@
         <span class="sr-only">Open user menu</span>
         <img
           class="h-8 w-8 rounded-full"
-          src={Routes.static_path(@conn, "/images/default-profile.jpeg")}
+          src={~p"/images/default-profile.jpeg"}
           alt=""
         />
       </button>
     <% else %>
       <.link
         type="button"
-        href={Routes.user_session_path(@conn, :new)}
+        href={~p"/login"}
         class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
         id="user-registration-button"
       >
@@ -44,7 +44,7 @@
       tabindex="-1"
     >
       <.link
-        href={Routes.user_profile_path(@conn, :show, @current_user.id)}
+        href={~p"/users/#{@current_user.id}"}
         class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
       >
         <%= @current_user.username %>
@@ -53,7 +53,7 @@
       <hr />
 
       <.link
-        href={Routes.user_settings_path(@conn, :edit)}
+        href={~p"/users/settings"}
         class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
         role="menuitem"
         tabindex="-1"
@@ -63,7 +63,7 @@
       </.link>
 
       <.link
-        href={Routes.user_session_path(@conn, :delete)}
+        href={~p"/users/log_out"}
         method="delete"
         class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
         role="menuitem"

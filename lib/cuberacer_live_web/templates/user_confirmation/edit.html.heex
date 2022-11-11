@@ -1,7 +1,7 @@
 <div class="max-w-sm m-auto my-6">
   <h1 class="text-3xl font-semibold text-center mb-6">Account confirmation</h1>
 
-  <.form :let={_f} for={:user} action={Routes.user_confirmation_path(@conn, :update, @token)}>
+  <.form :let={_f} for={:user} action={~p"/users/confirm/#{@token}"}>
     <div>
       <%= submit("Confirm my account",
         class:

@@ -49,27 +49,27 @@
 
           <div class="w-10/12">
             <img
-              src={Routes.static_path(@conn, "/images/how-to-create.png")}
+              src={~p"/images/how-to-create.png"}
               alt="How to create a room"
               x-show="currentPage === 1"
             />
             <img
-              src={Routes.static_path(@conn, "/images/how-to-join.png")}
+              src={~p"/images/how-to-join.png"}
               alt="How to join a room"
               x-show="currentPage === 2"
             />
             <img
-              src={Routes.static_path(@conn, "/images/how-to-time.png")}
+              src={~p"/images/how-to-time.png"}
               alt="How to start the timer"
               x-show="currentPage === 3"
             />
             <img
-              src={Routes.static_path(@conn, "/images/how-to-keyboard.png")}
+              src={~p"/images/how-to-keyboard.png"}
               alt="How to use keyboard input"
               x-show="currentPage === 4"
             />
             <img
-              src={Routes.static_path(@conn, "/images/how-to-enjoy.png")}
+              src={~p"/images/how-to-enjoy.png"}
               alt="Enjoy!"
               x-show="currentPage === 5"
             />

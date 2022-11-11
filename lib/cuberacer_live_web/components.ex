@@ -4,8 +4,13 @@ defmodule CuberacerLiveWeb.Components do
   import CuberacerLiveWeb.SharedUtils, only: [format_datetime: 1]
 
   alias Phoenix.LiveView.JS
-  alias CuberacerLiveWeb.Router.Helpers, as: Routes
   alias CuberacerLive.Sessions
+
+  # TODO: Don't want this here, should move session_link elsewhere
+  use Phoenix.VerifiedRoutes,
+    endpoint: CuberacerLiveWeb.Endpoint,
+    router: CuberacerLiveWeb.Router,
+    statics: CuberacerLiveWeb.static_paths()
 
   @doc """
   Renders a live component inside a modal.
@@ -15,13 +20,13 @@ defmodule CuberacerLiveWeb.Components do
 
   ## Examples
 
-      <.modal return_to={Routes.session_index_path(@socket, :index)}>
+      <.modal return_to={~p"/lobby"}>
         <.live_component
           module={CuberacerLiveWeb.SessionLive.FormComponent}
           id={@session.id || :new}
           title={@page_title}
           action={@live_action}
-          return_to={Routes.session_index_path(@socket, :index)}
+          return_to={~p"/lobby"}
           session: @session
         />
       </.modal>
@@ -107,7 +112,7 @@ defmodule CuberacerLiveWeb.Components do
   def session_link(assigns) do
     ~H"""
     <.link href={
-      Routes.session_path(CuberacerLiveWeb.Endpoint, :show, Sessions.session_locator(assigns.session))
+      ~p"/sessions/#{Sessions.session_locator(assigns.session)}"
     }>
       <%= render_slot(@inner_block) %>
     </.link>

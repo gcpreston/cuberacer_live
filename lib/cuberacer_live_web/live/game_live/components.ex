@@ -22,7 +22,7 @@ defmodule CuberacerLiveWeb.GameLive.Components do
 
     ~H"""
     <.link
-      navigate={Routes.game_room_path(CuberacerLiveWeb.Endpoint, :show, @room_ext)}
+      navigate={~p"/rooms/#{@room_ext}"}
       class="t_room-card"
     >
       <div
@@ -166,7 +166,7 @@ defmodule CuberacerLiveWeb.GameLive.Components do
               <div class="inline-flex max-w-full">
                 <span class="flex-1 truncate">
                   <.link
-                    href={Routes.user_profile_path(CuberacerLiveWeb.Endpoint, :show, user_id)}
+                    href={~p"/users/#{user_id}"}
                     target="_blank"
                   >
                     <%= data.user.username %>
@@ -184,6 +184,7 @@ defmodule CuberacerLiveWeb.GameLive.Components do
         </tr>
       </thead>
       <tbody id="times-table-body" class="bg-white" x-show="bottomBarShow" phx-update="prepend">
+
         <tr id={"round-#{@current_round.id}"} class="flex t_round-row" title={@current_round.scramble}>
           <%= for {{user_id, data}, i} <- Enum.with_index(@participant_data) do %>
             <td

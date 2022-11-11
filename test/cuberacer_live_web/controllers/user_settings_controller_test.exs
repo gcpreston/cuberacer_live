@@ -8,16 +8,16 @@ defmodule CuberacerLiveWeb.UserSettingsControllerTest do
 
   describe "GET /users/settings" do
     test "renders settings page", %{conn: conn} do
-      conn = get(conn, Routes.user_settings_path(conn, :edit))
+      conn = get(conn, ~p"/users/settings")
       response = html_response(conn, 200)
       assert response =~ "Settings</h1>"
     end
 
     test "renders user unconfirmed status", %{conn: conn} do
-      conn = get(conn, Routes.user_settings_path(conn, :edit))
+      conn = get(conn, ~p"/users/settings")
       response = html_response(conn, 200)
-      assert response =~ "Unconfirmed</span>"
-      refute response =~ "Confirmed</span>"
+      assert response =~ "Unconfirmed"
+      refute response =~ "Confirmed"
       assert response =~ "Resend confirmation email</button>"
     end
 
@@ -28,17 +28,17 @@ defmodule CuberacerLiveWeb.UserSettingsControllerTest do
         end)
 
       conn =
-        post(conn, Routes.user_confirmation_path(conn, :update, token))
-        |> get(Routes.user_settings_path(conn, :edit))
+        post(conn, ~p"/users/confirm/#{token}")
+        |> get(~p"/users/settings")
 
       response = html_response(conn, 200)
-      assert response =~ "Confirmed</span>"
-      refute response =~ "Unconfirmed</span>"
+      assert response =~ "Confirmed"
+      refute response =~ "Unconfirmed"
       refute response =~ "Resend confirmation email</button>"
     end
 
     test "renders country name dropdown", %{conn: conn} do
-      conn = get(conn, Routes.user_settings_path(conn, :edit))
+      conn = get(conn, ~p"/users/settings")
       html = html_response(conn, 200)
 
       html
@@ -48,15 +48,15 @@ defmodule CuberacerLiveWeb.UserSettingsControllerTest do
 
     test "redirects if user is not logged in" do
       conn = build_conn()
-      conn = get(conn, Routes.user_settings_path(conn, :edit))
-      assert redirected_to(conn) == Routes.user_session_path(conn, :new)
+      conn = get(conn, ~p"/users/settings")
+      assert redirected_to(conn) == ~p"/login"
     end
   end
 
   describe "PUT /users/settings (change profile form)" do
     test "updates the user profile", %{conn: conn, user: user} do
       conn =
-        put(conn, Routes.user_settings_path(conn, :update), %{
+        put(conn, ~p"/users/settings", %{
           "action" => "update_profile",
           "user" => %{
             "bio" => "some new bio",
@@ -66,7 +66,7 @@ defmodule CuberacerLiveWeb.UserSettingsControllerTest do
           }
         })
 
-      assert redirected_to(conn) == Routes.user_settings_path(conn, :edit)
+      assert redirected_to(conn) == ~p"/users/settings"
       assert Phoenix.Flash.get(conn.assigns.flash, :info) =~ "Profile updated successfully"
 
       updated_user = Accounts.get_user!(user.id)
@@ -78,7 +78,7 @@ defmodule CuberacerLiveWeb.UserSettingsControllerTest do
 
     test "does not update if bio is too long", %{conn: conn, user: user} do
       conn =
-        put(conn, Routes.user_settings_path(conn, :update), %{
+        put(conn, ~p"/users/settings", %{
           "action" => "update_profile",
           "user" => %{
             "bio" => String.duplicate("some new bio", 100),
@@ -96,14 +96,14 @@ defmodule CuberacerLiveWeb.UserSettingsControllerTest do
 
     test "blank country removes country", %{conn: conn, user: user} do
       conn =
-        put(conn, Routes.user_settings_path(conn, :update), %{
+        put(conn, ~p"/users/settings", %{
           "action" => "update_profile",
           "user" => %{
             "country" => ""
           }
         })
 
-      assert redirected_to(conn) == Routes.user_settings_path(conn, :edit)
+      assert redirected_to(conn) == ~p"/users/settings"
       assert Phoenix.Flash.get(conn.assigns.flash, :info) =~ "Profile updated successfully"
 
       updated_user = Accounts.get_user!(user.id)
@@ -114,7 +114,7 @@ defmodule CuberacerLiveWeb.UserSettingsControllerTest do
   describe "PUT /users/settings (change password form)" do
     test "updates the user password and resets tokens", %{conn: conn, user: user} do
       new_password_conn =
-        put(conn, Routes.user_settings_path(conn, :update), %{
+        put(conn, ~p"/users/settings", %{
           "action" => "update_password",
           "current_password" => valid_user_password(),
           "user" => %{
@@ -123,7 +123,7 @@ defmodule CuberacerLiveWeb.UserSettingsControllerTest do
           }
         })
 
-      assert redirected_to(new_password_conn) == Routes.user_settings_path(conn, :edit)
+      assert redirected_to(new_password_conn) == ~p"/users/settings"
       assert get_session(new_password_conn, :user_token) != get_session(conn, :user_token)
 
       assert Phoenix.Flash.get(new_password_conn.assigns.flash, :info) =~
@@ -134,7 +134,7 @@ defmodule CuberacerLiveWeb.UserSettingsControllerTest do
 
     test "does not update password on invalid data", %{conn: conn} do
       old_password_conn =
-        put(conn, Routes.user_settings_path(conn, :update), %{
+        put(conn, ~p"/users/settings", %{
           "action" => "update_password",
           "current_password" => "invalid",
           "user" => %{
@@ -157,20 +157,20 @@ defmodule CuberacerLiveWeb.UserSettingsControllerTest do
     @tag :capture_log
     test "updates the user email", %{conn: conn, user: user} do
       conn =
-        put(conn, Routes.user_settings_path(conn, :update), %{
+        put(conn, ~p"/users/settings", %{
           "action" => "update_email",
           "current_password" => valid_user_password(),
           "user" => %{"email" => unique_user_email()}
         })
 
-      assert redirected_to(conn) == Routes.user_settings_path(conn, :edit)
+      assert redirected_to(conn) == ~p"/users/settings"
       assert Phoenix.Flash.get(conn.assigns.flash, :info) =~ "A link to confirm your email"
       assert Accounts.get_user_by_email(user.email)
     end
 
     test "does not update email on invalid data", %{conn: conn} do
       conn =
-        put(conn, Routes.user_settings_path(conn, :update), %{
+        put(conn, ~p"/users/settings", %{
           "action" => "update_email",
           "current_password" => "invalid",
           "user" => %{"email" => "with spaces"}
@@ -196,22 +196,22 @@ defmodule CuberacerLiveWeb.UserSettingsControllerTest do
     end
 
     test "updates the user email once", %{conn: conn, user: user, token: token, email: email} do
-      conn = get(conn, Routes.user_settings_path(conn, :confirm_email, token))
-      assert redirected_to(conn) == Routes.user_settings_path(conn, :edit)
+      conn = get(conn, ~p"/users/settings/confirm_email/#{token}")
+      assert redirected_to(conn) == ~p"/users/settings"
       assert Phoenix.Flash.get(conn.assigns.flash, :info) =~ "Email changed successfully"
       refute Accounts.get_user_by_email(user.email)
       assert Accounts.get_user_by_email(email)
 
-      conn = get(conn, Routes.user_settings_path(conn, :confirm_email, token))
-      assert redirected_to(conn) == Routes.user_settings_path(conn, :edit)
+      conn = get(conn, ~p"/users/settings/confirm_email/#{token}")
+      assert redirected_to(conn) == ~p"/users/settings"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
                "Email change link is invalid or it has expired"
     end
 
     test "does not update email with invalid token", %{conn: conn, user: user} do
-      conn = get(conn, Routes.user_settings_path(conn, :confirm_email, "oops"))
-      assert redirected_to(conn) == Routes.user_settings_path(conn, :edit)
+      conn = get(conn,~p"/users/settings/confirm_email/oops")
+      assert redirected_to(conn) == ~p"/users/settings"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
                "Email change link is invalid or it has expired"
@@ -221,8 +221,8 @@ defmodule CuberacerLiveWeb.UserSettingsControllerTest do
 
     test "redirects if user is not logged in", %{token: token} do
       conn = build_conn()
-      conn = get(conn, Routes.user_settings_path(conn, :confirm_email, token))
-      assert redirected_to(conn) == Routes.user_session_path(conn, :new)
+      conn = get(conn, ~p"/users/settings/confirm_email/#{token}")
+      assert redirected_to(conn) == ~p"/login"
     end
   end
 end

@@ -14,7 +14,7 @@ defmodule CuberacerLive.SessionControllerTest do
 
   describe "GET /sessions/:id" do
     test "empty case", %{conn: conn, user: user, session: session} do
-      conn = conn |> log_in_user(user) |> get(Routes.session_path(conn, :show, session.id))
+      conn = conn |> log_in_user(user) |> get(~p"/sessions/#{session.id}")
       html = html_response(conn, 200)
 
       assert html =~ "Session</h1>"
@@ -55,7 +55,7 @@ defmodule CuberacerLive.SessionControllerTest do
           penalty: :DNF
         )
 
-      conn = conn |> log_in_user(user1) |> get(Routes.session_path(conn, :show, session.id))
+      conn = conn |> log_in_user(user1) |> get(~p"/sessions/#{session.id}")
       html = html_response(conn, 200)
 
       assert html =~ "Session</h1>"
@@ -69,28 +69,28 @@ defmodule CuberacerLive.SessionControllerTest do
       assert html =~ "hope this passes"
 
       html
-      |> assert_html("tr td a[href='#{Routes.round_path(conn, :show, round1.id)}']",
+      |> assert_html("tr td a[href='#{~p"/rounds/#{round1.id}"}']",
         text: round1.scramble
       )
-      |> assert_html("tr td a[href='#{Routes.round_path(conn, :show, round2.id)}']",
+      |> assert_html("tr td a[href='#{~p"/rounds/#{round2.id}"}']",
         text: round2.scramble
       )
-      |> assert_html("tr td a[href='#{Routes.round_path(conn, :show, round3.id)}']",
+      |> assert_html("tr td a[href='#{~p"/rounds/#{round3.id}"}']",
         text: round3.scramble
       )
-      |> assert_html("tr td a[href='#{Routes.solve_path(conn, :show, solve1.id)}']",
+      |> assert_html("tr td a[href='#{~p"/solves/#{solve1.id}"}']",
         text: Sessions.display_solve(solve1)
       )
-      |> assert_html("tr td a[href='#{Routes.solve_path(conn, :show, solve2.id)}']",
+      |> assert_html("tr td a[href='#{~p"/solves/#{solve2.id}"}']",
         text: Sessions.display_solve(solve2)
       )
-      |> assert_html("tr td a[href='#{Routes.solve_path(conn, :show, solve3.id)}']",
+      |> assert_html("tr td a[href='#{~p"/solves/#{solve3.id}"}']",
         text: Sessions.display_solve(solve3)
       )
-      |> assert_html("tr td a[href='#{Routes.solve_path(conn, :show, solve4.id)}']",
+      |> assert_html("tr td a[href='#{~p"/solves/#{solve4.id}"}']",
         text: Sessions.display_solve(solve4)
       )
-      |> assert_html("tr td a[href='#{Routes.solve_path(conn, :show, solve5.id)}']",
+      |> assert_html("tr td a[href='#{~p"/solves/#{solve5.id}"}']",
         text: Sessions.display_solve(solve5)
       )
     end
@@ -98,7 +98,7 @@ defmodule CuberacerLive.SessionControllerTest do
     test "indicates that a session is unlisted", %{conn: conn, user: user} do
       session = session_fixture(unlisted?: true)
       ext = Sessions.session_locator(session)
-      conn = conn |> log_in_user(user) |> get(Routes.session_path(conn, :show, ext))
+      conn = conn |> log_in_user(user) |> get(~p"/sessions/#{ext}")
       html = html_response(conn, 200)
 
       assert html =~ "fas fa-lock"
@@ -106,7 +106,7 @@ defmodule CuberacerLive.SessionControllerTest do
 
     test "does not allow access to an unlisted session via session ID", %{conn: conn, user: user} do
       session = session_fixture(unlisted?: true)
-      conn = conn |> log_in_user(user) |> get(Routes.session_path(conn, :show, session.id))
+      conn = conn |> log_in_user(user) |> get(~p"/sessions/#{session.id}")
 
       assert html_response(conn, 404)
     end
@@ -114,14 +114,14 @@ defmodule CuberacerLive.SessionControllerTest do
     test "404s for non-existing unlisted session", %{conn: conn, user: user} do
       _session = session_fixture(unlisted: true)
 
-      conn = conn |> log_in_user(user) |> get(Routes.session_path(conn, :show, "fjdkalfjda"))
+      conn = conn |> log_in_user(user) |> get(~p"/sessions/fjdkalfjda")
 
       assert html_response(conn, 404)
     end
 
     test "redirects if not logged in", %{conn: conn, session: session} do
-      conn = get(conn, Routes.session_path(conn, :show, session.id))
-      assert redirected_to(conn) == Routes.user_session_path(conn, :new)
+      conn = get(conn, ~p"/sessions/#{session.id}")
+      assert redirected_to(conn) == ~p"/login"
     end
   end
 end

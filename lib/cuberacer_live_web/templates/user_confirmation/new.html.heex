@@ -2,7 +2,7 @@
   <h1 class="text-3xl font-semibold text-center mb-6">Resend confirmation instructions</h1>
 
   <div class="w-full bg-gray-200 border border-gray-600 rounded-lg p-3">
-    <.form :let={f} for={:user} action={Routes.user_confirmation_path(@conn, :create)}>
+    <.form :let={f} for={:user} action={~p"/users/confirm"}>
       <%= label(f, :email) %>
       <%= email_input(f, :email,
         required: true,

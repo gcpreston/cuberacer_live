@@ -3,10 +3,10 @@
     <div class="relative flex items-center justify-between h-16">
       <div class="flex-1 flex items-stretch justify-start">
         <div class="flex-shrink-0 flex items-center">
-          <a href={Routes.game_lobby_path(@conn, :index)} class="block lg:hidden h-8 w-auto">
+          <a href={~p"/lobby"} class="block lg:hidden h-8 w-auto">
             <span class="text-gray-200 text-3xl font-medium italic">CR</span>
           </a>
-          <a href={Routes.game_lobby_path(@conn, :index)} class="hidden lg:block h-8 w-auto">
+          <a href={~p"/lobby"} class="hidden lg:block h-8 w-auto">
             <span class="text-gray-200 text-3xl font-medium italic">CubeRacer</span>
           </a>
         </div>
@@ -14,7 +14,7 @@
           <div class="flex space-x-4">
             <%= if function_exported?(Routes, :live_dashboard_path, 2) do %>
               <.link
-                href={Routes.live_dashboard_path(@conn, :home)}
+                href={~p"/dashboard"}
                 class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
               >
                 LiveDashboard

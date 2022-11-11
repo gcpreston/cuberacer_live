@@ -51,7 +51,7 @@ defmodule CuberacerLiveWeb do
   def live_view do
     quote do
       use Phoenix.LiveView,
-        layout: {CuberacerLiveWeb.LayoutView, "live.html"}
+        layout: {CuberacerLiveWeb.LayoutView, :live}
 
       unquote(view_helpers())
     end
@@ -102,7 +102,6 @@ defmodule CuberacerLiveWeb do
 
       import CuberacerLiveWeb.ErrorHelpers
       import CuberacerLiveWeb.Gettext
-      alias CuberacerLiveWeb.Router.Helpers, as: Routes
 
       unquote(verified_routes())
     end

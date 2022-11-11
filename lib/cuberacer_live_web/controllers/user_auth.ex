@@ -1,9 +1,10 @@
 defmodule CuberacerLiveWeb.UserAuth do
+  use CuberacerLiveWeb, :verified_routes
+
   import Plug.Conn
   import Phoenix.Controller
 
   alias CuberacerLive.Accounts
-  alias CuberacerLiveWeb.Router.Helpers, as: Routes
 
   # Make the remember me cookie valid for 60 days.
   # If you want bump or reduce this value, also change
@@ -33,7 +34,7 @@ defmodule CuberacerLiveWeb.UserAuth do
     |> put_session(:user_token, token)
     |> put_session(:live_socket_id, "users_sessions:#{Base.url_encode64(token)}")
     |> maybe_write_remember_me_cookie(token, params)
-    |> redirect(to: user_return_to || signed_in_path(conn))
+    |> redirect(to: user_return_to || signed_in_path())
   end
 
   defp maybe_write_remember_me_cookie(conn, token, %{"remember_me" => "true"}) do
@@ -114,7 +115,7 @@ defmodule CuberacerLiveWeb.UserAuth do
   def redirect_if_user_is_authenticated(conn, _opts) do
     if conn.assigns[:current_user] do
       conn
-      |> redirect(to: signed_in_path(conn))
+      |> redirect(to: signed_in_path())
       |> halt()
     else
       conn
@@ -134,7 +135,7 @@ defmodule CuberacerLiveWeb.UserAuth do
       conn
       |> put_flash(:error, "You must log in to access this page.")
       |> maybe_store_return_to()
-      |> redirect(to: Routes.user_session_path(conn, :new))
+      |> redirect(to: ~p"/login")
       |> halt()
     end
   end
@@ -145,5 +146,5 @@ defmodule CuberacerLiveWeb.UserAuth do
 
   defp maybe_store_return_to(conn), do: conn
 
-  defp signed_in_path(conn), do: Routes.game_lobby_path(conn, :index)
+  defp signed_in_path, do: ~p"/lobby"
 end

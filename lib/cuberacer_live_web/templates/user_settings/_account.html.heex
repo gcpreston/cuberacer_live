@@ -14,7 +14,7 @@
     <.form
       :let={resend_confirm}
       for={:user}
-      action={Routes.user_confirmation_path(@conn, :create)}
+      action={~p"/users/confirm"}
       class="inline"
     >
       <%= hidden_input(resend_confirm, :email, value: @conn.assigns.current_user.email) %>
@@ -25,7 +25,7 @@
   <.form
     :let={f}
     for={@email_changeset}
-    action={Routes.user_settings_path(@conn, :update)}
+    action={~p"/users/settings"}
     id="update_email"
   >
     <%= if @email_changeset.action do %>
@@ -63,7 +63,7 @@
   <.form
     :let={f}
     for={@password_changeset}
-    action={Routes.user_settings_path(@conn, :update)}
+    action={~p"/users/settings"}
     id="update_password"
   >
     <%= if @password_changeset.action do %>

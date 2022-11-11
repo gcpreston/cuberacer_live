@@ -2,7 +2,7 @@
   <h1 class="text-3xl font-semibold text-center mb-6">Forgot your password?</h1>
 
   <div class="w-full bg-gray-200 border border-gray-600 rounded-lg p-3">
-    <.form :let={f} for={:user} action={Routes.user_reset_password_path(@conn, :create)}>
+    <.form :let={f} for={:user} action={~p"/reset_password"}>
       <%= label(f, :email) %>
       <%= email_input(f, :email,
         required: true,
@@ -19,7 +19,7 @@
   </div>
 
   <div class="mt-4 text-center">
-    <.link href={Routes.user_session_path(@conn, :new)} class="text-blue-500 hover:underline">
+    <.link href={~p"/login"} class="text-blue-500 hover:underline">
       Return to login
     </.link>
   </div>

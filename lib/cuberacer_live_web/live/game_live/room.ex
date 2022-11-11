@@ -21,7 +21,7 @@ defmodule CuberacerLiveWeb.GameLive.Room do
 
         cond do
           user == nil ->
-            redirect(socket, to: Routes.user_session_path(socket, :new))
+            redirect(socket, to: ~p"/login")
 
           session == nil or (used_session_id and session.unlisted?) ->
             push_redirect_to_lobby(socket, "Unknown room")
@@ -43,13 +43,13 @@ defmodule CuberacerLiveWeb.GameLive.Room do
     # TODO: How to make it redirect to room after login instead of /?
     {:ok,
      socket
-     |> redirect(to: Routes.user_session_path(socket, :new))}
+     |> redirect(to: ~p"/login")}
   end
 
   defp push_redirect_to_lobby(socket, flash_error) do
     socket
     |> put_flash(:error, flash_error)
-    |> push_redirect(to: Routes.game_lobby_path(socket, :index))
+    |> push_redirect(to: ~p"/lobby")
   end
 
   defp track_and_subscribe(socket, user, session) do
@@ -224,7 +224,7 @@ defmodule CuberacerLiveWeb.GameLive.Room do
     {:noreply,
      socket
      |> put_flash(:info, "Session was deleted")
-     |> push_redirect(to: Routes.game_lobby_path(socket, :index))}
+     |> push_redirect(to: ~p"/lobby")}
   end
 
   # TODO: I don't like having a Repo call in this file, and would like to

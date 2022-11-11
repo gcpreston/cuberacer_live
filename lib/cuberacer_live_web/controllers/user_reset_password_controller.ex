@@ -23,7 +23,7 @@ defmodule CuberacerLiveWeb.UserResetPasswordController do
       :info,
       "If your email is in our system, you will receive instructions to reset your password shortly."
     )
-    |> redirect(to: "/")
+    |> redirect(to: ~p"/")
   end
 
   def edit(conn, _params) do
@@ -37,7 +37,7 @@ defmodule CuberacerLiveWeb.UserResetPasswordController do
       {:ok, _} ->
         conn
         |> put_flash(:info, "Password reset successfully.")
-        |> redirect(to: Routes.user_session_path(conn, :new))
+        |> redirect(to: ~p"/login")
 
       {:error, changeset} ->
         render(conn, "edit.html", changeset: changeset)
@@ -52,7 +52,7 @@ defmodule CuberacerLiveWeb.UserResetPasswordController do
     else
       conn
       |> put_flash(:error, "Reset password link is invalid or it has expired.")
-      |> redirect(to: "/")
+      |> redirect(to: ~p"/")
       |> halt()
     end
   end

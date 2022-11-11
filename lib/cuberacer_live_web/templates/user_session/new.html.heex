@@ -2,7 +2,7 @@
   <h1 class="text-3xl font-semibold text-center mb-6">Log in to Cuberacer</h1>
 
   <div class="w-full bg-gray-200 border border-gray-600 rounded-lg p-3">
-    <.form :let={f} for={@conn} action={Routes.user_session_path(@conn, :create)} as={:user}>
+    <.form :let={f} for={@conn} action={~p"/login"} as={:user}>
       <%= if @error_message do %>
         <div class="alert alert-danger">
           <p><%= @error_message %></p>
@@ -23,7 +23,7 @@
         ) %>
         <div class="text-right w-full">
           <.link
-            href={Routes.user_reset_password_path(@conn, :new)}
+            href={~p"/reset_password"}
             class="text-sm text-blue-500 hover:underline"
           >
             Forgot password?
@@ -44,7 +44,7 @@
 
   <div class="mt-4 text-center">
     Need an account?
-    <.link href={Routes.user_registration_path(@conn, :new)} class="text-blue-500 hover:underline">
+    <.link href={~p"/signup"} class="text-blue-500 hover:underline">
       Sign up
     </.link>
   </div>

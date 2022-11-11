@@ -1,5 +1,5 @@
 <%= if @live_action == :new do %>
-  <.modal return_to={Routes.game_lobby_path(@socket, :index)}>
+  <.modal return_to={~p"/lobby"}>
     <.live_component
       module={CuberacerLiveWeb.GameLive.CreateRoomForm}
       id={@session.id || :new}
@@ -7,7 +7,7 @@
       action={@live_action}
       current_user={@current_user}
       session={@session}
-      return_to={Routes.game_lobby_path(@socket, :index)}
+      return_to={~p"/lobby"}
     />
   </.modal>
 <% end %>
@@ -28,7 +28,7 @@
 
   <button class="mt-8">
     <.link
-      patch={Routes.game_lobby_path(@socket, :new)}
+      patch={~p"/lobby/new"}
       id="t_new-room"
       class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm text-gray-900 font-medium bg-green-400 hover:bg-green-500"
     >

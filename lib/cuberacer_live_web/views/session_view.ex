@@ -3,7 +3,6 @@ defmodule CuberacerLiveWeb.SessionView do
 
   import CuberacerLiveWeb.SharedUtils, only: [format_datetime: 1]
 
-  alias CuberacerLiveWeb.Endpoint
   alias CuberacerLive.Sessions
   alias CuberacerLive.Sessions.{Session, Round}
   alias CuberacerLive.Accounts.User
@@ -39,7 +38,7 @@ defmodule CuberacerLiveWeb.SessionView do
               scope="col"
               class="border-y px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
             >
-              <.link href={Routes.user_profile_path(Endpoint, :show, user.id)}>
+              <.link href={~p"/users/#{user.id}"}>
                 <%= user.username %>
               </.link>
             </th>
@@ -52,7 +51,7 @@ defmodule CuberacerLiveWeb.SessionView do
             <td class="border-b px-6 py-4">
               <div class="ml-4">
                 <div class="text-sm font-medium text-gray-900">
-                  <.link href={Routes.round_path(Endpoint, :show, round.id)}>
+                  <.link href={~p"/rounds/#{round.id}"}>
                     <%= round.scramble %>
                   </.link>
                 </div>
@@ -78,7 +77,7 @@ defmodule CuberacerLiveWeb.SessionView do
       <div class="ml-4">
         <div class="text-sm font-medium text-gray-900">
           <%= if @solve do %>
-            <.link href={Routes.solve_path(Endpoint, :show, @solve.id)}>
+            <.link href={~p"/solves/#{@solve.id}"}>
               <%= @text %>
             </.link>
           <% else %>
@@ -94,6 +93,7 @@ defmodule CuberacerLiveWeb.SessionView do
     Enum.find(round.solves, fn solve -> solve.user_id == user.id end)
   end
 
+  attr :messages, :list, required: true
   attr :color_seed, :any, required: true
 
   defp messages_block(assigns) do
