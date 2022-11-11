@@ -17,6 +17,8 @@ defmodule CuberacerLiveWeb do
   and import those modules here.
   """
 
+  def static_paths, do: ~w(assets fonts images favicon.ico robots.txt)
+
   def controller do
     quote do
       use Phoenix.Controller, namespace: CuberacerLiveWeb
@@ -24,6 +26,8 @@ defmodule CuberacerLiveWeb do
       import Plug.Conn
       import CuberacerLiveWeb.Gettext
       alias CuberacerLiveWeb.Router.Helpers, as: Routes
+
+      unquote(verified_routes())
     end
   end
 
@@ -99,6 +103,17 @@ defmodule CuberacerLiveWeb do
       import CuberacerLiveWeb.ErrorHelpers
       import CuberacerLiveWeb.Gettext
       alias CuberacerLiveWeb.Router.Helpers, as: Routes
+
+      unquote(verified_routes())
+    end
+  end
+
+  def verified_routes do
+    quote do
+      use Phoenix.VerifiedRoutes,
+        endpoint: CuberacerLiveWeb.Endpoint,
+        router: CuberacerLiveWeb.Router,
+        statics: CuberacerLiveWeb.static_paths()
     end
   end
 
