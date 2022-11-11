@@ -43,7 +43,7 @@
 
     <%= if @conn.assigns.current_user.id == @user.id do %>
       <.link href={Routes.user_settings_path(@conn, :edit)}
-        class="block mt-4 mb-8 w-full text-center font-medium rounded-md border py-0.5 bg-gray-50 shadow-xs hover:bg-gray-100 hover:shadow-sm active:bg-gray-200 transition-all",
+        class="block mt-4 mb-8 w-full text-center font-medium rounded-md border py-0.5 bg-gray-50 shadow-xs hover:bg-gray-100 hover:shadow-sm active:bg-gray-200 transition-all"
         id="profile-edit">
         Edit profile
       </.link>
