@@ -31,6 +31,11 @@
   </div>
 
   <div class="flex-1 overflow-auto">
-    <.rounds_table rounds={@session.rounds} users={participants(@session)} include_scramble={true} include_links={true} />
+    <.rounds_table
+      rounds={@session.rounds}
+      users={participants(@session)}
+      include_scramble={true}
+      include_links={true}
+    />
   </div>
 </div>

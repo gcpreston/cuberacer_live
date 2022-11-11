@@ -5,18 +5,30 @@
       <i class="fas fa-heart"></i>
     </span>
   </button>
-
   <!-- Modal -->
-  <div x-show="open" x-on:keydown.escape.prevent.stop="open = false" role="dialog" aria-modal="true"
-    x-id="['modal-title']" x-bind:aria-labelledby="$id('modal-title')" class="fixed inset-0 overflow-y-auto z-10">
+  <div
+    x-show="open"
+    x-on:keydown.escape.prevent.stop="open = false"
+    role="dialog"
+    aria-modal="true"
+    x-id="['modal-title']"
+    x-bind:aria-labelledby="$id('modal-title')"
+    class="fixed inset-0 overflow-y-auto z-10"
+  >
     <!-- Overlay -->
     <div x-show="open" x-transition.opacity class="fixed inset-0 bg-black bg-opacity-50"></div>
-
     <!-- Panel -->
-    <div x-show="open" x-transition x-on:click="open = false"
-      class="relative min-h-screen flex items-center justify-center p-4">
-      <div x-on:click.stop x-trap.noscroll.inert="open"
-        class="relative max-w-2xl w-full bg-white rounded-lg border border-black p-8 overflow-y-auto">
+    <div
+      x-show="open"
+      x-transition
+      x-on:click="open = false"
+      class="relative min-h-screen flex items-center justify-center p-4"
+    >
+      <div
+        x-on:click.stop
+        x-trap.noscroll.inert="open"
+        class="relative max-w-2xl w-full bg-white rounded-lg border border-black p-8 overflow-y-auto"
+      >
         <h1 class="text-center" x-bind:id="$id('modal-title')">
           <span class="text-red-400 text-2xl">
             <i class="fas fa-heart"></i>
@@ -29,8 +41,14 @@
           about the site, or features to suggest, feel free to get in touch:
         </p>
         <ul class="mt-2 text-center">
-          <li><a href="mailto:gpreston@cuberacer.io" class="text-blue-500">gpreston@cuberacer.io</a></li>
-          <li><a href="https://www.reddit.com/user/cuberacer-io" class="text-blue-500">/u/cuberacer-io</a></li>
+          <li>
+            <a href="mailto:gpreston@cuberacer.io" class="text-blue-500">gpreston@cuberacer.io</a>
+          </li>
+          <li>
+            <a href="https://www.reddit.com/user/cuberacer-io" class="text-blue-500">
+              /u/cuberacer-io
+            </a>
+          </li>
         </ul>
         <!-- Donate -->
         <h2 class="mt-4 text-xl font-medium text-center">Donate</h2>
@@ -45,8 +63,11 @@
         </div>
         <!-- Buttons -->
         <div class="mt-4 flex space-x-2">
-          <button type="button" x-on:click="open = false"
-            class="text-sm bg-white rounded-md border border-black px-2 py-1 focus:outline-none focus:ring-4 focus:ring-aqua-400">
+          <button
+            type="button"
+            x-on:click="open = false"
+            class="text-sm bg-white rounded-md border border-black px-2 py-1 focus:outline-none focus:ring-4 focus:ring-aqua-400"
+          >
             Close
           </button>
         </div>

@@ -9,7 +9,7 @@ import Config
 
 # Load front-end configuration
 with {:ok, body} <- File.read(Path.expand("../assets/app.config.json", __DIR__)),
-      json <- Jason.decode!(body) do
+     json <- Jason.decode!(body) do
   config :cuberacer_live, :frontend_config, json
 end
 

@@ -41,16 +41,11 @@ defmodule CuberacerLiveWeb.Components do
         phx-key="escape"
       >
         <%= if @return_to do %>
-          <.link
-            patch={@return_to}
-            id="close"
-            class="phx-modal-close"
-            phx_click={hide_modal()}
-          >
+          <.link patch={@return_to} id="close" class="phx-modal-close" phx_click={hide_modal()}>
             ✖
           </.link>
         <% else %>
-         <a id="close" href="#" class="phx-modal-close" phx-click={hide_modal()}>✖</a>
+          <a id="close" href="#" class="phx-modal-close" phx-click={hide_modal()}>✖</a>
         <% end %>
 
         <%= render_slot(@inner_block) %>
@@ -80,6 +75,7 @@ defmodule CuberacerLiveWeb.Components do
   ]
 
   attr :room_message, :any, required: true, doc: "The Messaging.RoomMessage to display."
+  attr :color_seed, :any, required: true
 
   def chat_message(assigns) do
     ~H"""
@@ -110,7 +106,9 @@ defmodule CuberacerLiveWeb.Components do
 
   def session_link(assigns) do
     ~H"""
-    <.link href={Routes.session_path(CuberacerLiveWeb.Endpoint, :show, Sessions.session_locator(assigns.session))}>
+    <.link href={
+      Routes.session_path(CuberacerLiveWeb.Endpoint, :show, Sessions.session_locator(assigns.session))
+    }>
       <%= render_slot(@inner_block) %>
     </.link>
     """

@@ -144,6 +144,7 @@ defmodule CuberacerLive.Accounts.User do
     user
     |> cast(attrs, [:bio, :wca_id, :country, :birthday])
     |> validate_bio()
+
     # |> validate_wca_id()
     # |> validate_country()
     # |> validate_birthday()

@@ -2,25 +2,35 @@
 <div class="relative" x-data="{ dropdownOpen: false }" @mousedown.outside="dropdownOpen = false">
   <div>
     <%= if @current_user do %>
-      <button @mousedown="dropdownOpen = !dropdownOpen" type="button"
+      <button
+        @mousedown="dropdownOpen = !dropdownOpen"
+        type="button"
         class="bg-gray-800 flex text-sm rounded-full"
         x-bind:class="dropdownOpen ? 'outline-none ring-2 ring-offset-2 ring-offset-gray-800 ring-white' : ''"
-        id="user-menu-button">
+        id="user-menu-button"
+      >
         <span class="sr-only">Open user menu</span>
-        <img class="h-8 w-8 rounded-full" src={Routes.static_path(@conn, "/images/default-profile.jpeg" )}
-          alt="">
+        <img
+          class="h-8 w-8 rounded-full"
+          src={Routes.static_path(@conn, "/images/default-profile.jpeg")}
+          alt=""
+        />
       </button>
-      <% else %>
-        <.link type="button" href={Routes.user_session_path(@conn, :new)}
-          class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-          id="user-registration-button">
-          Log in
-        </.link>
-        <% end %>
+    <% else %>
+      <.link
+        type="button"
+        href={Routes.user_session_path(@conn, :new)}
+        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+        id="user-registration-button"
+      >
+        Log in
+      </.link>
+    <% end %>
   </div>
 
   <%= if @current_user do %>
-    <div x-show="dropdownOpen"
+    <div
+      x-show="dropdownOpen"
       class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-10"
       x-transition:enter="transition ease-out duration-100"
       x-transition:enter-start="transform opacity-0 scale-95"
@@ -28,25 +38,38 @@
       x-transition:leave="transition ease-in duration-75"
       x-transition:leave-start="transform opacity-100 scale-100"
       x-transition:leave-end="transform opacity-0 scale-95"
-      role="menu" aria-orientation="vertical" aria-labelledby="user-menu-button" tabindex="-1">
-
+      role="menu"
+      aria-orientation="vertical"
+      aria-labelledby="user-menu-button"
+      tabindex="-1"
+    >
       <.link
         href={Routes.user_profile_path(@conn, :show, @current_user.id)}
-        class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+        class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+      >
         <%= @current_user.username %>
       </.link>
 
       <hr />
 
-      <.link href={Routes.user_settings_path(@conn, :edit)},
-        class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem" tabindex="-1"
-        id="user-menu-item-0">
+      <.link
+        href={Routes.user_settings_path(@conn, :edit)}
+        class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+        role="menuitem"
+        tabindex="-1"
+        id="user-menu-item-0"
+      >
         Settings
       </.link>
 
-      <.link href={Routes.user_session_path(@conn, :delete)} method={:delete}
-        class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem" tabindex="-1"
-        id="user-menu-item-2">
+      <.link
+        href={Routes.user_session_path(@conn, :delete)}
+        method="delete"
+        class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+        role="menuitem"
+        tabindex="-1"
+        id="user-menu-item-2"
+      >
         Log out
       </.link>
     </div>

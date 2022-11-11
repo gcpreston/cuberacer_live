@@ -25,7 +25,9 @@ defmodule CuberacerLiveWeb.RoundView do
             <%= for solve <- @solves do %>
               <tr>
                 <td class="px-6 py-4 whitespace-nowrap">
-                  <.link href={Routes.user_profile_path(CuberacerLiveWeb.Endpoint, :show, solve.user_id)}>
+                  <.link href={
+                    Routes.user_profile_path(CuberacerLiveWeb.Endpoint, :show, solve.user_id)
+                  }>
                     <%= solve.user.username %>
                   </.link>
                 </td>

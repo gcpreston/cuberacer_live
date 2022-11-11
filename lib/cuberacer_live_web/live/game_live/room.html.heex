@@ -59,11 +59,20 @@
         </div>
         <.penalty_input />
 
-        <button id="new-round-button" phx-click="new-round" class="px-4 py-2 mt-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium bg-white hover:bg-gray-50">New round</button>
+        <button
+          id="new-round-button"
+          phx-click="new-round"
+          class="px-4 py-2 mt-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium bg-white hover:bg-gray-50"
+        >
+          New round
+        </button>
       </div>
     </div>
 
-    <div class="absolute bottom-0 inset-x-0 w-full overflow-auto bg-white" x-bind:class="bottomRowHeight">
+    <div
+      class="absolute bottom-0 inset-x-0 w-full overflow-auto bg-white"
+      x-bind:class="bottomRowHeight"
+    >
       <div class="flex flex-row h-full">
         <div class="flex flex-col justify-between border-r">
           <.stats ao5={@stats.ao5} ao12={@stats.ao12} />
@@ -81,7 +90,11 @@
         </div>
 
         <div class="flex-1 h-full overflow-auto">
-          <.times_table participant_data={@participant_data} current_round={@current_round} past_rounds={@past_rounds} />
+          <.times_table
+            participant_data={@participant_data}
+            current_round={@current_round}
+            past_rounds={@past_rounds}
+          />
         </div>
 
         <div
@@ -97,7 +110,10 @@
     </div>
   </div>
 
-  <div class="w-full sm:w-80 shrink-0 h-full" x-bind:class="{ 'hidden': !(chatSidebarShow || mobileChatOpen) }">
+  <div
+    class="w-full sm:w-80 shrink-0 h-full"
+    x-bind:class="{ 'hidden': !(chatSidebarShow || mobileChatOpen) }"
+  >
     <.chat room_messages={@room_messages} color_seed={@socket.id} />
   </div>
 </div>

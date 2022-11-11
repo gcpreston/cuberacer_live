@@ -27,13 +27,18 @@ defmodule CuberacerLiveWeb.SessionView do
     <table class="w-full border-separate [border-spacing:0]">
       <thead class="bg-gray-50 sticky top-0">
         <tr>
-
-          <th scope="col" class="border-y px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+          <th
+            scope="col"
+            class="border-y px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+          >
             Scramble
           </th>
 
           <%= for user <- @users do %>
-            <th scope="col" class="border-y px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th
+              scope="col"
+              class="border-y px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+            >
               <.link href={Routes.user_profile_path(Endpoint, :show, user.id)}>
                 <%= user.username %>
               </.link>
@@ -44,7 +49,6 @@ defmodule CuberacerLiveWeb.SessionView do
       <tbody id="times-table-body" class="bg-white">
         <%= for round <- @rounds do %>
           <tr id={"round-#{round.id}"} class="t_round-row">
-
             <td class="border-b px-6 py-4">
               <div class="ml-4">
                 <div class="text-sm font-medium text-gray-900">
@@ -90,6 +94,8 @@ defmodule CuberacerLiveWeb.SessionView do
     Enum.find(round.solves, fn solve -> solve.user_id == user.id end)
   end
 
+  attr :color_seed, :any, required: true
+
   defp messages_block(assigns) do
     ~H"""
     <%= if length(@messages) == 0 do %>
@@ -99,7 +105,10 @@ defmodule CuberacerLiveWeb.SessionView do
         <div class="divide-y">
           <%= for message <- @messages do %>
             <div title={format_datetime(message.inserted_at)}>
-              <.chat_message room_message={CuberacerLive.Repo.preload(message, :user)} color_seed={@color_seed} />
+              <.chat_message
+                room_message={CuberacerLive.Repo.preload(message, :user)}
+                color_seed={@color_seed}
+              />
             </div>
           <% end %>
         </div>

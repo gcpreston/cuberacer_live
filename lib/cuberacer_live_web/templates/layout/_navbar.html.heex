@@ -3,17 +3,20 @@
     <div class="relative flex items-center justify-between h-16">
       <div class="flex-1 flex items-stretch justify-start">
         <div class="flex-shrink-0 flex items-center">
-          <a href={Routes.game_lobby_path(@conn, :index)} class="block lg:hidden h-8 w-auto"><span
-              class="text-gray-200 text-3xl font-medium italic">CR</span></a>
-          <a href={Routes.game_lobby_path(@conn, :index)} class="hidden lg:block h-8 w-auto"><span
-              class="text-gray-200 text-3xl font-medium italic">CubeRacer</span></a>
+          <a href={Routes.game_lobby_path(@conn, :index)} class="block lg:hidden h-8 w-auto">
+            <span class="text-gray-200 text-3xl font-medium italic">CR</span>
+          </a>
+          <a href={Routes.game_lobby_path(@conn, :index)} class="hidden lg:block h-8 w-auto">
+            <span class="text-gray-200 text-3xl font-medium italic">CubeRacer</span>
+          </a>
         </div>
         <div class="block ml-6">
           <div class="flex space-x-4">
             <%= if function_exported?(Routes, :live_dashboard_path, 2) do %>
               <.link
                 href={Routes.live_dashboard_path(@conn, :home)}
-                class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">
+                class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+              >
                 LiveDashboard
               </.link>
             <% end %>
@@ -23,15 +26,15 @@
 
       <div class="flex justify-end">
         <div class="flex items-center ml-4 inset-auto">
-          <%= render "_how_to.html", assigns %>
+          <%= render("_how_to.html", assigns) %>
         </div>
 
         <div class="flex items-center ml-4 inset-auto">
-          <%= render "_show_love.html", assigns %>
+          <%= render("_show_love.html", assigns) %>
         </div>
 
         <div class="flex items-center ml-4 inset-auto">
-          <%= render "_profile_icon.html", assigns %>
+          <%= render("_profile_icon.html", assigns) %>
         </div>
       </div>
     </div>

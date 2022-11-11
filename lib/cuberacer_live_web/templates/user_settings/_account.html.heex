@@ -3,37 +3,56 @@
 <div class="my-6">
   <h3 class="text-xl">Change email</h3>
 
-    <%= if @conn.assigns.current_user.confirmed_at do %>
-      <span class="rounded bg-green-300 text-green-900 text-sm font-medium px-1 py-0.5">Confirmed</span>
-    <% else %>
-      <span class="rounded bg-orange-300 text-orange-900 text-sm font-medium px-1 py-0.5">Unconfirmed</span>
-      <.form let={resend_confirm} for={:user} action={Routes.user_confirmation_path(@conn, :create)} class="inline">
-        <%= hidden_input resend_confirm, :email, value: @conn.assigns.current_user.email %>
-        <%= submit "Resend confirmation email", class: "text-blue-500 hover:underline" %>
-      </.form>
-    <% end %>
+  <%= if @conn.assigns.current_user.confirmed_at do %>
+    <span class="rounded bg-green-300 text-green-900 text-sm font-medium px-1 py-0.5">
+      Confirmed
+    </span>
+  <% else %>
+    <span class="rounded bg-orange-300 text-orange-900 text-sm font-medium px-1 py-0.5">
+      Unconfirmed
+    </span>
+    <.form
+      :let={resend_confirm}
+      for={:user}
+      action={Routes.user_confirmation_path(@conn, :create)}
+      class="inline"
+    >
+      <%= hidden_input(resend_confirm, :email, value: @conn.assigns.current_user.email) %>
+      <%= submit("Resend confirmation email", class: "text-blue-500 hover:underline") %>
+    </.form>
+  <% end %>
 
-  <.form let={f} for={@email_changeset} action={Routes.user_settings_path(@conn, :update)} id="update_email">
+  <.form
+    :let={f}
+    for={@email_changeset}
+    action={Routes.user_settings_path(@conn, :update)}
+    id="update_email"
+  >
     <%= if @email_changeset.action do %>
       <div class="alert alert-danger">
         <p>Oops, something went wrong! Please check the errors below.</p>
       </div>
     <% end %>
 
-    <%= hidden_input f, :action, name: "action", value: "update_email" %>
+    <%= hidden_input(f, :action, name: "action", value: "update_email") %>
 
-    <%= label f, :email %>
-    <%= email_input f, :email, required: true, class: input_classes() %>
-    <%= error_tag f, :email %>
+    <%= label(f, :email) %>
+    <%= email_input(f, :email, required: true, class: input_classes()) %>
+    <%= error_tag(f, :email) %>
 
     <div class="mt-3">
-      <%= label f, :current_password, for: "current_password_for_email" %>
-      <%= password_input f, :current_password, required: true, name: "current_password", id: "current_password_for_email", class: input_classes() %>
-      <%= error_tag f, :current_password %>
+      <%= label(f, :current_password, for: "current_password_for_email") %>
+      <%= password_input(f, :current_password,
+        required: true,
+        name: "current_password",
+        id: "current_password_for_email",
+        class: input_classes()
+      ) %>
+      <%= error_tag(f, :current_password) %>
     </div>
 
     <div class="mt-4">
-      <%= submit "Change email", class: success_button_classes() %>
+      <%= submit("Change email", class: success_button_classes()) %>
     </div>
   </.form>
 </div>
@@ -41,33 +60,43 @@
 <div>
   <h3 class="text-xl">Change password</h3>
 
-  <.form let={f} for={@password_changeset} action={Routes.user_settings_path(@conn, :update)} id="update_password">
+  <.form
+    :let={f}
+    for={@password_changeset}
+    action={Routes.user_settings_path(@conn, :update)}
+    id="update_password"
+  >
     <%= if @password_changeset.action do %>
       <div class="alert alert-danger">
         <p>Oops, something went wrong! Please check the errors below.</p>
       </div>
     <% end %>
 
-    <%= hidden_input f, :action, name: "action", value: "update_password" %>
+    <%= hidden_input(f, :action, name: "action", value: "update_password") %>
 
-    <%= label f, :password, "New password" %>
-    <%= password_input f, :password, required: true, class: input_classes() %>
-    <%= error_tag f, :password %>
+    <%= label(f, :password, "New password") %>
+    <%= password_input(f, :password, required: true, class: input_classes()) %>
+    <%= error_tag(f, :password) %>
 
     <div class="mt-3">
-      <%= label f, :password_confirmation, "Confirm new password" %>
-      <%= password_input f, :password_confirmation, required: true, class: input_classes() %>
-      <%= error_tag f, :password_confirmation %>
+      <%= label(f, :password_confirmation, "Confirm new password") %>
+      <%= password_input(f, :password_confirmation, required: true, class: input_classes()) %>
+      <%= error_tag(f, :password_confirmation) %>
     </div>
 
     <div class="mt-3">
-      <%= label f, :current_password, for: "current_password_for_password" %>
-      <%= password_input f, :current_password, required: true, name: "current_password", id: "current_password_for_password", class: input_classes() %>
-      <%= error_tag f, :current_password %>
+      <%= label(f, :current_password, for: "current_password_for_password") %>
+      <%= password_input(f, :current_password,
+        required: true,
+        name: "current_password",
+        id: "current_password_for_password",
+        class: input_classes()
+      ) %>
+      <%= error_tag(f, :current_password) %>
     </div>
 
     <div class="mt-4">
-      <%= submit "Change password", class: success_button_classes() %>
+      <%= submit("Change password", class: success_button_classes()) %>
     </div>
   </.form>
 </div>

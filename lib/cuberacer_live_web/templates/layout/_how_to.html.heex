@@ -5,18 +5,31 @@
       <i class="fas fa-question"></i>
     </span>
   </button>
-
   <!-- Modal -->
-  <div x-show="modalOpen" x-on:keydown.escape.prevent.stop="closeModal" role="dialog" aria-modal="true"
-    x-id="['modal-title']" x-bind:aria-labelledby="$id('modal-title')" class="fixed inset-0 overflow-y-auto z-10">
+  <div
+    x-show="modalOpen"
+    x-on:keydown.escape.prevent.stop="closeModal"
+    role="dialog"
+    aria-modal="true"
+    x-id="['modal-title']"
+    x-bind:aria-labelledby="$id('modal-title')"
+    class="fixed inset-0 overflow-y-auto z-10"
+  >
     <!-- Overlay -->
-    <div x-show="modalOpen" x-transition.opacity class="fixed inset-0 bg-black bg-opacity-50"></div>
-
+    <div x-show="modalOpen" x-transition.opacity class="fixed inset-0 bg-black bg-opacity-50">
+    </div>
     <!-- Panel -->
-    <div x-show="modalOpen" x-transition x-on:click="closeModal"
-      class="relative min-h-screen flex items-center justify-center p-4">
-      <div x-on:click.stop x-trap.noscroll.inert="open"
-        class="relative max-w-2xl w-full bg-white rounded-lg border border-black p-8 overflow-y-auto">
+    <div
+      x-show="modalOpen"
+      x-transition
+      x-on:click="closeModal"
+      class="relative min-h-screen flex items-center justify-center p-4"
+    >
+      <div
+        x-on:click.stop
+        x-trap.noscroll.inert="open"
+        class="relative max-w-2xl w-full bg-white rounded-lg border border-black p-8 overflow-y-auto"
+      >
         <h1 class="text-center" x-bind:id="$id('modal-title')">
           <span class="text-purple-500 text-2xl">
             <i class="fas fa-question"></i>
@@ -35,11 +48,31 @@
           </button>
 
           <div class="w-10/12">
-            <img src={Routes.static_path(@conn, "/images/how-to-create.png")} alt="How to create a room" x-show="currentPage === 1">
-            <img src={Routes.static_path(@conn, "/images/how-to-join.png")} alt="How to join a room" x-show="currentPage === 2">
-            <img src={Routes.static_path(@conn, "/images/how-to-time.png")} alt="How to start the timer" x-show="currentPage === 3">
-            <img src={Routes.static_path(@conn, "/images/how-to-keyboard.png")} alt="How to use keyboard input" x-show="currentPage === 4">
-            <img src={Routes.static_path(@conn, "/images/how-to-enjoy.png")} alt="Enjoy!" x-show="currentPage === 5">
+            <img
+              src={Routes.static_path(@conn, "/images/how-to-create.png")}
+              alt="How to create a room"
+              x-show="currentPage === 1"
+            />
+            <img
+              src={Routes.static_path(@conn, "/images/how-to-join.png")}
+              alt="How to join a room"
+              x-show="currentPage === 2"
+            />
+            <img
+              src={Routes.static_path(@conn, "/images/how-to-time.png")}
+              alt="How to start the timer"
+              x-show="currentPage === 3"
+            />
+            <img
+              src={Routes.static_path(@conn, "/images/how-to-keyboard.png")}
+              alt="How to use keyboard input"
+              x-show="currentPage === 4"
+            />
+            <img
+              src={Routes.static_path(@conn, "/images/how-to-enjoy.png")}
+              alt="Enjoy!"
+              x-show="currentPage === 5"
+            />
           </div>
 
           <button
@@ -72,20 +105,25 @@
 
           <div class="text-center" x-show="currentPage === 5">
             Happy solving! Some additional tips and tricks:
-
             <ul class="text-left list-disc">
               <li>Chat by using the input box on the right</li>
-              <li>Toggle chat on small devices using the message bubble in the top right corner</li>
+              <li>
+                Toggle chat on small devices using the message bubble in the top right corner
+              </li>
               <li>The time table can be collapsed with the down arrow to the left of "Stats"</li>
-              <li>The time table can be maximized by double clicking/tapping within the "Stats" header</li>
+              <li>
+                The time table can be maximized by double clicking/tapping within the "Stats" header
+              </li>
             </ul>
           </div>
         </div>
-
         <!-- Buttons -->
         <div class="mt-4 flex space-x-2">
-          <button type="button" x-on:click="closeModal"
-            class="text-sm bg-white rounded-md border border-black px-2 py-1 focus:outline-none focus:ring-4 focus:ring-aqua-400">
+          <button
+            type="button"
+            x-on:click="closeModal"
+            class="text-sm bg-white rounded-md border border-black px-2 py-1 focus:outline-none focus:ring-4 focus:ring-aqua-400"
+          >
             Close
           </button>
         </div>

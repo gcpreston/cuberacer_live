@@ -252,11 +252,12 @@ defmodule CuberacerLive.CountryUtils do
   }
 
   def countries_select_options do
-    [[key: "", value: ""] |
-      for {code, name} <- @countries do
-        [key: name, value: code]
-      end
-      |> Enum.sort(&(&1[:key] < &2[:key]))
+    [
+      [key: "", value: ""]
+      | for {code, name} <- @countries do
+          [key: name, value: code]
+        end
+        |> Enum.sort(&(&1[:key] < &2[:key]))
     ]
   end
 
