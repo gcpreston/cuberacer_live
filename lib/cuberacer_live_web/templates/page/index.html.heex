@@ -1,8 +1,12 @@
 <div class="text-center my-40">
   <h1 class="text-3xl font-bold my-3">Cuberacer</h1>
   <span>
-    <.link href={Routes.user_session_path(@conn, :new)} class="text-blue-500 hover:underline">Log in</.link>
+    <.link href={~p"/login"} class="text-blue-500 hover:underline">
+      Log in
+    </.link>
     ·
-    <.link href={Routes.user_registration_path(@conn, :new)} class="text-blue-500 hover:underline">Sign up</.link>
+    <.link href={~p"/signup"} class="text-blue-500 hover:underline">
+      Sign up
+    </.link>
   </span>
 </div>

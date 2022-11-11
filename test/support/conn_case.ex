@@ -21,6 +21,8 @@ defmodule CuberacerLiveWeb.ConnCase do
 
   using do
     quote do
+      use CuberacerLiveWeb, :verified_routes
+
       # Import conveniences for testing with connections
       import Plug.Conn
       import Phoenix.ConnTest

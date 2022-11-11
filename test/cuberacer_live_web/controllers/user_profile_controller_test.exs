@@ -31,7 +31,7 @@ defmodule CuberacerLiveWeb.UserProfileControllerTest do
       conn =
         conn
         |> log_in_user(user)
-        |> get(Routes.user_profile_path(conn, :show, other_user.id))
+        |> get(~p"/users/#{other_user.id}")
 
       html = html_response(conn, 200)
 
@@ -64,7 +64,7 @@ defmodule CuberacerLiveWeb.UserProfileControllerTest do
       conn =
         conn
         |> log_in_user(user)
-        |> get(Routes.user_profile_path(conn, :show, user.id))
+        |> get(~p"/users/#{user.id}")
 
       html = html_response(conn, 200)
 
@@ -82,7 +82,7 @@ defmodule CuberacerLiveWeb.UserProfileControllerTest do
       conn =
         conn
         |> log_in_user(user1)
-        |> get(Routes.user_profile_path(conn, :show, user2.id))
+        |> get(~p"/users/#{user2.id}")
 
       html = html_response(conn, 200)
 
@@ -93,7 +93,7 @@ defmodule CuberacerLiveWeb.UserProfileControllerTest do
       conn =
         conn
         |> log_in_user(user)
-        |> get(Routes.user_profile_path(conn, :show, user.id))
+        |> get(~p"/users/#{user.id}")
 
       html = html_response(conn, 200)
       assert_html(html, "#profile-edit", "Edit profile")
@@ -103,7 +103,7 @@ defmodule CuberacerLiveWeb.UserProfileControllerTest do
       conn =
         conn
         |> log_in_user(user)
-        |> get(Routes.user_profile_path(conn, :show, user.id))
+        |> get(~p"/users/#{user.id}")
 
       html = html_response(conn, 200)
 
@@ -122,7 +122,7 @@ defmodule CuberacerLiveWeb.UserProfileControllerTest do
     end
 
     test "redirects if not logged in", %{conn: conn, user: user} do
-      conn = get(conn, Routes.user_profile_path(conn, :show, user.id))
+      conn = get(conn, ~p"/users/#{user.id}")
       assert redirected_to(conn) == "/login"
     end
   end

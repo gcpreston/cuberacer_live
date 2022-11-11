@@ -54,8 +54,8 @@ defmodule CuberacerLive.LobbyServer do
          %{session_id: session_id, participant_count: participant_count}},
         state
       ) do
+    # This conditional should only fail if the room process has crashed
     new_state =
-      # This conditional should only fail if the room process has crashed
       if Map.has_key?(state.rooms, session_id) do
         put_in(state.rooms[session_id].participant_count, participant_count)
       else

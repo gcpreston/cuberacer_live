@@ -14,7 +14,7 @@ defmodule CuberacerLiveWeb.GameLive.Lobby do
 
     socket =
       if !user do
-        redirect(socket, to: Routes.user_session_path(Endpoint, :new))
+        redirect(socket, to: ~p"/login")
       else
         if connected?(socket) do
           track_presence(user.id)
@@ -55,7 +55,7 @@ defmodule CuberacerLiveWeb.GameLive.Lobby do
     rooms =
       Sessions.get_sessions(Map.keys(participant_counts))
       |> Enum.filter(fn session ->
-        (not session.unlisted?) or socket.assigns.current_user.id == session.host_id
+        not session.unlisted? or socket.assigns.current_user.id == session.host_id
       end)
 
     assign(socket, rooms: rooms, participant_counts: participant_counts)

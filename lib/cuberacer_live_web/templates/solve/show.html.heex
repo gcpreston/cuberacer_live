@@ -7,7 +7,10 @@
       <ul class="my-8">
         <li>
           <span class="font-semibold text-gray-800">User: </span>
-          <.link href={Routes.user_profile_path(@conn, :show, @solve.user_id)} class="text-blue-500 hover:underline">
+          <.link
+            href={~p"/users/#{@solve.user_id}"}
+            class="text-blue-500 hover:underline"
+          >
             <%= @solve.user.username %>
           </.link>
         </li>
@@ -17,7 +20,10 @@
         </li>
         <li>
           <span class="font-semibold text-gray-800">Round: </span>
-          <.link href={Routes.round_path(@conn, :show, @solve.round_id)} class="text-blue-500 hover:underline">
+          <.link
+            href={~p"/rounds/#{@solve.round_id}"}
+            class="text-blue-500 hover:underline"
+          >
             <%= @solve.round_id %>
           </.link>
         </li>

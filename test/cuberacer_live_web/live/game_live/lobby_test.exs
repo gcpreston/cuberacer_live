@@ -13,7 +13,7 @@ defmodule CuberacerLive.GameLive.LobbyTest do
     test "displays only active rooms", %{conn: conn} do
       {:ok, pid1, session1} = RoomCache.create_room("test room", :"3x3")
 
-      {:ok, lv, html} = live(conn, Routes.game_lobby_path(conn, :index))
+      {:ok, lv, html} = live(conn, ~p"/lobby")
 
       html
       |> assert_html(".t_room-card", count: 1)
@@ -43,17 +43,17 @@ defmodule CuberacerLive.GameLive.LobbyTest do
     end
 
     test "patches to new room modal", %{conn: conn} do
-      {:ok, live, _html} = live(conn, Routes.game_lobby_path(conn, :index))
+      {:ok, live, _html} = live(conn, ~p"/lobby")
 
       live
       |> element("#t_new-room")
       |> render_click()
 
-      assert_patch(live, Routes.game_lobby_path(conn, :new))
+      assert_patch(live, ~p"/lobby/new")
     end
 
     test "shows correct copy when there are no rooms", %{conn: conn} do
-      {:ok, _live, html} = live(conn, Routes.game_lobby_path(conn, :index))
+      {:ok, _live, html} = live(conn, ~p"/lobby")
 
       refute_html(html, ".t_room-card")
       assert html =~ "Welcome"
@@ -62,7 +62,7 @@ defmodule CuberacerLive.GameLive.LobbyTest do
 
     test "shows correct copy when there are rooms", %{conn: conn} do
       {:ok, _pid, _session} = RoomCache.create_room("test room", :"3x3")
-      {:ok, _live, html} = live(conn, Routes.game_lobby_path(conn, :index))
+      {:ok, _live, html} = live(conn, ~p"/lobby")
 
       assert_html(html, ".t_room-card", count: 1)
       assert html =~ "Welcome"
@@ -70,7 +70,7 @@ defmodule CuberacerLive.GameLive.LobbyTest do
     end
 
     test "changes copy when rooms are created or terminated", %{conn: conn} do
-      {:ok, live, html} = live(conn, Routes.game_lobby_path(conn, :index))
+      {:ok, live, html} = live(conn, ~p"/lobby")
 
       refute_html(html, ".t_room-card")
       assert html =~ "Welcome"
@@ -97,11 +97,11 @@ defmodule CuberacerLive.GameLive.LobbyTest do
       user2 = user_fixture()
       conn2 = build_conn() |> log_in_user(user2)
 
-      {:ok, lv1, html1} = live(conn1, Routes.game_lobby_path(conn1, :index))
+      {:ok, lv1, html1} = live(conn1, ~p"/lobby")
 
       assert html1 =~ "1 user in the lobby"
 
-      {:ok, _lv2, _html2} = live(conn2, Routes.game_lobby_path(conn2, :index))
+      {:ok, _lv2, _html2} = live(conn2, ~p"/lobby")
 
       assert render(lv1) =~ "2 users in the lobby"
     end
@@ -113,14 +113,14 @@ defmodule CuberacerLive.GameLive.LobbyTest do
       {:ok, _pid, %CuberacerLive.Sessions.Session{id: session_id}} =
         RoomCache.create_room("test room", :"3x3")
 
-      {:ok, lv1, html1} = live(conn1, Routes.game_lobby_path(conn1, :index))
+      {:ok, lv1, html1} = live(conn1, ~p"/lobby")
 
       html1
       |> assert_html(".t_room-card", count: 1)
       |> assert_html(".t_room-participants", text: "0")
       |> refute_html(".bg-green-500.h-3.w-3.rounded-full")
 
-      {:ok, lv2, _html2} = live(conn2, Routes.game_room_path(conn2, :show, session_id))
+      {:ok, lv2, _html2} = live(conn2, ~p"/rooms/#{session_id}")
 
       render(lv1)
       |> assert_html(".t_room-participants", text: "1")
@@ -137,14 +137,14 @@ defmodule CuberacerLive.GameLive.LobbyTest do
 
     test "redirects if user is not logged in" do
       conn = build_conn()
-      conn = get(conn, Routes.game_lobby_path(conn, :index))
-      assert redirected_to(conn) == Routes.user_session_path(conn, :new)
+      conn = get(conn, ~p"/lobby")
+      assert redirected_to(conn) == ~p"/login"
     end
   end
 
   describe ":new" do
     test "displays create room modal correctly", %{conn: conn} do
-      {:ok, _live, html} = live(conn, Routes.game_lobby_path(conn, :new))
+      {:ok, _live, html} = live(conn, ~p"/lobby/new")
 
       html
       |> assert_html("h2.t_new-room-title", text: "New Room")
@@ -159,7 +159,7 @@ defmodule CuberacerLive.GameLive.LobbyTest do
 
     @tag :ensure_presence_shutdown
     test "create room modal creates a new room with an initial round", %{conn: conn} do
-      {:ok, lv, html} = live(conn, Routes.game_lobby_path(conn, :new))
+      {:ok, lv, html} = live(conn, ~p"/lobby/new")
 
       refute_html(html, ".t_room-card")
 
@@ -168,7 +168,7 @@ defmodule CuberacerLive.GameLive.LobbyTest do
         |> form("#create-room-form")
         |> render_submit(%{session: %{name: "new session", puzzle_type: :"2x2"}})
 
-      flash = assert_redirect(lv, Routes.game_lobby_path(conn, :index))
+      flash = assert_redirect(lv, ~p"/lobby")
       assert flash["info"] == "Room created successfully"
 
       {:ok, lv, html} = follow_redirect(result, conn)
@@ -194,7 +194,7 @@ defmodule CuberacerLive.GameLive.LobbyTest do
       user2 = user_fixture()
       conn2 = build_conn() |> log_in_user(user2)
 
-      {:ok, lv, html} = live(conn1, Routes.game_lobby_path(conn1, :new))
+      {:ok, lv, html} = live(conn1, ~p"/lobby/new")
 
       refute_html(html, ".t_room-card")
 
@@ -203,7 +203,7 @@ defmodule CuberacerLive.GameLive.LobbyTest do
         |> form("#create-room-form")
         |> render_submit(%{session: %{name: "new session", puzzle_type: :"2x2", unlisted: true}})
 
-      flash = assert_redirect(lv, Routes.game_lobby_path(conn1, :index))
+      flash = assert_redirect(lv, ~p"/lobby")
       assert flash["info"] == "Room created successfully"
 
       # Shows up for user who created the room
@@ -226,20 +226,20 @@ defmodule CuberacerLive.GameLive.LobbyTest do
       |> assert_html(".t_scramble")
 
       # Does not show up for other user
-      {:ok, _lv2, html2} = live(conn2, Routes.game_lobby_path(conn2, :index))
+      {:ok, _lv2, html2} = live(conn2, ~p"/lobby")
 
       refute_html(html2, ".t_room-card")
     end
 
     test "displays error messages", %{conn: conn} do
-      {:ok, live, _html} = live(conn, Routes.game_lobby_path(conn, :new))
+      {:ok, live, _html} = live(conn, ~p"/lobby/new")
 
       html =
         live
         |> form("#create-room-form")
         |> render_submit(%{session: %{name: "", puzzle_type: :"3x3"}})
 
-      refute_redirected(live, Routes.game_lobby_path(conn, :index))
+      refute_redirected(live, ~p"/lobby")
 
       assert_html(html, ~s(.invalid-feedback[phx-feedback-for="session[name]"),
         text: "can't be blank"
@@ -248,8 +248,8 @@ defmodule CuberacerLive.GameLive.LobbyTest do
 
     test "redirects if user is not logged in" do
       conn = build_conn()
-      conn = get(conn, Routes.game_lobby_path(conn, :new))
-      assert redirected_to(conn) == Routes.user_session_path(conn, :new)
+      conn = get(conn, ~p"/lobby/new")
+      assert redirected_to(conn) == ~p"/login"
     end
   end
 end

@@ -5,16 +5,16 @@ defmodule CuberacerLiveWeb.UserRegistrationControllerTest do
 
   describe "GET /signup" do
     test "renders registration page", %{conn: conn} do
-      conn = get(conn, Routes.user_registration_path(conn, :new))
+      conn = get(conn, ~p"/signup")
       response = html_response(conn, 200)
       assert response =~ "Welcome</h1>"
       assert response =~ "Sign up</button>"
-      assert response =~ "Log in</a>"
+      assert response =~ "Log in"
     end
 
     test "redirects if already logged in", %{conn: conn} do
-      conn = conn |> log_in_user(user_fixture()) |> get(Routes.user_registration_path(conn, :new))
-      assert redirected_to(conn) == "/lobby"
+      conn = conn |> log_in_user(user_fixture()) |> get(~p"/signup")
+      assert redirected_to(conn) == ~p"/lobby"
     end
   end
 
@@ -24,7 +24,7 @@ defmodule CuberacerLiveWeb.UserRegistrationControllerTest do
       {email, username} = unique_email_and_username()
 
       conn =
-        post(conn, Routes.user_registration_path(conn, :create), %{
+        post(conn, ~p"/signup", %{
           "user" => valid_user_attributes(email: email, username: username)
         })
 
@@ -32,7 +32,7 @@ defmodule CuberacerLiveWeb.UserRegistrationControllerTest do
       assert redirected_to(conn) == "/lobby"
 
       # Now do a logged in request and assert on the menu
-      conn = get(conn, "/lobby")
+      conn = get(conn, ~p"/lobby")
       response = html_response(conn, 200)
       assert response =~ username
       assert response =~ "Settings"
@@ -41,7 +41,7 @@ defmodule CuberacerLiveWeb.UserRegistrationControllerTest do
 
     test "render errors for invalid data", %{conn: conn} do
       conn =
-        post(conn, Routes.user_registration_path(conn, :create), %{
+        post(conn, ~p"/signup", %{
           "user" => %{"email" => "with spaces", "password" => "short"}
         })
 

@@ -1,6 +1,8 @@
 <div class="sm:grid sm:grid-cols-5 sm:gap-4 max-w-4xl mx-auto my-6">
   <div class="col-span-2">
-    <h1 id="profile-username" class="text-4xl font-semibold break-words"><%= @user.username %></h1>
+    <h1 id="profile-username" class="text-4xl font-semibold break-words">
+      <%= @user.username %>
+    </h1>
 
     <%= if @user.bio do %>
       <div id="profile-bio" class="mt-4">
@@ -12,7 +14,11 @@
       <%= if @user.wca_id do %>
         <li>
           <span class="fa-li"><i class="fas fa-user"></i></span>
-          <a id="profile-wca-link" class="underline" href={"https://www.worldcubeassociation.org/persons/#{@user.wca_id}"}>
+          <a
+            id="profile-wca-link"
+            class="underline"
+            href={"https://www.worldcubeassociation.org/persons/#{@user.wca_id}"}
+          >
             <%= @user.wca_id %>
           </a>
         </li>
@@ -21,7 +27,9 @@
         <li>
           <span class="fa-li"><i class="fas fa-globe"></i></span>
           <span id="profile-country">
-            <%= CountryUtils.country_name_from_code(@user.country) %> <%= CountryUtils.to_flag_emoji(@user.country) %>
+            <%= CountryUtils.country_name_from_code(@user.country) %> <%= CountryUtils.to_flag_emoji(
+              @user.country
+            ) %>
           </span>
         </li>
       <% end %>
@@ -42,9 +50,11 @@
     </ul>
 
     <%= if @conn.assigns.current_user.id == @user.id do %>
-      <.link href={Routes.user_settings_path(@conn, :edit)}
-        class="block mt-4 mb-8 w-full text-center font-medium rounded-md border py-0.5 bg-gray-50 shadow-xs hover:bg-gray-100 hover:shadow-sm active:bg-gray-200 transition-all",
-        id="profile-edit">
+      <.link
+        href={~p"/users/settings"}
+        class="block mt-4 mb-8 w-full text-center font-medium rounded-md border py-0.5 bg-gray-50 shadow-xs hover:bg-gray-100 hover:shadow-sm active:bg-gray-200 transition-all"
+        id="profile-edit"
+      >
         Edit profile
       </.link>
     <% end %>

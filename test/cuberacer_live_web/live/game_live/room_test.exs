@@ -44,35 +44,35 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
 
   describe "mount" do
     test "redirects if no user token", %{conn: conn, session: session} do
-      login_path = Routes.user_session_path(conn, :new)
+      login_path = ~p"/login"
 
       assert {:error, {:redirect, %{to: ^login_path}}} =
-               live(conn, Routes.game_room_path(conn, :show, session.id))
+               live(conn, ~p"/rooms/#{session.id}")
     end
 
     test "redirects if invalid user token", %{conn: conn, session: session} do
-      login_path = Routes.user_session_path(conn, :new)
+      login_path = ~p"/login"
       conn = init_test_session(conn, %{user_token: "some invalid token"})
 
       assert {:error, {:redirect, %{to: ^login_path}}} =
-               live(conn, Routes.game_room_path(conn, :show, session.id))
+               live(conn, ~p"/rooms/#{session.id}")
     end
 
     test "redirects if inactive session", %{conn: conn, user: user, session: session, pid: pid} do
       GenServer.stop(pid)
       conn = log_in_user(conn, user)
-      lobby_path = Routes.game_lobby_path(conn, :index)
+      lobby_path = ~p"/lobby"
 
       {:error, {:live_redirect, %{flash: %{"error" => "Room has terminated"}, to: ^lobby_path}}} =
-        live(conn, Routes.game_room_path(conn, :show, session.id))
+        live(conn, ~p"/rooms/#{session.id}")
     end
 
     test "redirects if invalid room ID", %{conn: conn, user: user} do
       conn = log_in_user(conn, user)
-      lobby_path = Routes.game_lobby_path(conn, :index)
+      lobby_path = ~p"/lobby"
 
       {:error, {:live_redirect, %{flash: %{"error" => "Unknown room"}, to: ^lobby_path}}} =
-        live(conn, Routes.game_room_path(conn, :show, "abc"))
+        live(conn, ~p"/rooms/abc")
     end
 
     test "redirects if unlisted and connecting with session ID", %{
@@ -81,16 +81,16 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
     } do
       {:ok, _pid, session} = RoomCache.create_room("unlisted room", :"3x3", true)
       conn = log_in_user(conn, user)
-      lobby_path = Routes.game_lobby_path(conn, :index)
+      lobby_path = ~p"/lobby"
 
       {:error, {:live_redirect, %{flash: %{"error" => "Unknown room"}, to: ^lobby_path}}} =
-        live(conn, Routes.game_room_path(conn, :show, session.id))
+        live(conn, ~p"/rooms/#{session.id}")
     end
 
     test "connects with valid user token", %{conn: conn, user: user, session: session} do
       conn = log_in_user(conn, user)
 
-      assert {:ok, _lv, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
+      assert {:ok, _lv, html} = live(conn, ~p"/rooms/#{session.id}")
       assert html =~ session.name
     end
 
@@ -99,7 +99,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       s = Hashids.new(Application.fetch_env!(:cuberacer_live, :hashids_config))
 
       assert {:ok, _lv, html} =
-               live(conn, Routes.game_room_path(conn, :show, Hashids.encode(s, session.id)))
+               live(conn, ~p"/rooms/#{Hashids.encode(s, session.id)}")
 
       assert html =~ session.name
     end
@@ -112,7 +112,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       round = Sessions.get_current_round!(session)
       solve = solve_fixture(%{user_id: user.id, round_id: round.id})
 
-      assert {:ok, lv, _html} = live(conn, Routes.game_room_path(conn, :show, session.id))
+      assert {:ok, lv, _html} = live(conn, ~p"/rooms/#{session.id}")
 
       render(lv)
       |> assert_html("th a", text: user.username)
@@ -131,7 +131,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
 
       _solve = solve_fixture(%{user_id: other_user.id, round_id: round.id})
 
-      assert {:ok, _lv, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
+      assert {:ok, _lv, html} = live(conn, ~p"/rooms/#{session.id}")
       assert html =~ user.username
       refute html =~ other_user.username
     end
@@ -146,7 +146,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
 
       message3 = room_message_fixture(session: session2, user: user, message: "some third text")
 
-      assert {:ok, _lv, html} = live(conn, Routes.game_room_path(conn, :show, session1.id))
+      assert {:ok, _lv, html} = live(conn, ~p"/rooms/#{session1.id}")
 
       html
       |> assert_html(".t_room-message", count: 2)
@@ -157,7 +157,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
     end
 
     test "displays ao5 and ao12", %{conn: conn, session: session} do
-      assert {:ok, _lv, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
+      assert {:ok, _lv, html} = live(conn, ~p"/rooms/#{session.id}")
 
       html
       |> assert_html(".t_ao5", count: 1, text: "DNF")
@@ -168,7 +168,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       conn: conn,
       session: session
     } do
-      {:ok, lv, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
+      {:ok, lv, html} = live(conn, ~p"/rooms/#{session.id}")
 
       html
       |> assert_html(".text-gray-900 .t_scramble", count: 1)
@@ -180,7 +180,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
     end
 
     test "displays timer toggle", %{conn: conn, session: session} do
-      {:ok, lv, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
+      {:ok, lv, html} = live(conn, ~p"/rooms/#{session.id}")
 
       html
       |> assert_html("#timer", count: 1)
@@ -200,11 +200,11 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
     test "displays keyboard indicator for keyboard users", %{conn: conn1, session: session} do
       user2 = user_fixture()
       conn2 = Phoenix.ConnTest.build_conn() |> log_in_user(user2)
-      {:ok, lv2, _html2} = live(conn2, Routes.game_room_path(conn2, :show, session.id))
+      {:ok, lv2, _html2} = live(conn2, ~p"/rooms/#{session.id}")
 
       render_click(lv2, "toggle-timer")
 
-      {:ok, lv1, _html1} = live(conn1, Routes.game_room_path(conn1, :show, session.id))
+      {:ok, lv1, _html1} = live(conn1, ~p"/rooms/#{session.id}")
 
       assert lv1
              |> element("#header-cell-user-#{user2.id}")
@@ -217,7 +217,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
                ~s(<i class="fas fa-keyboard" title="This player is using keyboard entry"></i>)
 
       exit_liveview(lv1)
-      {:ok, lv1, _html1} = live(conn1, Routes.game_room_path(conn1, :show, session.id))
+      {:ok, lv1, _html1} = live(conn1, ~p"/rooms/#{session.id}")
 
       assert lv1
              |> element("#header-cell-user-#{user2.id}")
@@ -234,11 +234,11 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       round = Sessions.get_current_round!(session)
       user2 = user_fixture()
       conn2 = Phoenix.ConnTest.build_conn() |> log_in_user(user2)
-      {:ok, lv2, _html2} = live(conn2, Routes.game_room_path(conn2, :show, session.id))
+      {:ok, lv2, _html2} = live(conn2, ~p"/rooms/#{session.id}")
 
       render_hook(lv2, "solving")
 
-      {:ok, lv1, _html1} = live(conn1, Routes.game_room_path(conn1, :show, session.id))
+      {:ok, lv1, _html1} = live(conn1, ~p"/rooms/#{session.id}")
 
       assert lv1
              |> element("#t_cell-round-#{round.id}-user-#{user2.id}")
@@ -249,7 +249,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
              |> render() =~ "Solving..."
 
       exit_liveview(lv1)
-      {:ok, lv1, _html1} = live(conn1, Routes.game_room_path(conn1, :show, session.id))
+      {:ok, lv1, _html1} = live(conn1, ~p"/rooms/#{session.id}")
 
       assert lv1
              |> element("#t_cell-round-#{round.id}-user-#{user2.id}")
@@ -270,9 +270,9 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
     } do
       user2 = user_fixture()
       conn2 = Phoenix.ConnTest.build_conn() |> log_in_user(user2)
-      {:ok, lv2, _html2} = live(conn2, Routes.game_room_path(conn2, :show, session.id))
+      {:ok, lv2, _html2} = live(conn2, ~p"/rooms/#{session.id}")
 
-      {:ok, lv1, html1} = live(conn, Routes.game_room_path(conn, :show, session.id))
+      {:ok, lv1, html1} = live(conn, ~p"/rooms/#{session.id}")
 
       num_rounds_before = Enum.count(Sessions.list_rounds_of_session(session))
 
@@ -302,9 +302,9 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       other_conn = Phoenix.ConnTest.build_conn() |> log_in_user(other_user)
 
       {:ok, other_lv, _html} =
-        live(other_conn, Routes.game_room_path(other_conn, :show, session.id))
+        live(other_conn, ~p"/rooms/#{session.id}")
 
-      {:ok, lv, _html} = live(conn, Routes.game_room_path(conn, :show, session.id))
+      {:ok, lv, _html} = live(conn, ~p"/rooms/#{session.id}")
       html = render(lv)
 
       assert_html(html, "#t_cell-round-#{round.id}-user-#{user.id}", text: "--")
@@ -319,7 +319,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
     end
 
     test "timer-submit creates a new solve", %{conn: conn, session: session} do
-      {:ok, view, _html} = live(conn, Routes.game_room_path(conn, :show, session.id))
+      {:ok, view, _html} = live(conn, ~p"/rooms/#{session.id}")
 
       num_solves_before = Enum.count(Sessions.list_solves_of_session(session))
 
@@ -357,7 +357,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       round4 = round_fixture(session: session)
       _solve4 = solve_fixture(round_id: round4.id, user_id: user.id)
 
-      {:ok, live, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
+      {:ok, live, html} = live(conn, ~p"/rooms/#{session.id}")
 
       assert_html(html, ".t_ao5", text: "DNF")
 
@@ -419,7 +419,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
     } do
       round = Sessions.get_current_round!(session)
 
-      {:ok, lv, _html} = live(conn, Routes.game_room_path(conn, :show, session.id))
+      {:ok, lv, _html} = live(conn, ~p"/rooms/#{session.id}")
 
       num_solves_before = Enum.count(Sessions.list_solves_of_session(session))
 
@@ -469,8 +469,8 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       solve3 = solve_fixture(time: 44, user_id: user2.id, round_id: round2.id)
 
       conn2 = Phoenix.ConnTest.build_conn() |> log_in_user(user2)
-      {:ok, _lv2, _html2} = live(conn2, Routes.game_room_path(conn2, :show, session.id))
-      {:ok, lv, _html} = live(conn1, Routes.game_room_path(conn1, :show, session.id))
+      {:ok, _lv2, _html2} = live(conn2, ~p"/rooms/#{session.id}")
+      {:ok, lv, _html} = live(conn1, ~p"/rooms/#{session.id}")
       html = render(lv)
 
       assert html =~ Sessions.display_solve(solve1)
@@ -497,7 +497,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       solve = solve_fixture(penalty: :"+2", user_id: user.id, round_id: round1.id)
       _round2 = round_fixture(session: session)
 
-      {:ok, lv, _html} = live(conn, Routes.game_room_path(conn, :show, session.id))
+      {:ok, lv, _html} = live(conn, ~p"/rooms/#{session.id}")
 
       html = render(lv)
       assert html =~ Sessions.display_solve(solve)
@@ -524,8 +524,8 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       solve3 = solve_fixture(time: 44, user_id: user2.id, round_id: round2.id)
 
       conn2 = Phoenix.ConnTest.build_conn() |> log_in_user(user2)
-      {:ok, _lv2, _html2} = live(conn2, Routes.game_room_path(conn2, :show, session.id))
-      {:ok, lv, _html} = live(conn1, Routes.game_room_path(conn1, :show, session.id))
+      {:ok, _lv2, _html2} = live(conn2, ~p"/rooms/#{session.id}")
+      {:ok, lv, _html} = live(conn1, ~p"/rooms/#{session.id}")
       html = render(lv)
 
       assert html =~ Sessions.display_solve(solve1)
@@ -552,7 +552,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       solve = solve_fixture(user_id: user.id, round_id: round1.id)
       _round2 = round_fixture(session: session)
 
-      {:ok, lv, _html} = live(conn, Routes.game_room_path(conn, :show, session.id))
+      {:ok, lv, _html} = live(conn, ~p"/rooms/#{session.id}")
 
       html = render(lv)
       assert html =~ Sessions.display_solve(solve)
@@ -579,8 +579,8 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       solve3 = solve_fixture(time: 44, user_id: user2.id, round_id: round2.id)
 
       conn2 = Phoenix.ConnTest.build_conn() |> log_in_user(user2)
-      {:ok, _lv2, _html2} = live(conn2, Routes.game_room_path(conn2, :show, session.id))
-      {:ok, lv, _html} = live(conn1, Routes.game_room_path(conn1, :show, session.id))
+      {:ok, _lv2, _html2} = live(conn2, ~p"/rooms/#{session.id}")
+      {:ok, lv, _html} = live(conn1, ~p"/rooms/#{session.id}")
       html = render(lv)
 
       assert html =~ Sessions.display_solve(solve1)
@@ -606,7 +606,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       solve = solve_fixture(user_id: user.id, round_id: round1.id)
       _round2 = round_fixture(session: session)
 
-      {:ok, lv, _html} = live(conn, Routes.game_room_path(conn, :show, session.id))
+      {:ok, lv, _html} = live(conn, ~p"/rooms/#{session.id}")
 
       html = render(lv)
       assert html =~ Sessions.display_solve(solve)
@@ -631,7 +631,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       round5 = round_fixture(session: session)
       _solve5 = solve_fixture(user_id: user.id, round_id: round5.id)
 
-      {:ok, lv, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
+      {:ok, lv, html} = live(conn, ~p"/rooms/#{session.id}")
 
       refute_html(html, ".t_ao5", text: "DNF")
 
@@ -641,7 +641,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
     end
 
     test "send-message creates and sends messages", %{conn: conn, user: user, session: session} do
-      {:ok, view, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
+      {:ok, view, html} = live(conn, ~p"/rooms/#{session.id}")
 
       num_messages_before = Enum.count(Messaging.list_room_messages(session))
 
@@ -680,7 +680,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
     setup [:authenticate]
 
     test "reacts to round created", %{conn: conn, session: session} do
-      {:ok, view, html} = live(conn, Routes.game_room_path(conn, :show, session.id))
+      {:ok, view, html} = live(conn, ~p"/rooms/#{session.id}")
 
       num_rounds_before = Enum.count(Sessions.list_rounds_of_session(session))
 
@@ -698,7 +698,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
     end
 
     test "reacts to solve created", %{conn: conn, session: session, user: user} do
-      {:ok, view, _html} = live(conn, Routes.game_room_path(conn, :show, session.id))
+      {:ok, view, _html} = live(conn, ~p"/rooms/#{session.id}")
 
       num_solves_before = Enum.count(Sessions.list_solves_of_session(session))
 
@@ -711,7 +711,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
     end
 
     test "reacts to room message created", %{conn: conn, session: session} do
-      {:ok, view, _html} = live(conn, Routes.game_room_path(conn, :show, session.id))
+      {:ok, view, _html} = live(conn, ~p"/rooms/#{session.id}")
 
       user = user_fixture()
       room_message = room_message_fixture(session: session, user: user)
@@ -742,13 +742,13 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
           penalty: :OK
         })
 
-      {:ok, lv, _html} = live(conn, Routes.game_room_path(conn, :show, session.id))
+      {:ok, lv, _html} = live(conn, ~p"/rooms/#{session.id}")
 
       html = render(lv)
       assert html =~ "1 participant"
       refute html =~ other_user.username
 
-      live(other_conn, Routes.game_room_path(other_conn, :show, session.id))
+      live(other_conn, ~p"/rooms/#{session.id}")
 
       html = render(lv)
       assert html =~ "2 participants"
@@ -773,9 +773,9 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
         })
 
       {:ok, other_lv, _other_html} =
-        live(other_conn, Routes.game_room_path(other_conn, :show, session.id))
+        live(other_conn, ~p"/rooms/#{session.id}")
 
-      {:ok, lv, _html} = live(conn, Routes.game_room_path(conn, :show, session.id))
+      {:ok, lv, _html} = live(conn, ~p"/rooms/#{session.id}")
 
       html = render(lv)
       assert html =~ "2 participants"
@@ -809,7 +809,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
     } do
       assert RoomCache.list_room_ids() == [session.id]
 
-      {:ok, lv, _html} = live(conn, Routes.game_room_path(conn, :show, session.id))
+      {:ok, lv, _html} = live(conn, ~p"/rooms/#{session.id}")
       :timer.sleep(empty_room_timeout_ms())
 
       assert RoomCache.list_room_ids() == [session.id]

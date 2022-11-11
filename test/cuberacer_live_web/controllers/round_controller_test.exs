@@ -14,7 +14,7 @@ defmodule CuberacerLive.RoundControllerTest do
   describe "GET /rounds/:id" do
     test "empty case", %{conn: conn, user: user, round: round} do
       session = Sessions.get_session!(round.session_id)
-      conn = conn |> log_in_user(user) |> get(Routes.round_path(conn, :show, round.id))
+      conn = conn |> log_in_user(user) |> get(~p"/rounds/#{round.id}")
       html = html_response(conn, 200)
 
       assert html =~ "Round</h1>"
@@ -46,7 +46,7 @@ defmodule CuberacerLive.RoundControllerTest do
           penalty: :DNF
         )
 
-      conn = conn |> log_in_user(user1) |> get(Routes.round_path(conn, :show, round.id))
+      conn = conn |> log_in_user(user1) |> get(~p"/rounds/#{round.id}")
       html = html_response(conn, 200)
 
       assert html =~ "Round</h1>"
@@ -56,29 +56,29 @@ defmodule CuberacerLive.RoundControllerTest do
 
       html
       |> assert_html("tr", count: 4)
-      |> assert_html("tr td a[href='#{Routes.user_profile_path(conn, :show, solve1.user_id)}']",
+      |> assert_html("tr td a[href='#{~p"/users/#{solve1.user_id}"}']",
         text: user1.username
       )
-      |> assert_html("tr td a[href='#{Routes.user_profile_path(conn, :show, solve2.user_id)}']",
+      |> assert_html("tr td a[href='#{~p"/users/#{solve2.user_id}"}']",
         text: user2.username
       )
-      |> assert_html("tr td a[href='#{Routes.user_profile_path(conn, :show, solve3.user_id)}']",
+      |> assert_html("tr td a[href='#{~p"/users/#{solve3.user_id}"}']",
         text: user3.username
       )
-      |> assert_html("tr td a[href='#{Routes.solve_path(conn, :show, solve1.id)}']",
+      |> assert_html("tr td a[href='#{~p"/solves/#{solve1.id}"}']",
         text: Sessions.display_solve(solve1)
       )
-      |> assert_html("tr td a[href='#{Routes.solve_path(conn, :show, solve2.id)}']",
+      |> assert_html("tr td a[href='#{~p"/solves/#{solve2.id}"}']",
         text: Sessions.display_solve(solve2)
       )
-      |> assert_html("tr td a[href='#{Routes.solve_path(conn, :show, solve3.id)}']",
+      |> assert_html("tr td a[href='#{~p"/solves/#{solve3.id}"}']",
         text: Sessions.display_solve(solve3)
       )
     end
 
     test "redirects if not logged in", %{conn: conn, round: round} do
-      conn = get(conn, Routes.round_path(conn, :show, round.id))
-      assert redirected_to(conn) == Routes.user_session_path(conn, :new)
+      conn = get(conn, ~p"/rounds/#{round.id}")
+      assert redirected_to(conn) == ~p"/login"
     end
   end
 end

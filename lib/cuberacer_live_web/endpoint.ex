@@ -20,7 +20,7 @@ defmodule CuberacerLiveWeb.Endpoint do
     at: "/",
     from: :cuberacer_live,
     gzip: false,
-    only: ~w(assets fonts images vendor favicon.ico robots.txt)
+    only: CuberacerLiveWeb.static_paths()
 
   # Code reloading can be explicitly enabled under the
   # :code_reloader configuration of your endpoint.
