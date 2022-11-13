@@ -6,5 +6,9 @@
     Enum.flat_map(
       ["*.{heex,ex,exs}", "{config,lib,test}/**/*.{heex,ex,exs}", "priv/*/seeds.exs"],
       &Path.wildcard(&1, match_dot: true)
-    ) -- ["lib/cuberacer_live_web/templates/layout/live.html.heex"]
+    ) --
+      [
+        "lib/cuberacer_live_web/templates/layout/app.html.heex",
+        "lib/cuberacer_live_web/templates/layout/live.html.heex"
+      ]
 ]
