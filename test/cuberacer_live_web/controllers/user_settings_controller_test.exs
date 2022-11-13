@@ -210,7 +210,7 @@ defmodule CuberacerLiveWeb.UserSettingsControllerTest do
     end
 
     test "does not update email with invalid token", %{conn: conn, user: user} do
-      conn = get(conn,~p"/users/settings/confirm_email/oops")
+      conn = get(conn, ~p"/users/settings/confirm_email/oops")
       assert redirected_to(conn) == ~p"/users/settings"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~

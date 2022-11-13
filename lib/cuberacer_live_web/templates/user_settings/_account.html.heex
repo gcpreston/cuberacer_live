@@ -11,23 +11,13 @@
     <span class="rounded bg-orange-300 text-orange-900 text-sm font-medium px-1 py-0.5">
       Unconfirmed
     </span>
-    <.form
-      :let={resend_confirm}
-      for={:user}
-      action={~p"/users/confirm"}
-      class="inline"
-    >
+    <.form :let={resend_confirm} for={:user} action={~p"/users/confirm"} class="inline">
       <%= hidden_input(resend_confirm, :email, value: @conn.assigns.current_user.email) %>
       <%= submit("Resend confirmation email", class: "text-blue-500 hover:underline") %>
     </.form>
   <% end %>
 
-  <.form
-    :let={f}
-    for={@email_changeset}
-    action={~p"/users/settings"}
-    id="update_email"
-  >
+  <.form :let={f} for={@email_changeset} action={~p"/users/settings"} id="update_email">
     <%= if @email_changeset.action do %>
       <div class="alert alert-danger">
         <p>Oops, something went wrong! Please check the errors below.</p>
@@ -60,12 +50,7 @@
 <div>
   <h3 class="text-xl">Change password</h3>
 
-  <.form
-    :let={f}
-    for={@password_changeset}
-    action={~p"/users/settings"}
-    id="update_password"
-  >
+  <.form :let={f} for={@password_changeset} action={~p"/users/settings"} id="update_password">
     <%= if @password_changeset.action do %>
       <div class="alert alert-danger">
         <p>Oops, something went wrong! Please check the errors below.</p>
