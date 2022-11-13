@@ -2,11 +2,7 @@
   <h1 class="text-3xl font-semibold text-center mb-6">Reset password</h1>
 
   <div class="w-full bg-gray-200 border border-gray-600 rounded-lg p-3">
-    <.form
-      :let={f}
-      for={@changeset}
-      action={~p"/reset_password/#{@token}"}
-    >
+    <.form :let={f} for={@changeset} action={~p"/reset_password/#{@token}"}>
       <%= if @changeset.action do %>
         <div class="alert alert-danger">
           <p>Oops, something went wrong! Please check the errors below.</p>

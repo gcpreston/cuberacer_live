@@ -46,16 +46,14 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
     test "redirects if no user token", %{conn: conn, session: session} do
       login_path = ~p"/login"
 
-      assert {:error, {:redirect, %{to: ^login_path}}} =
-               live(conn, ~p"/rooms/#{session.id}")
+      assert {:error, {:redirect, %{to: ^login_path}}} = live(conn, ~p"/rooms/#{session.id}")
     end
 
     test "redirects if invalid user token", %{conn: conn, session: session} do
       login_path = ~p"/login"
       conn = init_test_session(conn, %{user_token: "some invalid token"})
 
-      assert {:error, {:redirect, %{to: ^login_path}}} =
-               live(conn, ~p"/rooms/#{session.id}")
+      assert {:error, {:redirect, %{to: ^login_path}}} = live(conn, ~p"/rooms/#{session.id}")
     end
 
     test "redirects if inactive session", %{conn: conn, user: user, session: session, pid: pid} do
@@ -98,8 +96,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       conn = log_in_user(conn, user)
       s = Hashids.new(Application.fetch_env!(:cuberacer_live, :hashids_config))
 
-      assert {:ok, _lv, html} =
-               live(conn, ~p"/rooms/#{Hashids.encode(s, session.id)}")
+      assert {:ok, _lv, html} = live(conn, ~p"/rooms/#{Hashids.encode(s, session.id)}")
 
       assert html =~ session.name
     end
@@ -301,8 +298,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       other_user = user_fixture()
       other_conn = Phoenix.ConnTest.build_conn() |> log_in_user(other_user)
 
-      {:ok, other_lv, _html} =
-        live(other_conn, ~p"/rooms/#{session.id}")
+      {:ok, other_lv, _html} = live(other_conn, ~p"/rooms/#{session.id}")
 
       {:ok, lv, _html} = live(conn, ~p"/rooms/#{session.id}")
       html = render(lv)
@@ -772,8 +768,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
           penalty: :OK
         })
 
-      {:ok, other_lv, _other_html} =
-        live(other_conn, ~p"/rooms/#{session.id}")
+      {:ok, other_lv, _other_html} = live(other_conn, ~p"/rooms/#{session.id}")
 
       {:ok, lv, _html} = live(conn, ~p"/rooms/#{session.id}")
 

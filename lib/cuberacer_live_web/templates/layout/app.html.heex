@@ -1,9 +1,5 @@
 <main class="px-4">
-  <p class="alert alert-info mt-5 mx-auto max-w-sm text-center" role="alert">
-    <%= Phoenix.Flash.get(@flash, :info) %>
-  </p>
-  <p class="alert alert-danger mt-5 mx-auto max-w-sm text-center" role="alert">
-    <%= Phoenix.Flash.get(@flash, :error) %>
-  </p>
+  <p class="alert alert-info mt-5 mx-auto max-w-sm text-center" role="alert"><%= Phoenix.Flash.get(@flash, :info) %></p>
+  <p class="alert alert-danger mt-5 mx-auto max-w-sm text-center" role="alert"><%= Phoenix.Flash.get(@flash, :error) %></p>
   <%= @inner_content %>
 </main>

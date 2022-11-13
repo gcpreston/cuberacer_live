@@ -14,5 +14,12 @@ alias CuberacerLive.Repo
 alias CuberacerLive.Accounts.User
 
 if not Repo.exists?(User) do
-  Repo.insert!(%User{} |> User.registration_changeset(%{email: "testuser1@example.com", username: "testuser1", password: "password"}))
+  Repo.insert!(
+    %User{}
+    |> User.registration_changeset(%{
+      email: "testuser1@example.com",
+      username: "testuser1",
+      password: "password"
+    })
+  )
 end

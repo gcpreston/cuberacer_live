@@ -111,9 +111,7 @@ defmodule CuberacerLiveWeb.Components do
 
   def session_link(assigns) do
     ~H"""
-    <.link href={
-      ~p"/sessions/#{Sessions.session_locator(assigns.session)}"
-    }>
+    <.link href={~p"/sessions/#{Sessions.session_locator(assigns.session)}"}>
       <%= render_slot(@inner_block) %>
     </.link>
     """

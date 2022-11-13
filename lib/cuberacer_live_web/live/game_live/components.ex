@@ -21,10 +21,7 @@ defmodule CuberacerLiveWeb.GameLive.Components do
       )
 
     ~H"""
-    <.link
-      navigate={~p"/rooms/#{@room_ext}"}
-      class="t_room-card"
-    >
+    <.link navigate={~p"/rooms/#{@room_ext}"} class="t_room-card">
       <div
         id={"t_room-card-#{@session.id}"}
         class="relative p-4 rounded-lg shadow-sm border bg-white transition-all hover:bg-gray-50 hover:shadow-md"
@@ -165,10 +162,7 @@ defmodule CuberacerLiveWeb.GameLive.Components do
             >
               <div class="inline-flex max-w-full">
                 <span class="flex-1 truncate">
-                  <.link
-                    href={~p"/users/#{user_id}"}
-                    target="_blank"
-                  >
+                  <.link href={~p"/users/#{user_id}"} target="_blank">
                     <%= data.user.username %>
                   </.link>
                 </span>
@@ -184,7 +178,6 @@ defmodule CuberacerLiveWeb.GameLive.Components do
         </tr>
       </thead>
       <tbody id="times-table-body" class="bg-white" x-show="bottomBarShow" phx-update="prepend">
-
         <tr id={"round-#{@current_round.id}"} class="flex t_round-row" title={@current_round.scramble}>
           <%= for {{user_id, data}, i} <- Enum.with_index(@participant_data) do %>
             <td
