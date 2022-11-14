@@ -25,6 +25,7 @@ defmodule CuberacerLive.Sessions.Session do
     belongs_to :host, CuberacerLive.Accounts.User
     has_many :rounds, CuberacerLive.Sessions.Round
     has_many :room_messages, CuberacerLive.Messaging.RoomMessage
+    has_many :user_room_auths, CuberacerLive.Accounts.UserRoomAuth
 
     timestamps()
   end

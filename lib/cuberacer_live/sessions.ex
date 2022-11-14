@@ -48,17 +48,34 @@ defmodule CuberacerLive.Sessions do
   user has participated in.
   """
   def list_user_sessions(%User{id: user_id}) do
+    query = user_sessions_query(user_id)
+    Repo.all(query)
+  end
+
+  defp user_sessions_query(user_id) do
+    from session in Session,
+      distinct: true,
+      left_join: round in assoc(session, :rounds),
+      left_join: solve in assoc(round, :solves),
+      left_join: message in assoc(session, :room_messages),
+      where: solve.user_id == ^user_id,
+      or_where: message.user_id == ^user_id,
+      or_where: session.host_id == ^user_id,
+      order_by: [desc: session.id],
+      select: session
+  end
+
+  @doc """
+  Returns a list of sessions (past and current) which
+  1. the first user has participated in
+  2. are visible to the second user
+  """
+  def list_visible_user_sessions(%User{id: user_id}, %User{id: current_user_id}) do
     query =
-      from session in Session,
-        distinct: true,
-        left_join: round in assoc(session, :rounds),
-        left_join: solve in assoc(round, :solves),
-        left_join: message in assoc(session, :room_messages),
-        where: solve.user_id == ^user_id,
-        or_where: message.user_id == ^user_id,
-        or_where: session.host_id == ^user_id,
-        order_by: [desc: session.id],
-        select: session
+      from session in user_sessions_query(user_id),
+        left_join: auth in assoc(session, :user_room_auths),
+        where: is_nil(session.hashed_password),
+        or_where: auth.user_id == ^current_user_id
 
     Repo.all(query)
   end

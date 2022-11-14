@@ -15,6 +15,8 @@ defmodule CuberacerLive.Accounts.User do
     field :birthday, :date
     field :bio, :string
 
+    has_many :user_room_auths, CuberacerLive.Accounts.UserRoomAuth
+
     timestamps()
   end
 

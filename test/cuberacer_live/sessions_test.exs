@@ -47,6 +47,27 @@ defmodule CuberacerLive.SessionsTest do
       assert Sessions.list_user_sessions(user) == [session]
     end
 
+    test "list_user_sessions/1 does not return sessions where user is authorized but has no activity" do
+      user = user_fixture()
+      session = session_fixture()
+      Accounts.create_user_room_auth(%{user_id: user.id, session_id: session.id})
+
+      assert Sessions.list_user_sessions(user) == []
+    end
+
+    test "list_visible_user_sessions/1 does not return sessions that the current user is unauthorized for" do
+      current_user = user_fixture()
+      other_user = user_fixture()
+      public_session = session_fixture(host_id: other_user.id)
+      {:ok, private_session, _round} = Sessions.create_session_and_round("secret room", :"3x3", "secret", other_user)
+
+      assert Sessions.list_visible_user_sessions(other_user, current_user) == [public_session]
+
+      Accounts.create_user_room_auth(%{user_id: current_user.id, session_id: private_session.id})
+
+      assert Sessions.list_visible_user_sessions(other_user, current_user) == [private_session, public_session]
+    end
+
     test "get_session!/1 returns the session with given id" do
       session = session_fixture()
       assert Sessions.get_session!(session.id) == session
