@@ -5,12 +5,13 @@ defmodule CuberacerLiveWeb.UserProfileView do
 
   alias CuberacerLive.CountryUtils
   alias CuberacerLive.Accounts
+  alias CuberacerLive.Sessions
 
   defp session_block(assigns) do
     ~H"""
-    <.session_link session={@session}>
+    <.link href={~p"/sessions/#{@session.id}"}>
       <div class="relative p-4 rounded-lg shadow-sm border bg-white transition-all hover:bg-gray-50 hover:shadow-md">
-        <%= if @session.unlisted? do %>
+        <%= if Sessions.private?(@session) do %>
           <span class="absolute top-2 right-2"><i class="fas fa-lock"></i></span>
         <% end %>
 
@@ -24,7 +25,7 @@ defmodule CuberacerLiveWeb.UserProfileView do
           </span>
         </div>
       </div>
-    </.session_link>
+    </.link>
     """
   end
 end

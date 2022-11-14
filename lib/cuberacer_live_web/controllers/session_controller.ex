@@ -1,19 +1,16 @@
 defmodule CuberacerLiveWeb.SessionController do
   use CuberacerLiveWeb, :controller
 
-  alias CuberacerLive.Sessions
+  alias CuberacerLive.{Sessions, Accounts}
 
-  def show(conn, %{"id" => locator}) do
-    {used_session_id, session_id} = Sessions.parse_session_locator(locator)
+  def show(conn, %{"id" => id}) do
+    session = Sessions.get_loaded_session!(id)
 
-    if is_nil(session_id) do
+    if Sessions.private?(session) &&
+         !Accounts.user_authorized_for_room?(conn.assigns.current_user, session) do
       render_error(conn, 404)
     else
-      session = Sessions.get_loaded_session!(session_id)
-
-      if session.unlisted? and used_session_id,
-        do: render_error(conn, 404),
-        else: render(conn, "show.html", session: session)
+      render(conn, "show.html", session: session)
     end
   end
 

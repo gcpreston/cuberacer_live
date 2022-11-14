@@ -9,44 +9,31 @@ defmodule CuberacerLiveWeb.GameLive.Components do
   attr :session, :any, required: true, doc: "The Sessions.Session to display."
 
   def room_card(assigns) do
-    assigns =
-      assign(
-        assigns,
-        :room_ext,
-        if assigns.session.unlisted? do
-          Hashids.encode(CuberacerLive.Hashids.new(), assigns.session.id)
-        else
-          assigns.session.id
-        end
-      )
-
     ~H"""
-    <.link navigate={~p"/rooms/#{@room_ext}"} class="t_room-card">
-      <div
-        id={"t_room-card-#{@session.id}"}
-        class="relative p-4 rounded-lg shadow-sm border bg-white transition-all hover:bg-gray-50 hover:shadow-md"
-      >
-        <%= if @participant_count > 0 do %>
-          <span class="absolute top-2 left-2 bg-green-500 h-3 w-3 rounded-full" />
-        <% end %>
+    <div
+      id={"t_room-card-#{@session.id}"}
+      class="t_room-card relative p-4 rounded-lg shadow-sm border bg-white transition-all hover:bg-gray-50 hover:shadow-md"
+    >
+      <%= if @participant_count > 0 do %>
+        <span class="absolute top-2 left-2 bg-green-500 h-3 w-3 rounded-full" />
+      <% end %>
 
-        <%= if @session.unlisted? do %>
-          <span class="absolute top-2 right-2"><i class="fas fa-lock"></i></span>
-        <% end %>
-        <div class="text-center">
-          <span class="text-lg font-medium"><%= @session.name %></span>
-        </div>
-        <hr class="my-2" />
-        <ul class="text-center">
-          <li class="t_room-puzzle">
-            <span class="font-semibold">Puzzle: </span><%= @session.puzzle_type %>
-          </li>
-          <li class="t_room-participants">
-            <span class="font-semibold">Participants: </span><%= @participant_count %>
-          </li>
-        </ul>
+      <%= if Sessions.private?(@session) do %>
+        <span class="absolute top-2 right-2"><i class="fas fa-lock"></i></span>
+      <% end %>
+      <div class="text-center">
+        <span class="text-lg font-medium"><%= @session.name %></span>
       </div>
-    </.link>
+      <hr class="my-2" />
+      <ul class="text-center">
+        <li class="t_room-puzzle">
+          <span class="font-semibold">Puzzle: </span><%= @session.puzzle_type %>
+        </li>
+        <li class="t_room-participants">
+          <span class="font-semibold">Participants: </span><%= @participant_count %>
+        </li>
+      </ul>
+    </div>
     """
   end
 

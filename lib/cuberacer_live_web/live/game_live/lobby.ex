@@ -47,16 +47,21 @@ defmodule CuberacerLiveWeb.GameLive.Lobby do
     |> assign(:session, %Session{})
   end
 
+  defp apply_action(socket, :join, %{"id" => session_id}) do
+    # TODO: Handle errors
+    session = Sessions.get_session!(session_id)
+
+    socket
+    |> assign(:page_title, "Join Room")
+    |> assign(:session, session)
+  end
+
   ## Socket populators
 
   defp fetch_rooms(socket) do
     participant_counts = LobbyServer.get_participant_counts()
-
-    rooms =
-      Sessions.get_sessions(Map.keys(participant_counts))
-      |> Enum.filter(fn session ->
-        not session.unlisted? or socket.assigns.current_user.id == session.host_id
-      end)
+    session_ids = Map.keys(participant_counts)
+    rooms = Sessions.get_sessions(session_ids)
 
     assign(socket, rooms: rooms, participant_counts: participant_counts)
   end
@@ -64,6 +69,24 @@ defmodule CuberacerLiveWeb.GameLive.Lobby do
   defp fetch_user_count(socket) do
     user_count = length(Map.keys(Presence.list(pubsub_topic())))
     assign(socket, :user_count, user_count)
+  end
+
+  ## LiveView handlers
+
+  @impl true
+  def handle_event("join-room", %{"session_id" => session_id}, socket) do
+    # TODO: Error handling, maybe not necessary to pass whole session...
+    session = Sessions.get_session!(session_id)
+    user = socket.assigns.current_user
+
+    socket =
+      if Accounts.user_authorized_for_room?(user, session) do
+        push_navigate(socket, to: ~p"/rooms/#{session.id}")
+      else
+        push_patch(socket, to: ~p"/lobby/join/#{session.id}")
+      end
+
+    {:noreply, socket}
   end
 
   ## PubSub handlers

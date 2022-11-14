@@ -11,11 +11,11 @@
         </li>
         <li>
           <span class="font-semibold text-gray-800">Session: </span>
-          <.session_link session={@round.session}>
+          <.link href={~p"/sessions/#{@round.session_id}"}>
             <span class="text-blue-500 hover:underline">
-              <%= session_locator(@round.session) %>
+              <%= @round.session_id %>
             </span>
-          </.session_link>
+          </.link>
         </li>
       </ul>
     </div>

@@ -6,7 +6,9 @@ defmodule CuberacerLive.Accounts do
   import Ecto.Query, warn: false
   alias CuberacerLive.Repo
 
-  alias CuberacerLive.Accounts.{User, UserToken, UserNotifier}
+  alias CuberacerLive.Sessions
+  alias CuberacerLive.Sessions.Session
+  alias CuberacerLive.Accounts.{User, UserToken, UserRoomAuth, UserNotifier}
 
   ## Database getters
 
@@ -350,6 +352,34 @@ defmodule CuberacerLive.Accounts do
   def delete_session_token(token) do
     Repo.delete_all(UserToken.token_and_context_query(token, "session"))
     :ok
+  end
+
+  ## Rooms
+
+  # TODO: Not sure if this stuff really belongs here.
+  #   This module does contain things like generating and deleting session tokens tho.
+  #   So maybe this is the hub for permissions functions for now.
+
+  @doc """
+  Authorize a user for a private room.
+  """
+  def create_user_room_auth(attrs) do
+    %UserRoomAuth{}
+    |> UserRoomAuth.create_changeset(attrs)
+    |> Repo.insert!()
+  end
+
+  def user_authorized_for_room?(%User{id: user_id}, %Session{id: session_id} = session) do
+    if Sessions.private?(session) do
+      query =
+        from auth in UserRoomAuth,
+          where: auth.user_id == ^user_id,
+          where: auth.session_id == ^session_id
+
+      Repo.exists?(query)
+    else
+      true
+    end
   end
 
   ## Confirmation

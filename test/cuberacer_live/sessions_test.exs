@@ -4,6 +4,8 @@ defmodule CuberacerLive.SessionsTest do
   alias CuberacerLive.Sessions
 
   describe "sessions" do
+    alias CuberacerLive.Accounts
+    alias CuberacerLive.Accounts.UserRoomAuth
     alias CuberacerLive.Sessions.{Session, Round}
 
     import CuberacerLive.AccountsFixtures
@@ -45,9 +47,46 @@ defmodule CuberacerLive.SessionsTest do
       assert Sessions.list_user_sessions(user) == [session]
     end
 
+    test "list_user_sessions/1 does not return sessions where user is authorized but has no activity" do
+      user = user_fixture()
+      session = session_fixture()
+      Accounts.create_user_room_auth(%{user_id: user.id, session_id: session.id})
+
+      assert Sessions.list_user_sessions(user) == []
+    end
+
+    test "list_visible_user_sessions/1 does not return sessions that the current user is unauthorized for" do
+      current_user = user_fixture()
+      other_user = user_fixture()
+      public_session = session_fixture(host_id: other_user.id)
+
+      {:ok, private_session, _round} =
+        Sessions.create_session_and_round("secret room", :"3x3", "secret", other_user)
+
+      assert Sessions.list_visible_user_sessions(other_user, current_user) == [public_session]
+
+      Accounts.create_user_room_auth(%{user_id: current_user.id, session_id: private_session.id})
+
+      assert Sessions.list_visible_user_sessions(other_user, current_user) == [
+               private_session,
+               public_session
+             ]
+    end
+
     test "get_session!/1 returns the session with given id" do
       session = session_fixture()
       assert Sessions.get_session!(session.id) == session
+    end
+
+    test "get_session/1 returns the session with the given id" do
+      session = session_fixture()
+      assert Sessions.get_session(session.id) == session
+    end
+
+    test "get_session/1 returns nil if the session is not found" do
+      assert Sessions.get_session(0) == nil
+      assert Sessions.get_session("abc") == nil
+      assert Sessions.get_session("abc123hi") == nil
     end
 
     test "create_session/1 with valid data creates a session" do
@@ -102,21 +141,46 @@ defmodule CuberacerLive.SessionsTest do
 
       assert session.name == "some name"
       assert session.puzzle_type == :"2x2"
-      refute session.unlisted?
+      refute Sessions.private?(session)
       assert session.host_id == nil
       assert round.session_id == session.id
     end
 
-    test "create_session_and_round/2 can be passed params for unlisted and host" do
+    test "create_session_and_round/2 can be passed params for password and host" do
       user = user_fixture()
 
       assert {:ok, %Session{} = session, %Round{} = round} =
-               Sessions.create_session_and_round("some name", :"4x4", true, user)
+               Sessions.create_session_and_round("some name", :"4x4", "password123", user)
 
       assert session.name == "some name"
       assert session.puzzle_type == :"4x4"
+      assert Sessions.private?(session)
+      assert Session.valid_password?(session, "password123")
       assert session.host_id == user.id
       assert round.session_id == session.id
+    end
+
+    test "create_session_and_round/2 auto-authorizes the host of a private session" do
+      user = user_fixture()
+
+      {:ok, session, _round} =
+        Sessions.create_session_and_round("some name", :"4x4", "password123", user)
+
+      assert Accounts.user_authorized_for_room?(user, session)
+    end
+
+    test "create_session_and_round/2 does not create UserRoomAuth unless passed both password and host" do
+      user = user_fixture()
+
+      user_room_auth_count_before = Repo.one(from a in UserRoomAuth, select: count(a.id))
+
+      {:ok, _session, _round} =
+        Sessions.create_session_and_round("some name", :"4x4", "password123", nil)
+
+      {:ok, _session, _round} = Sessions.create_session_and_round("some name", :"4x4", nil, user)
+      user_room_auth_count_after = Repo.one(from a in UserRoomAuth, select: count(a.id))
+
+      assert user_room_auth_count_before == user_room_auth_count_after
     end
 
     test "create_session_and_round/2 with no name returns error changeset" do
@@ -143,6 +207,14 @@ defmodule CuberacerLive.SessionsTest do
       {:error, _reason} = Sessions.create_session_and_round("some name", nil)
 
       refute_receive {Sessions, _, _}
+    end
+
+    test "private?/1 determines if a session is private" do
+      public_session = session_fixture(password: nil)
+      private_session = session_fixture(password: "hello")
+
+      refute Sessions.private?(public_session)
+      assert Sessions.private?(private_session)
     end
 
     test "update_session/2 with valid data updates the session" do

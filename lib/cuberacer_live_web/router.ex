@@ -96,7 +96,9 @@ defmodule CuberacerLiveWeb.Router do
 
     live "/lobby", GameLive.Lobby, :index
     live "/lobby/new", GameLive.Lobby, :new
+    live "/lobby/join/:id", GameLive.Lobby, :join
     live "/rooms/:id", GameLive.Room, :show
+    # live "/rooms/:id/join", GameLive.JoinRoom, :show
 
     get "/users/settings", UserSettingsController, :edit
     put "/users/settings", UserSettingsController, :update

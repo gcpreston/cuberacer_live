@@ -21,7 +21,7 @@ defmodule CuberacerLive.RoundControllerTest do
       assert html =~ SharedUtils.format_datetime(round.inserted_at)
       assert html =~ round.scramble
       assert html =~ "No solves"
-      assert html =~ ~s(<a href="/sessions/#{Sessions.session_locator(session)}">)
+      assert html =~ ~s(<a href="/sessions/#{session.id}">)
     end
 
     test "displays round data", %{conn: conn, user: user1, round: round} do
@@ -52,7 +52,7 @@ defmodule CuberacerLive.RoundControllerTest do
       assert html =~ "Round</h1>"
       assert html =~ SharedUtils.format_datetime(round.inserted_at)
       assert html =~ round.scramble
-      assert html =~ ~s(<a href="/sessions/#{Sessions.session_locator(session)}">)
+      assert html =~ ~s(<a href="/sessions/#{session.id}">)
 
       html
       |> assert_html("tr", count: 4)

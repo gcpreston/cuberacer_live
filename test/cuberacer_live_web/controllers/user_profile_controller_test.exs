@@ -4,7 +4,7 @@ defmodule CuberacerLiveWeb.UserProfileControllerTest do
   import CuberacerLive.AccountsFixtures
   import CuberacerLive.SessionsFixtures
 
-  alias CuberacerLive.{CountryUtils, Sessions}
+  alias CuberacerLive.{CountryUtils, Accounts}
 
   setup do
     %{user: user_fixture()}
@@ -58,35 +58,32 @@ defmodule CuberacerLiveWeb.UserProfileControllerTest do
       assert html =~ "4x4"
     end
 
-    test "shows unlisted sessions on your own profile", %{conn: conn, user: user} do
-      session = session_fixture(name: "unlisted session", unlisted?: true, host_id: user.id)
+    test "shows private sessions that the current user is authorized for", %{
+      conn: conn,
+      user: current_user
+    } do
+      other_user = user_fixture()
+
+      invisible_session =
+        session_fixture(name: "sad session", password: "boo", host_id: other_user.id)
+
+      visible_session =
+        session_fixture(name: "happy session", password: "boo", host_id: other_user.id)
+
+      Accounts.create_user_room_auth(%{user_id: current_user.id, session_id: visible_session.id})
 
       conn =
         conn
-        |> log_in_user(user)
-        |> get(~p"/users/#{user.id}")
+        |> log_in_user(current_user)
+        |> get(~p"/users/#{other_user.id}")
 
       html = html_response(conn, 200)
 
-      assert html =~ "unlisted session"
+      assert html =~ "happy session"
       assert html =~ "fas fa-lock"
-      assert html =~ ~s(<a href="/sessions/#{Sessions.session_locator(session)}">)
-    end
-
-    test "does not show unlisted sessions on someone else's profile", %{conn: conn, user: user1} do
-      user2 = user_fixture()
-      session = session_fixture(name: "unlisted session", unlisted?: true, host_id: user2.id)
-      round = round_fixture(session: session)
-      _user1_solve = solve_fixture(round_id: round.id, user_id: user1.id)
-
-      conn =
-        conn
-        |> log_in_user(user1)
-        |> get(~p"/users/#{user2.id}")
-
-      html = html_response(conn, 200)
-
-      refute html =~ "unlisted session"
+      assert html =~ ~s(<a href="/sessions/#{visible_session.id}">)
+      refute html =~ "sad session"
+      refute html =~ ~s(<a href="/sessions/#{invisible_session.id}">)
     end
 
     test "shows Edit profile button on your own profile", %{conn: conn, user: user} do

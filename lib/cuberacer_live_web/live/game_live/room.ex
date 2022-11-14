@@ -8,37 +8,33 @@ defmodule CuberacerLiveWeb.GameLive.Room do
   alias CuberacerLiveWeb.{Presence, Endpoint}
 
   @impl true
-  def mount(%{"id" => locator}, %{"user_token" => user_token}, socket)
+  def mount(%{"id" => session_id}, %{"user_token" => user_token}, socket)
       when not is_nil(user_token) do
-    {used_session_id, session_id} = Sessions.parse_session_locator(locator)
+    session = Sessions.get_session(session_id)
+    user = Accounts.get_user_by_session_token(user_token)
 
     socket =
-      if is_nil(session_id) do
-        push_redirect_to_lobby(socket, "Unknown room")
-      else
-        session = Sessions.get_session(session_id)
-        user = Accounts.get_user_by_session_token(user_token)
+      cond do
+        user == nil ->
+          redirect(socket, to: ~p"/login")
 
-        cond do
-          user == nil ->
-            redirect(socket, to: ~p"/login")
+        session == nil ->
+          push_navigate_to_lobby(socket, "Unknown room")
 
-          session == nil or (used_session_id and session.unlisted?) ->
-            push_redirect_to_lobby(socket, "Unknown room")
+        !RoomServer.whereis(session.id) ->
+          push_navigate_to_lobby(socket, "Room has terminated")
 
-          !RoomServer.whereis(session.id) ->
-            push_redirect_to_lobby(socket, "Room has terminated")
+        !Accounts.user_authorized_for_room?(user, session) ->
+          push_navigate_to_room_join(socket, session)
 
-          true ->
-            track_and_subscribe(socket, user, session)
-            socket_pipeline(socket, user, session)
-        end
+        true ->
+          track_and_subscribe(socket, user, session)
+          socket_pipeline(socket, user, session)
       end
 
     {:ok, socket, temporary_assigns: [past_rounds: [], room_messages: []]}
   end
 
-  @impl true
   def mount(_params, _session, socket) do
     # TODO: How to make it redirect to room after login instead of /?
     {:ok,
@@ -46,10 +42,15 @@ defmodule CuberacerLiveWeb.GameLive.Room do
      |> redirect(to: ~p"/login")}
   end
 
-  defp push_redirect_to_lobby(socket, flash_error) do
+  defp push_navigate_to_lobby(socket, flash_error) do
     socket
     |> put_flash(:error, flash_error)
-    |> push_redirect(to: ~p"/lobby")
+    |> push_navigate(to: ~p"/lobby")
+  end
+
+  defp push_navigate_to_room_join(socket, session) do
+    socket
+    |> push_navigate(to: ~p"/lobby/join/#{session.id}")
   end
 
   defp track_and_subscribe(socket, user, session) do
@@ -224,7 +225,7 @@ defmodule CuberacerLiveWeb.GameLive.Room do
     {:noreply,
      socket
      |> put_flash(:info, "Session was deleted")
-     |> push_redirect(to: ~p"/lobby")}
+     |> push_navigate(to: ~p"/lobby")}
   end
 
   # TODO: I don't like having a Repo call in this file, and would like to

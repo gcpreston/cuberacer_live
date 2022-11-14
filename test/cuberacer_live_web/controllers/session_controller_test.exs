@@ -5,7 +5,7 @@ defmodule CuberacerLive.SessionControllerTest do
   import CuberacerLive.MessagingFixtures
   import CuberacerLive.SessionsFixtures
 
-  alias CuberacerLive.Sessions
+  alias CuberacerLive.{Sessions, Accounts}
   alias CuberacerLiveWeb.SharedUtils
 
   setup do
@@ -95,26 +95,21 @@ defmodule CuberacerLive.SessionControllerTest do
       )
     end
 
-    test "indicates that a session is unlisted", %{conn: conn, user: user} do
-      session = session_fixture(unlisted?: true)
-      ext = Sessions.session_locator(session)
-      conn = conn |> log_in_user(user) |> get(~p"/sessions/#{ext}")
+    test "indicates that a session is private", %{conn: conn, user: user} do
+      session = session_fixture(password: "password")
+      Accounts.create_user_room_auth(%{user_id: user.id, session_id: session.id})
+      conn = conn |> log_in_user(user) |> get(~p"/sessions/#{session.id}")
       html = html_response(conn, 200)
 
       assert html =~ "fas fa-lock"
     end
 
-    test "does not allow access to an unlisted session via session ID", %{conn: conn, user: user} do
-      session = session_fixture(unlisted?: true)
+    test "does not allow an unauthorized user access to a private session", %{
+      conn: conn,
+      user: user
+    } do
+      session = session_fixture(password: "password")
       conn = conn |> log_in_user(user) |> get(~p"/sessions/#{session.id}")
-
-      assert html_response(conn, 404)
-    end
-
-    test "404s for non-existing unlisted session", %{conn: conn, user: user} do
-      _session = session_fixture(unlisted: true)
-
-      conn = conn |> log_in_user(user) |> get(~p"/sessions/fjdkalfjda")
 
       assert html_response(conn, 404)
     end

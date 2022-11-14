@@ -4,7 +4,7 @@
       <h1 class="text-4xl text-gray-800 font-semibold">Session</h1>
       <div class="mt-8 text-2xl text-gray-800 font-medium">
         <%= @session.name %>
-        <%= if @session.unlisted? do %>
+        <%= if Sessions.private?(@session) do %>
           <span class="ml-1 text-lg"><i class="fas fa-lock"></i></span>
         <% end %>
       </div>

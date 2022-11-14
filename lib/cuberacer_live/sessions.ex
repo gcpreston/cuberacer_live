@@ -16,6 +16,7 @@ defmodule CuberacerLive.Sessions do
   alias CuberacerLive.Repo
   alias CuberacerLive.Stats
   alias CuberacerLive.Sessions.{Session, Round, Solve}
+  alias CuberacerLive.Accounts
   alias CuberacerLive.Accounts.User
 
   @topic inspect(__MODULE__)
@@ -47,17 +48,34 @@ defmodule CuberacerLive.Sessions do
   user has participated in.
   """
   def list_user_sessions(%User{id: user_id}) do
+    query = user_sessions_query(user_id)
+    Repo.all(query)
+  end
+
+  defp user_sessions_query(user_id) do
+    from session in Session,
+      distinct: true,
+      left_join: round in assoc(session, :rounds),
+      left_join: solve in assoc(round, :solves),
+      left_join: message in assoc(session, :room_messages),
+      where: solve.user_id == ^user_id,
+      or_where: message.user_id == ^user_id,
+      or_where: session.host_id == ^user_id,
+      order_by: [desc: session.id],
+      select: session
+  end
+
+  @doc """
+  Returns a list of sessions (past and current) which
+  1. the first user has participated in
+  2. are visible to the second user
+  """
+  def list_visible_user_sessions(%User{id: user_id}, %User{id: current_user_id}) do
     query =
-      from session in Session,
-        distinct: true,
-        left_join: round in assoc(session, :rounds),
-        left_join: solve in assoc(round, :solves),
-        left_join: message in assoc(session, :room_messages),
-        where: solve.user_id == ^user_id,
-        or_where: message.user_id == ^user_id,
-        or_where: session.host_id == ^user_id,
-        order_by: [desc: session.id],
-        select: session
+      from session in user_sessions_query(user_id),
+        left_join: auth in assoc(session, :user_room_auths),
+        where: is_nil(session.hashed_password),
+        or_where: auth.user_id == ^current_user_id
 
     Repo.all(query)
   end
@@ -92,7 +110,16 @@ defmodule CuberacerLive.Sessions do
       nil
 
   """
-  def get_session(id), do: Repo.get(Session, id)
+  def get_session(id) when is_integer(id) do
+    Repo.get(Session, id)
+  end
+
+  def get_session(id) when is_binary(id) do
+    case Integer.parse(id) do
+      {int_id, ""} -> get_session(int_id)
+      _ -> nil
+    end
+  end
 
   @doc """
   Gets a list of sessions, given a list of session IDs.
@@ -139,27 +166,6 @@ defmodule CuberacerLive.Sessions do
     Repo.one!(query)
   end
 
-  def session_locator(%Session{} = session) do
-    if session.unlisted? do
-      Hashids.encode(CuberacerLive.Hashids.new(), session.id)
-    else
-      session.id
-    end
-  end
-
-  def parse_session_locator(room_id) do
-    case Integer.parse(room_id) do
-      {session_id, ""} ->
-        {true, session_id}
-
-      _ ->
-        case Hashids.decode(CuberacerLive.Hashids.new(), room_id) do
-          {:ok, [session_id]} -> {false, session_id}
-          _ -> {false, nil}
-        end
-    end
-  end
-
   @doc """
   Creates a session.
 
@@ -174,7 +180,7 @@ defmodule CuberacerLive.Sessions do
   """
   def create_session(attrs \\ %{}) do
     %Session{}
-    |> Session.changeset(attrs)
+    |> Session.create_changeset(attrs)
     |> Repo.insert()
     |> notify_subscribers([:session, :created])
   end
@@ -187,22 +193,26 @@ defmodule CuberacerLive.Sessions do
       iex> create_session_and_round("my cool sesh", "3x3")
       {:ok, %Session{}, %Round{}}
 
-      iex> create_session_and_round(nil, %CubeType{}, true, %User{})
+      iex> create_session_and_round(nil, %CubeType{}, "strongpassword123", %User{})
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_session_and_round(name, puzzle_type, unlisted \\ false, host \\ nil) do
+  def create_session_and_round(name, puzzle_type, password \\ nil, host \\ nil) do
     host_id = if match?(%User{}, host), do: host.id, else: nil
 
     session_attrs = %{
       host_id: host_id,
       name: name,
       puzzle_type: puzzle_type,
-      unlisted?: unlisted
+      password: password
     }
 
     with {:ok, session} <- create_session(session_attrs),
          {:ok, round} <- create_round(session) do
+      if password && host do
+        Accounts.create_user_room_auth(%{user_id: host.id, session_id: session.id})
+      end
+
       {:ok, session, round}
     else
       err -> err
@@ -256,6 +266,13 @@ defmodule CuberacerLive.Sessions do
   """
   def change_session(%Session{} = session, attrs \\ %{}) do
     Session.changeset(session, attrs)
+  end
+
+  @doc """
+  Determine if the passed session is private.
+  """
+  def private?(%Session{} = session) do
+    !!session.hashed_password
   end
 
   @doc """

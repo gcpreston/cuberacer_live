@@ -4,13 +4,6 @@ defmodule CuberacerLiveWeb.Components do
   import CuberacerLiveWeb.SharedUtils, only: [format_datetime: 1]
 
   alias Phoenix.LiveView.JS
-  alias CuberacerLive.Sessions
-
-  # TODO: Don't want this here, should move session_link elsewhere
-  use Phoenix.VerifiedRoutes,
-    endpoint: CuberacerLiveWeb.Endpoint,
-    router: CuberacerLiveWeb.Router,
-    statics: CuberacerLiveWeb.static_paths()
 
   @doc """
   Renders a live component inside a modal.
@@ -104,16 +97,5 @@ defmodule CuberacerLiveWeb.Components do
     color = Enum.at(options, :erlang.phash2({user_id, color_seed}, length(options)))
 
     "text-#{color}"
-  end
-
-  attr :session, :any, required: true, doc: "The Sessions.Session to link to."
-  slot :inner_block, requied: true
-
-  def session_link(assigns) do
-    ~H"""
-    <.link href={~p"/sessions/#{Sessions.session_locator(assigns.session)}"}>
-      <%= render_slot(@inner_block) %>
-    </.link>
-    """
   end
 end

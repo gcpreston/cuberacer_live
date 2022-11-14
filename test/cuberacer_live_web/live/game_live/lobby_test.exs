@@ -177,7 +177,7 @@ defmodule CuberacerLive.GameLive.LobbyTest do
 
       result =
         lv
-        |> element(".t_room-card")
+        |> element(".t_room-card-button")
         |> render_click()
 
       assert_redirect(lv)
@@ -190,7 +190,7 @@ defmodule CuberacerLive.GameLive.LobbyTest do
     end
 
     @tag :ensure_presence_shutdown
-    test "create room modal creates a new unlisted room only visible to host", %{conn: conn1} do
+    test "create room modal creates a new private room", %{conn: conn1} do
       user2 = user_fixture()
       conn2 = build_conn() |> log_in_user(user2)
 
@@ -201,34 +201,119 @@ defmodule CuberacerLive.GameLive.LobbyTest do
       result =
         lv
         |> form("#create-room-form")
-        |> render_submit(%{session: %{name: "new session", puzzle_type: :"2x2", unlisted: true}})
+        |> render_submit(%{
+          session: %{name: "new session", puzzle_type: :"2x2", password: "hello"}
+        })
 
       flash = assert_redirect(lv, ~p"/lobby")
       assert flash["info"] == "Room created successfully"
 
       # Shows up for user who created the room
-      {:ok, lv, html} = follow_redirect(result, conn1)
+      {:ok, lv1, html1} = follow_redirect(result, conn1)
+
+      assert_html(html1, ".t_room-card", count: 1)
+      assert lv1 |> element(".t_room-card") |> render() =~ "fa-lock"
+
+      # Shows up for other user as well
+      {:ok, lv2, html2} = live(conn2, ~p"/lobby")
+
+      assert_html(html2, ".t_room-card", count: 1)
+      assert lv2 |> element(".t_room-card") |> render() =~ "fa-lock"
+    end
+
+    test "only shows join room modal for unauthorized users", %{conn: conn1} do
+      user2 = user_fixture()
+      conn2 = build_conn() |> log_in_user(user2)
+
+      {:ok, lv, html} = live(conn1, ~p"/lobby/new")
+
+      refute_html(html, ".t_room-card")
+
+      result =
+        lv
+        |> form("#create-room-form")
+        |> render_submit(%{
+          session: %{name: "new session", puzzle_type: :"2x2", password: "hello"}
+        })
+
+      flash = assert_redirect(lv, ~p"/lobby")
+      assert flash["info"] == "Room created successfully"
+
+      # User who created room is already authorized
+      {:ok, lv1, html1} = follow_redirect(result, conn1)
+
+      assert_html(html1, ".t_room-card", count: 1)
+      assert lv1 |> element(".t_room-card") |> render() =~ "fa-lock"
+
+      result =
+        lv1
+        |> element(".t_room-card-button")
+        |> render_click()
+
+      assert_redirect(lv1)
+
+      {:ok, _room_lv1, html1} = follow_redirect(result, conn1)
+
+      html1
+      |> assert_html(".t_round-row", count: 1)
+      |> assert_html(".t_scramble")
+
+      # Other user needs to enter password
+      {:ok, lv2, html2} = live(conn2, ~p"/lobby")
+
+      assert_html(html2, ".t_room-card", count: 1)
+      assert lv2 |> element(".t_room-card") |> render() =~ "fa-lock"
+
+      lv2
+      |> element(".t_room-card-button")
+      |> render_click()
+
+      path = assert_patch(lv2)
+      assert path =~ "/lobby/join/"
+
+      result =
+        lv2
+        |> form("#join-room-form")
+        |> render_submit(%{session: %{password: "hello"}})
+
+      assert_redirect(lv2)
+
+      {:ok, _room_lv2, html2} = follow_redirect(result, conn2)
+
+      html2
+      |> assert_html(".t_round-row", count: 1)
+      |> assert_html(".t_scramble")
+    end
+
+    test "join room modal checks password", %{conn: conn1} do
+      user2 = user_fixture()
+      {:ok, _pid, session} = RoomCache.create_room("private room", :"3x3", "password", user2)
+
+      {:ok, lv, html} = live(conn1, ~p"/lobby")
 
       assert_html(html, ".t_room-card", count: 1)
       assert lv |> element(".t_room-card") |> render() =~ "fa-lock"
 
+      lv
+      |> element(".t_room-card-button")
+      |> render_click()
+
+      path = assert_patch(lv)
+      assert path =~ "/lobby/join/"
+
       result =
         lv
-        |> element(".t_room-card")
-        |> render_click()
+        |> form("#join-room-form")
+        |> render_submit(%{session: %{password: "wrong password"}})
 
-      assert_redirect(lv)
+      refute_redirected(lv, ~p"/rooms/#{session.id}")
+      assert_html(result, "span[phx-feedback-for=\"session[password]\"", text: "is not valid")
 
-      {:ok, _room_lv, html} = follow_redirect(result, conn1)
+      lv
+      |> form("#join-room-form")
+      |> render_submit(%{session: %{password: "password"}})
 
-      html
-      |> assert_html(".t_round-row", count: 1)
-      |> assert_html(".t_scramble")
-
-      # Does not show up for other user
-      {:ok, _lv2, html2} = live(conn2, ~p"/lobby")
-
-      refute_html(html2, ".t_room-card")
+      assert_redirect(lv, ~p"/rooms/#{session.id}")
     end
 
     test "displays error messages", %{conn: conn} do

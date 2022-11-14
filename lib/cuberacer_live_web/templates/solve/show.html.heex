@@ -23,11 +23,11 @@
         </li>
         <li>
           <span class="font-semibold text-gray-800">Session: </span>
-          <.session_link session={@solve.session}>
+          <.link href={~p"/sessions/#{@solve.session.id}"}>
             <span class="text-blue-500 hover:underline">
-              <%= session_locator(@solve.session) %>
+              <%= @solve.session.id %>
             </span>
-          </.session_link>
+          </.link>
         </li>
       </ul>
     </div>
