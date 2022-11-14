@@ -10,7 +10,10 @@ defmodule CuberacerLiveWeb.GameLive.Components do
 
   def room_card(assigns) do
     ~H"""
-    <div id={"t_room-card-#{@session.id}"} class="t_room-card relative p-4 rounded-lg shadow-sm border bg-white transition-all hover:bg-gray-50 hover:shadow-md">
+    <div
+      id={"t_room-card-#{@session.id}"}
+      class="t_room-card relative p-4 rounded-lg shadow-sm border bg-white transition-all hover:bg-gray-50 hover:shadow-md"
+    >
       <%= if @participant_count > 0 do %>
         <span class="absolute top-2 left-2 bg-green-500 h-3 w-3 rounded-full" />
       <% end %>
@@ -23,8 +26,12 @@ defmodule CuberacerLiveWeb.GameLive.Components do
       </div>
       <hr class="my-2" />
       <ul class="text-center">
-        <li class="t_room-puzzle"><span class="font-semibold">Puzzle: </span><%= @session.puzzle_type %></li>
-        <li class="t_room-participants"><span class="font-semibold">Participants: </span><%= @participant_count %></li>
+        <li class="t_room-puzzle">
+          <span class="font-semibold">Puzzle: </span><%= @session.puzzle_type %>
+        </li>
+        <li class="t_room-participants">
+          <span class="font-semibold">Participants: </span><%= @participant_count %>
+        </li>
       </ul>
     </div>
     """

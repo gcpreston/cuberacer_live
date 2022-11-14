@@ -8,7 +8,8 @@ defmodule CuberacerLiveWeb.GameLive.Room do
   alias CuberacerLiveWeb.{Presence, Endpoint}
 
   @impl true
-  def mount(%{"id" => session_id}, %{"user_token" => user_token}, socket) when not is_nil(user_token) do
+  def mount(%{"id" => session_id}, %{"user_token" => user_token}, socket)
+      when not is_nil(user_token) do
     session = Sessions.get_session(session_id)
     user = Accounts.get_user_by_session_token(user_token)
 

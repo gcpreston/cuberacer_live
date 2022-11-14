@@ -201,7 +201,9 @@ defmodule CuberacerLive.GameLive.LobbyTest do
       result =
         lv
         |> form("#create-room-form")
-        |> render_submit(%{session: %{name: "new session", puzzle_type: :"2x2", password: "hello"}})
+        |> render_submit(%{
+          session: %{name: "new session", puzzle_type: :"2x2", password: "hello"}
+        })
 
       flash = assert_redirect(lv, ~p"/lobby")
       assert flash["info"] == "Room created successfully"
@@ -230,7 +232,9 @@ defmodule CuberacerLive.GameLive.LobbyTest do
       result =
         lv
         |> form("#create-room-form")
-        |> render_submit(%{session: %{name: "new session", puzzle_type: :"2x2", password: "hello"}})
+        |> render_submit(%{
+          session: %{name: "new session", puzzle_type: :"2x2", password: "hello"}
+        })
 
       flash = assert_redirect(lv, ~p"/lobby")
       assert flash["info"] == "Room created successfully"
@@ -283,7 +287,7 @@ defmodule CuberacerLive.GameLive.LobbyTest do
 
     test "join room modal checks password", %{conn: conn1} do
       user2 = user_fixture()
-      {:ok, _pid, session} =  RoomCache.create_room("private room", :"3x3", "password", user2)
+      {:ok, _pid, session} = RoomCache.create_room("private room", :"3x3", "password", user2)
 
       {:ok, lv, html} = live(conn1, ~p"/lobby")
 

@@ -104,7 +104,10 @@ defmodule CuberacerLive.SessionControllerTest do
       assert html =~ "fas fa-lock"
     end
 
-    test "does not allow an unauthorized user access to a private session", %{conn: conn, user: user} do
+    test "does not allow an unauthorized user access to a private session", %{
+      conn: conn,
+      user: user
+    } do
       session = session_fixture(password: "password")
       conn = conn |> log_in_user(user) |> get(~p"/sessions/#{session.id}")
 

@@ -59,13 +59,18 @@ defmodule CuberacerLive.SessionsTest do
       current_user = user_fixture()
       other_user = user_fixture()
       public_session = session_fixture(host_id: other_user.id)
-      {:ok, private_session, _round} = Sessions.create_session_and_round("secret room", :"3x3", "secret", other_user)
+
+      {:ok, private_session, _round} =
+        Sessions.create_session_and_round("secret room", :"3x3", "secret", other_user)
 
       assert Sessions.list_visible_user_sessions(other_user, current_user) == [public_session]
 
       Accounts.create_user_room_auth(%{user_id: current_user.id, session_id: private_session.id})
 
-      assert Sessions.list_visible_user_sessions(other_user, current_user) == [private_session, public_session]
+      assert Sessions.list_visible_user_sessions(other_user, current_user) == [
+               private_session,
+               public_session
+             ]
     end
 
     test "get_session!/1 returns the session with given id" do
@@ -157,7 +162,9 @@ defmodule CuberacerLive.SessionsTest do
 
     test "create_session_and_round/2 auto-authorizes the host of a private session" do
       user = user_fixture()
-      {:ok, session, _round} = Sessions.create_session_and_round("some name", :"4x4", "password123", user)
+
+      {:ok, session, _round} =
+        Sessions.create_session_and_round("some name", :"4x4", "password123", user)
 
       assert Accounts.user_authorized_for_room?(user, session)
     end
@@ -166,7 +173,10 @@ defmodule CuberacerLive.SessionsTest do
       user = user_fixture()
 
       user_room_auth_count_before = Repo.one(from a in UserRoomAuth, select: count(a.id))
-      {:ok, _session, _round} = Sessions.create_session_and_round("some name", :"4x4", "password123", nil)
+
+      {:ok, _session, _round} =
+        Sessions.create_session_and_round("some name", :"4x4", "password123", nil)
+
       {:ok, _session, _round} = Sessions.create_session_and_round("some name", :"4x4", nil, user)
       user_room_auth_count_after = Repo.one(from a in UserRoomAuth, select: count(a.id))
 

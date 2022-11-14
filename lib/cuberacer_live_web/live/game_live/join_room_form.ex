@@ -32,7 +32,10 @@ defmodule CuberacerLiveWeb.GameLive.JoinRoomForm do
          |> assign(:changeset, changeset)}
 
       true ->
-        Accounts.create_user_room_auth(%{user_id: socket.assigns.current_user.id, session_id: socket.assigns.session.id})
+        Accounts.create_user_room_auth(%{
+          user_id: socket.assigns.current_user.id,
+          session_id: socket.assigns.session.id
+        })
 
         {:noreply,
          socket

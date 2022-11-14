@@ -58,10 +58,18 @@ defmodule CuberacerLiveWeb.UserProfileControllerTest do
       assert html =~ "4x4"
     end
 
-    test "shows private sessions that the current user is authorized for", %{conn: conn, user: current_user} do
+    test "shows private sessions that the current user is authorized for", %{
+      conn: conn,
+      user: current_user
+    } do
       other_user = user_fixture()
-      invisible_session = session_fixture(name: "sad session", password: "boo", host_id: other_user.id)
-      visible_session = session_fixture(name: "happy session", password: "boo", host_id: other_user.id)
+
+      invisible_session =
+        session_fixture(name: "sad session", password: "boo", host_id: other_user.id)
+
+      visible_session =
+        session_fixture(name: "happy session", password: "boo", host_id: other_user.id)
+
       Accounts.create_user_room_auth(%{user_id: current_user.id, session_id: visible_session.id})
 
       conn =

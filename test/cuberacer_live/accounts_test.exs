@@ -613,7 +613,10 @@ defmodule CuberacerLive.AccountsTest do
       user = user_fixture()
       session = session_fixture(password: "hello")
 
-      assert %UserRoomAuth{} = user_room_auth = Accounts.create_user_room_auth(%{user_id: user.id, session_id: session.id})
+      assert %UserRoomAuth{} =
+               user_room_auth =
+               Accounts.create_user_room_auth(%{user_id: user.id, session_id: session.id})
+
       assert user_room_auth.user_id == user.id
       assert user_room_auth.session_id == session.id
     end
@@ -622,9 +625,17 @@ defmodule CuberacerLive.AccountsTest do
       user = user_fixture()
       session = session_fixture(password: "hello")
 
-      assert_raise Ecto.InvalidChangesetError, fn -> Accounts.create_user_room_auth(%{user_id: nil, session_id: nil}) end
-      assert_raise Ecto.InvalidChangesetError, fn -> Accounts.create_user_room_auth(%{user_id: user.id, session_id: nil}) end
-      assert_raise Ecto.InvalidChangesetError, fn -> Accounts.create_user_room_auth(%{user_id: nil, session_id: session.id}) end
+      assert_raise Ecto.InvalidChangesetError, fn ->
+        Accounts.create_user_room_auth(%{user_id: nil, session_id: nil})
+      end
+
+      assert_raise Ecto.InvalidChangesetError, fn ->
+        Accounts.create_user_room_auth(%{user_id: user.id, session_id: nil})
+      end
+
+      assert_raise Ecto.InvalidChangesetError, fn ->
+        Accounts.create_user_room_auth(%{user_id: nil, session_id: session.id})
+      end
     end
   end
 
@@ -648,7 +659,9 @@ defmodule CuberacerLive.AccountsTest do
     test "returns true if user is authorized for private room" do
       user = user_fixture()
       session = session_fixture(password: "mystery")
-      _user_room_auth = Accounts.create_user_room_auth(%{user_id: user.id, session_id: session.id})
+
+      _user_room_auth =
+        Accounts.create_user_room_auth(%{user_id: user.id, session_id: session.id})
 
       assert Accounts.user_authorized_for_room?(user, session)
     end

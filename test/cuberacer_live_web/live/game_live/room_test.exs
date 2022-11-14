@@ -76,7 +76,10 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
     test "redirects to connect if user not authorized", %{conn: conn, user: user} do
       conn = log_in_user(conn, user)
       user2 = user_fixture()
-      {:ok, _pid, private_session} = RoomCache.create_room("private room", :"3x3", "secret", user2)
+
+      {:ok, _pid, private_session} =
+        RoomCache.create_room("private room", :"3x3", "secret", user2)
+
       room_join_path = ~p"/lobby/join/#{private_session.id}"
 
       {:error, {:live_redirect, %{to: ^room_join_path}}} =
@@ -86,7 +89,10 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
     test "connects if user is authorized", %{conn: conn, user: user} do
       conn = log_in_user(conn, user)
       user2 = user_fixture()
-      {:ok, _pid, private_session} = RoomCache.create_room("private room", :"3x3", "secret", user2)
+
+      {:ok, _pid, private_session} =
+        RoomCache.create_room("private room", :"3x3", "secret", user2)
+
       Accounts.create_user_room_auth(%{user_id: user.id, session_id: private_session.id})
 
       assert {:ok, _lv, _html} = live(conn, ~p"/rooms/#{private_session.id}")
