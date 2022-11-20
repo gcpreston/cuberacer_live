@@ -93,7 +93,7 @@ defmodule CuberacerLiveWeb do
   defp view_helpers do
     quote do
       use Phoenix.HTML
-      import CuberacerLiveWeb.Components
+      import CuberacerLiveWeb.CoreComponents
 
       alias Phoenix.LiveView.JS
 

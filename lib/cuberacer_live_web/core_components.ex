@@ -1,4 +1,4 @@
-defmodule CuberacerLiveWeb.Components do
+defmodule CuberacerLiveWeb.CoreComponents do
   use Phoenix.Component
 
   import CuberacerLiveWeb.SharedUtils, only: [format_datetime: 1]
