@@ -39,7 +39,7 @@ defmodule CuberacerLiveWeb.CoreComponents do
         phx-key="escape"
       >
         <%= if @return_to do %>
-          <.link patch={@return_to} id="close" class="phx-modal-close" phx_click={hide_modal()}>
+          <.link patch={@return_to} id="close" class="phx-modal-close">
             ✖
           </.link>
         <% else %>
