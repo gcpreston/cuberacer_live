@@ -1,4 +1,4 @@
-defmodule CuberacerLiveWeb.Components do
+defmodule CuberacerLiveWeb.CoreComponents do
   use Phoenix.Component
 
   import CuberacerLiveWeb.SharedUtils, only: [format_datetime: 1]
@@ -39,7 +39,7 @@ defmodule CuberacerLiveWeb.Components do
         phx-key="escape"
       >
         <%= if @return_to do %>
-          <.link patch={@return_to} id="close" class="phx-modal-close" phx_click={hide_modal()}>
+          <.link patch={@return_to} id="close" class="phx-modal-close">
             ✖
           </.link>
         <% else %>
