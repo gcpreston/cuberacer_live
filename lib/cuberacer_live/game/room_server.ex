@@ -9,10 +9,11 @@ defmodule CuberacerLive.RoomServer do
   alias CuberacerLive.{Sessions, Messaging, Accounts}
   alias CuberacerLive.Sessions.Session
   alias CuberacerLive.Accounts.User
+  alias CuberacerLive.ParticipantDataEntry
 
   @lobby_server_topic inspect(CuberacerLive.LobbyServer)
 
-  defstruct [:session, messages: [], participant_data: %{}, timeout_ref: nil]
+  defstruct [:session, participant_data: %{}, timeout_ref: nil]
 
   ## API
 
@@ -84,7 +85,8 @@ defmodule CuberacerLive.RoomServer do
         _from,
         %{session: session} = state
       ) do
-    new_state = put_in(state.participant_data[user.id].meta.solving, false)
+    new_entry = ParticipantDataEntry.set_solving(state.participant_data[user.id], false)
+    new_state = put_in(state.participant_data[user.id], new_entry)
     {:ok, solve} = Sessions.create_solve(session, user, time, penalty)
     {:reply, solve, new_state}
   end
@@ -109,10 +111,10 @@ defmodule CuberacerLive.RoomServer do
   @impl true
   def handle_cast(
         {:send_message, %User{} = user, message},
-        %{session: session, messages: messages} = state
+        %{session: session} = state
       ) do
-    {:ok, message} = Messaging.create_room_message(session, user, message)
-    {:noreply, %{state | messages: [message | messages]}}
+    {:ok, _message} = Messaging.create_room_message(session, user, message)
+    {:noreply, state}
   end
 
   @impl true
@@ -123,7 +125,7 @@ defmodule CuberacerLive.RoomServer do
     joins_participant_data =
       Accounts.get_users(Map.keys(payload.joins))
       |> Map.new(fn user ->
-        {user.id, participant_data_entry(user)}
+        {user.id, ParticipantDataEntry.new(user)}
       end)
 
     leaves_user_ids =
@@ -148,23 +150,26 @@ defmodule CuberacerLive.RoomServer do
       participant_count: present_users_count
     })
 
-    if present_users_count == 0 do
-      {:noreply, new_state |> set_empty_room_timeout(),
-       {:continue, {:tell_game_room_to_fetch, :participants}}}
-    else
-      {:noreply, new_state |> cancel_empty_room_timeout(),
-       {:continue, {:tell_game_room_to_fetch, :participants}}}
-    end
+    new_state =
+      if present_users_count == 0 do
+        new_state |> set_empty_room_timeout()
+      else
+        new_state |> cancel_empty_room_timeout()
+      end
+
+    {:noreply, new_state, {:continue, {:tell_game_room_to_fetch, :participants}}}
   end
 
   def handle_info({:solving, user_id}, state) do
-    {:noreply, put_in(state.participant_data[user_id].meta.solving, true),
-     {:continue, {:tell_game_room_to_fetch, :participant_data}}}
+    new_entry = ParticipantDataEntry.set_solving(state.participant_data[user_id], true)
+    new_state = put_in(state.participant_data[user_id], new_entry)
+    {:noreply, new_state, {:continue, {:tell_game_room_to_fetch, :participant_data}}}
   end
 
   def handle_info({:set_time_entry, user_id, method}, state) do
-    {:noreply, put_in(state.participant_data[user_id].meta.time_entry, method),
-     {:continue, {:tell_game_room_to_fetch, :participant_data}}}
+    new_entry = ParticipantDataEntry.set_time_entry(state.participant_data[user_id], method)
+    new_state = put_in(state.participant_data[user_id], new_entry)
+    {:noreply, new_state, {:continue, {:tell_game_room_to_fetch, :participant_data}}}
   end
 
   def handle_info(:timeout, state) do
@@ -236,9 +241,5 @@ defmodule CuberacerLive.RoomServer do
   defp _cancel_timeout(state) do
     Logger.info("Cancelling empty room timeout for room #{state.session.id}")
     Process.cancel_timer(state.timeout_ref)
-  end
-
-  defp participant_data_entry(user) do
-    %{user: user, meta: %{solving: false, time_entry: :timer}}
   end
 end

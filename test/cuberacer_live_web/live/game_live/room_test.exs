@@ -104,6 +104,19 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       assert {:ok, _lv, html} = live(conn, ~p"/rooms/#{session.id}")
       assert html =~ session.name
     end
+
+    test "displays existing messages", %{conn: conn1, user: user1, session: session} do
+      conn1 = log_in_user(conn1, user1)
+      user2 = user_fixture()
+
+      Messaging.create_room_message(session, user1, "hello world!")
+      Messaging.create_room_message(session, user2, "sup guys")
+
+      {:ok, _lv, html} = live(conn1, ~p"/rooms/#{session.id}")
+
+      assert html =~ "hello world!"
+      assert html =~ "sup guys"
+    end
   end
 
   describe "interface" do
