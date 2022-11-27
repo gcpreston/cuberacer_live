@@ -12,7 +12,7 @@ defmodule CuberacerLive.RoomServer do
 
   @lobby_server_topic inspect(CuberacerLive.LobbyServer)
 
-  defstruct [:session, messages: [], participant_data: %{}, timeout_ref: nil]
+  defstruct [:session, participant_data: %{}, timeout_ref: nil]
 
   ## API
 
@@ -109,10 +109,10 @@ defmodule CuberacerLive.RoomServer do
   @impl true
   def handle_cast(
         {:send_message, %User{} = user, message},
-        %{session: session, messages: messages} = state
+        %{session: session} = state
       ) do
-    {:ok, message} = Messaging.create_room_message(session, user, message)
-    {:noreply, %{state | messages: [message | messages]}}
+    {:ok, _message} = Messaging.create_room_message(session, user, message)
+    {:noreply, state}
   end
 
   @impl true
