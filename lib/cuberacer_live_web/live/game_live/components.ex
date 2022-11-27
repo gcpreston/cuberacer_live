@@ -1,6 +1,7 @@
 defmodule CuberacerLiveWeb.GameLive.Components do
   use CuberacerLiveWeb, :component
 
+  alias CuberacerLive.ParticipantDataEntry
   alias CuberacerLive.Sessions
   alias CuberacerLive.Sessions.Round
   alias CuberacerLive.Accounts.User
@@ -140,7 +141,7 @@ defmodule CuberacerLiveWeb.GameLive.Components do
     >
       <thead class="bg-gray-50 sticky top-0">
         <tr class="flex">
-          <%= for {{user_id, data}, i} <- Enum.with_index(@participant_data) do %>
+          <%= for {{user_id, entry}, i} <- Enum.with_index(@participant_data) do %>
             <th
               scope="col"
               id={"header-cell-user-#{user_id}"}
@@ -150,10 +151,10 @@ defmodule CuberacerLiveWeb.GameLive.Components do
               <div class="inline-flex max-w-full">
                 <span class="flex-1 truncate">
                   <.link href={~p"/users/#{user_id}"} target="_blank">
-                    <%= data.user.username %>
+                    <%= entry.user.username %>
                   </.link>
                 </span>
-                <%= if data.meta.time_entry == :keyboard do %>
+                <%= if ParticipantDataEntry.get_time_entry(entry) == :keyboard do %>
                   <span class="text-center pl-1">
                     <i class="fas fa-keyboard" title="This player is using keyboard entry"></i>
                   </span>
@@ -166,7 +167,7 @@ defmodule CuberacerLiveWeb.GameLive.Components do
       </thead>
       <tbody id="times-table-body" class="bg-white" x-show="bottomBarShow" phx-update="prepend">
         <tr id={"round-#{@current_round.id}"} class="flex t_round-row" title={@current_round.scramble}>
-          <%= for {{user_id, data}, i} <- Enum.with_index(@participant_data) do %>
+          <%= for {{user_id, entry}, i} <- Enum.with_index(@participant_data) do %>
             <td
               id={"round-#{@current_round.id}-solve-user-#{user_id}"}
               class="w-28 border-b px-2 py-4 whitespace-nowrap"
@@ -176,10 +177,10 @@ defmodule CuberacerLiveWeb.GameLive.Components do
                 id={"t_cell-round-#{@current_round.id}-user-#{user_id}"}
                 class="text-sm font-medium text-center text-gray-900"
               >
-                <%= if data.meta.solving do %>
+                <%= if ParticipantDataEntry.get_solving(entry) do %>
                   Solving...
                 <% else %>
-                  <%= user_solve_for_round(data.user, @current_round) |> Sessions.display_solve() %>
+                  <%= user_solve_for_round(entry.user, @current_round) |> Sessions.display_solve() %>
                 <% end %>
               </div>
             </td>
