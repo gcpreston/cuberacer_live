@@ -106,6 +106,7 @@ defmodule CuberacerLiveWeb.Router do
 
     get "/users/:id", UserProfileController, :show
 
+    live "/sessions_live/:id", SessionLive.Show, :show
     get "/sessions/:id", SessionController, :show
     get "/rounds/:id", RoundController, :show
     get "/solves/:id", SolveController, :show

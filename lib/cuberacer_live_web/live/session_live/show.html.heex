@@ -1,0 +1,40 @@
+<h3>This is the live one</h3>
+<div class="flex flex-col">
+  <div class="sm:grid grid-cols-2">
+    <div class="p-6">
+      <h1 class="text-4xl text-gray-800 font-semibold">Session</h1>
+      <div class="mt-8 text-2xl text-gray-800 font-medium">
+        <%= @session.name %>
+        <%= if Sessions.private?(@session) do %>
+          <span class="ml-1 text-lg"><i class="fas fa-lock"></i></span>
+        <% end %>
+      </div>
+      <ul class="my-8 fa-ul">
+        <li>
+          <span class="fa-li"><i class="fas fa-cube"></i></span>
+          <span class="text-gray-800"><%= @session.puzzle_type %></span>
+        </li>
+        <li>
+          <span class="fa-li"><i class="fas fa-clock"></i></span>
+          <span class="text-gray-800"><%= format_datetime(@session.inserted_at) %></span>
+        </li>
+      </ul>
+    </div>
+
+    <div class="p-6">
+      <div class="text-lg text-gray-800 font-medium">
+        Chat log
+      </div>
+      <div class="my-8 max-h-72 overflow-auto">
+        <.messages_block messages={@session.room_messages} color_seed={:rand.uniform()} />
+      </div>
+    </div>
+  </div>
+
+  <div class="flex-1 overflow-auto">
+    <.rounds_table
+      rounds={@session.rounds}
+      users={participants(@session)}
+    />
+  </div>
+</div>
