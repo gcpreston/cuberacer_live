@@ -4,7 +4,10 @@
   <.form :let={f} for={@changeset} id="join-room-form" phx-target={@myself} phx-submit="join">
     <div class="mt-3">
       <%= label(f, :password) %>
-      <%= text_input(f, :password) %>
+      <%= password_input(f, :password,
+        class:
+          "block mb-1 w-full rounded-md mt-0.5 px-2 py-0.5 outline outline-1 outline-gray-600"
+      ) %>
       <%= error_tag(f, :password) %>
     </div>
 
