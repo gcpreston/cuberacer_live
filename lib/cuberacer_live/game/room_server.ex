@@ -47,6 +47,10 @@ defmodule CuberacerLive.RoomServer do
     GenServer.cast(room_server, {:send_message, user, message})
   end
 
+  def set_spectating(room_server, %User{} = user, spectating) do
+    GenServer.call(room_server, {:set_spectating, user, spectating})
+  end
+
   def get_participant_count(room_server) do
     GenServer.call(room_server, :get_participant_count)
   end
@@ -97,6 +101,13 @@ defmodule CuberacerLive.RoomServer do
     end
 
     {:reply, :ok, state}
+  end
+
+  def handle_call({:set_spectating, %User{} = user, spectating}, _from, state) do
+    new_entry = ParticipantDataEntry.set_spectating(state.participant_data[user.id], spectating)
+    new_state = put_in(state.participant_data[user.id], new_entry)
+
+    {:reply, :ok, new_state, {:continue, {:tell_game_room_to_fetch, :participant_data}}}
   end
 
   def handle_call(:get_participant_count, _from, state) do

@@ -3,7 +3,7 @@ defmodule CuberacerLive.ParticipantDataEntry do
 
   @type time_entry_method() :: :timer | :keyboard
 
-  defstruct user: nil, meta: %{solving: false, time_entry: :timer}
+  defstruct user: nil, meta: %{solving: false, time_entry: :timer, spectating: false}
 
   @spec new(%User{}) :: %__MODULE__{}
   def new(%User{} = user) do
@@ -28,5 +28,15 @@ defmodule CuberacerLive.ParticipantDataEntry do
   @spec set_time_entry(%__MODULE__{}, time_entry_method()) :: %__MODULE__{}
   def set_time_entry(entry, method) do
     put_in(entry.meta.time_entry, method)
+  end
+
+  @spec get_spectating(%__MODULE__{}) :: boolean()
+  def get_spectating(entry) do
+    entry.meta.spectating
+  end
+
+  @spec set_spectating(%__MODULE__{}, boolean()) :: %__MODULE__{}
+  def set_spectating(entry, spectating) do
+    put_in(entry.meta.spectating, spectating)
   end
 end

@@ -73,6 +73,7 @@ defmodule CuberacerLiveWeb.GameLive.Room do
     |> fetch_stats()
     |> fetch_room_messages()
     |> initialize_time_entry()
+    |> initialize_spectating()
   end
 
   ## Socket populators
@@ -113,6 +114,10 @@ defmodule CuberacerLiveWeb.GameLive.Room do
     assign(socket, time_entry: :timer)
   end
 
+  defp initialize_spectating(socket) do
+    assign(socket, spectating: false)
+  end
+
   ## LiveView handlers
 
   @impl true
@@ -120,6 +125,13 @@ defmodule CuberacerLiveWeb.GameLive.Room do
     RoomServer.create_round(socket.assigns.room_server_pid)
 
     {:noreply, socket}
+  end
+
+  def handle_event("toggle-spectate", _value, socket) do
+    new_spectating_status = !socket.assigns.spectating
+    RoomServer.set_spectating(socket.assigns.room_server_pid, socket.assigns.current_user, new_spectating_status)
+
+    {:noreply, assign(socket, :spectating, new_spectating_status)}
   end
 
   def handle_event("solving", _value, socket) do
