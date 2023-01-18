@@ -34,7 +34,7 @@ defmodule CuberacerLive.MixProject do
     [
       {:argon2_elixir, "~> 2.0"},
       {:assert_html, "~> 0.1.2", only: :test},
-      {:phoenix, "~> 1.7.0-rc.0", override: true},
+      {:phoenix, "~> 1.7.0-rc.2", override: true},
       {:phoenix_ecto, "~> 4.4"},
       {:ecto_sql, "~> 3.6"},
       {:postgrex, ">= 0.0.0"},
