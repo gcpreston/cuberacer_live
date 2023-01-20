@@ -9,11 +9,11 @@ defmodule CuberacerLive.RoomServer do
   alias CuberacerLive.{Sessions, Messaging, Accounts}
   alias CuberacerLive.Sessions.Session
   alias CuberacerLive.Accounts.User
-  alias CuberacerLive.ParticipantDataEntry
+  alias CuberacerLive.{ParticipantData, ParticipantDataEntry}
 
   @lobby_server_topic inspect(CuberacerLive.LobbyServer)
 
-  defstruct [:session, participant_data: %{}, timeout_ref: nil]
+  defstruct [:session, participant_data: ParticipantData.new([]), timeout_ref: nil]
 
   ## API
 
@@ -89,8 +89,12 @@ defmodule CuberacerLive.RoomServer do
         _from,
         %{session: session} = state
       ) do
-    new_entry = ParticipantDataEntry.set_solving(state.participant_data[user.id], false)
-    new_state = put_in(state.participant_data[user.id], new_entry)
+    new_entry =
+      ParticipantData.get_entry(state.participant_data, user)
+      |> ParticipantDataEntry.set_solving(false)
+
+    new_data = ParticipantData.set_entry(state.participant_data, new_entry)
+    new_state = Map.put(state, :participant_data, new_data)
     {:ok, solve} = Sessions.create_solve(session, user, time, penalty)
     {:reply, solve, new_state}
   end
@@ -104,8 +108,12 @@ defmodule CuberacerLive.RoomServer do
   end
 
   def handle_call({:set_spectating, %User{} = user, spectating}, _from, state) do
-    new_entry = ParticipantDataEntry.set_spectating(state.participant_data[user.id], spectating)
-    new_state = put_in(state.participant_data[user.id], new_entry)
+    new_entry =
+      ParticipantData.get_entry(state.participant_data, user)
+      |> ParticipantDataEntry.set_spectating(spectating)
+
+    new_data = ParticipantData.set_entry(state.participant_data, new_entry)
+    new_state = Map.put(state, :participant_data, new_data)
 
     {:reply, :ok, new_state, {:continue, {:tell_game_room_to_fetch, :participant_data}}}
   end
@@ -145,6 +153,7 @@ defmodule CuberacerLive.RoomServer do
         user_id
       end)
 
+    # TODO: Move this to ParticipantData somehow
     new_participant_data =
       Map.filter(state.participant_data, fn {user_id, _data} ->
         not Enum.member?(leaves_user_ids, user_id)

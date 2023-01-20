@@ -22,6 +22,7 @@ defmodule CuberacerLiveWeb.GameLive.Components do
       <%= if Sessions.private?(@session) do %>
         <span class="absolute top-2 right-2"><i class="fas fa-lock"></i></span>
       <% end %>
+
       <div class="text-center">
         <span class="text-lg font-medium"><%= @session.name %></span>
       </div>
@@ -127,7 +128,7 @@ defmodule CuberacerLiveWeb.GameLive.Components do
     """
   end
 
-  attr :participant_data, :list, required: true, doc: "See RoomServer.participant_data_entry/1."
+  attr :participants, :map, required: true, doc: "ParticipantData for participants"
   attr :current_round, :any, required: true, doc: "The current Sessions.Round for this session."
   attr :past_rounds, :list, required: true, doc: "The previous Sessions.Rounds for this session."
 
@@ -141,7 +142,7 @@ defmodule CuberacerLiveWeb.GameLive.Components do
     >
       <thead class="bg-gray-50 sticky top-0">
         <tr class="flex">
-          <%= for {{user_id, entry}, i} <- Enum.with_index(@participant_data) do %>
+          <%= for {{user_id, entry}, i} <- Enum.with_index(@participants) do %>
             <th
               scope="col"
               id={"header-cell-user-#{user_id}"}
@@ -167,7 +168,7 @@ defmodule CuberacerLiveWeb.GameLive.Components do
       </thead>
       <tbody id="times-table-body" class="bg-white" x-show="bottomBarShow" phx-update="prepend">
         <tr id={"round-#{@current_round.id}"} class="flex t_round-row" title={@current_round.scramble}>
-          <%= for {{user_id, entry}, i} <- Enum.with_index(@participant_data) do %>
+          <%= for {{user_id, entry}, i} <- Enum.with_index(@participants) do %>
             <td
               id={"round-#{@current_round.id}-solve-user-#{user_id}"}
               class="w-28 border-b px-2 py-4 whitespace-nowrap"
@@ -189,7 +190,7 @@ defmodule CuberacerLiveWeb.GameLive.Components do
         </tr>
         <%= for round <- @past_rounds do %>
           <tr id={"round-#{round.id}"} class="flex t_round-row" title={round.scramble}>
-            <%= for {{user_id, data}, i} <- Enum.with_index(@participant_data) do %>
+            <%= for {{user_id, data}, i} <- Enum.with_index(@participants) do %>
               <td
                 id={"round-#{round.id}-solve-user-#{user_id}"}
                 class="w-28 border-b px-2 py-4 whitespace-nowrap"
@@ -255,7 +256,8 @@ defmodule CuberacerLiveWeb.GameLive.Components do
     """
   end
 
-  attr :num_present_users, :integer, required: true
+  attr :num_participants, :integer, required: true
+  attr :num_spectators, :integer, required: true
 
   def presence(assigns) do
     # Taps into 'room' Alpine data
@@ -274,7 +276,12 @@ defmodule CuberacerLiveWeb.GameLive.Components do
       <tbody class="bg-white">
         <tr>
           <td class="px-6 whitespace-nowrap">
-            <%= @num_present_users %> <%= Inflex.inflect("participant", @num_present_users) %>
+            <%= @num_participants %> <%= Inflex.inflect("participant", @num_participants) %>
+          </td>
+        </tr>
+        <tr :if={@num_spectators > 0}>
+          <td class="px-6 whitespace-nowrap">
+            <%= @num_spectators %> <%= Inflex.inflect("spectator", @num_spectators) %>
           </td>
         </tr>
         <tr x-show="numUsersPages > 1">

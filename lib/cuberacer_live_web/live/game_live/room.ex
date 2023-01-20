@@ -4,7 +4,7 @@ defmodule CuberacerLiveWeb.GameLive.Room do
   import CuberacerLive.Repo, only: [preload: 2]
   import CuberacerLiveWeb.GameLive.Components
 
-  alias CuberacerLive.{RoomServer, Sessions, Accounts, Messaging}
+  alias CuberacerLive.{RoomServer, Sessions, Accounts, Messaging, ParticipantData}
   alias CuberacerLiveWeb.{Presence, Endpoint}
 
   @impl true
@@ -129,7 +129,12 @@ defmodule CuberacerLiveWeb.GameLive.Room do
 
   def handle_event("toggle-spectate", _value, socket) do
     new_spectating_status = !socket.assigns.spectating
-    RoomServer.set_spectating(socket.assigns.room_server_pid, socket.assigns.current_user, new_spectating_status)
+
+    RoomServer.set_spectating(
+      socket.assigns.room_server_pid,
+      socket.assigns.current_user,
+      new_spectating_status
+    )
 
     {:noreply, assign(socket, :spectating, new_spectating_status)}
   end
