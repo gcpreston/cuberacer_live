@@ -5,6 +5,7 @@
 const READY_HOLD_TIME_MS = 500;
 const PREPARING_COLOR = 'text-red-500';
 const READY_COLOR = 'text-green-400';
+const SPECTATING_COLOR = 'text-gray-400'
 
 export default () => ({
   clock: 0,
@@ -12,7 +13,8 @@ export default () => ({
   interval: null,
   readyTimeout: null,
   ready: false,
-  hasCurrentSolve: null, // shadows assign has_current_solve?
+  hasCurrentSolve: false,
+  spectating: false, // shadows spectating assign
 
   get formattedTime() {
     const secondsVal = Math.floor(this.clock / 1000) % 60;
@@ -38,13 +40,25 @@ export default () => ({
       return READY_COLOR;
     } else if (this.readyTimeout && !this.interval) {
       return PREPARING_COLOR;
+    } else if (this.spectating) {
+      return SPECTATING_COLOR;
     }
 
     return '';
   },
 
+  initialize(currentSolveTime, spectating) {
+    if (currentSolveTime) {
+      this.presetTime(currentSolveTime);
+    } else {
+      this.hasCurrentSolve = false;
+    }
+
+    this.spectating = spectating;
+  },
+
   handlePointDown() {
-    if (!this.$store.inputFocused && !this.hasCurrentSolve) {
+    if (!this.$store.inputFocused && !this.hasCurrentSolve && !this.spectating) {
       if (this.interval) {
         this.stopTime();
       } else if (!this.readyTimeout) {

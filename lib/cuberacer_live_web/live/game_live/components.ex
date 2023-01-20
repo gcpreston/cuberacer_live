@@ -40,14 +40,13 @@ defmodule CuberacerLiveWeb.GameLive.Components do
   end
 
   attr :current_solve, :any, required: true, doc: "See Sessions.get_current_solve/2."
+  attr :spectating, :boolean, required: true
 
   def timer(assigns) do
     ~H"""
     <div
       id="timer"
-      x-init={
-        if @current_solve, do: "presetTime(#{@current_solve.time})", else: "hasCurrentSolve = false"
-      }
+      x-init={"initialize(#{if @current_solve, do: @current_solve.time, else: "null"}, #{@spectating})"}
     >
       <span id="time" x-text="formattedTime" x-bind:class="timeColor"></span>
     </div>
