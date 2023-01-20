@@ -6,7 +6,7 @@ defmodule CuberacerLive.RoomServer do
 
   require Logger
 
-  alias CuberacerLive.{Sessions, Messaging, Accounts}
+  alias CuberacerLive.{Sessions, Messaging}
   alias CuberacerLive.Sessions.Session
   alias CuberacerLive.Accounts.User
   alias CuberacerLive.{ParticipantData, ParticipantDataEntry}
@@ -115,7 +115,7 @@ defmodule CuberacerLive.RoomServer do
     new_data = ParticipantData.set_entry(state.participant_data, new_entry)
     new_state = Map.put(state, :participant_data, new_data)
 
-    {:reply, :ok, new_state, {:continue, {:tell_game_room_to_fetch, :participant_data}}}
+    {:reply, :ok, new_state, {:continue, {:tell_game_room_to_fetch, :participants}}}
   end
 
   def handle_call(:get_participant_count, _from, state) do
@@ -142,9 +142,11 @@ defmodule CuberacerLive.RoomServer do
         state
       ) do
     joins_participant_data =
-      Accounts.get_users(Map.keys(payload.joins))
-      |> Map.new(fn user ->
-        {user.id, ParticipantDataEntry.new(user)}
+      Enum.map(payload.joins, fn {_user_id, presence} ->
+        {presence.user, %{spectating: List.first(presence.metas).spectating}}
+      end)
+      |> Map.new(fn {user, meta} ->
+        {user.id, ParticipantDataEntry.new(user, meta)}
       end)
 
     leaves_user_ids =

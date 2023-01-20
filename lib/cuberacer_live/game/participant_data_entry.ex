@@ -5,9 +5,10 @@ defmodule CuberacerLive.ParticipantDataEntry do
 
   defstruct user: nil, meta: %{solving: false, time_entry: :timer, spectating: false}
 
-  @spec new(%User{}) :: %__MODULE__{}
-  def new(%User{} = user) do
-    %__MODULE__{user: user}
+  @spec new(%User{}, list()) :: %__MODULE__{}
+  def new(%User{} = user, opts \\ []) do
+    entry = %__MODULE__{user: user}
+    Map.put(entry, :meta, Enum.into(opts, entry.meta))
   end
 
   @spec get_solving(%__MODULE__{}) :: boolean()

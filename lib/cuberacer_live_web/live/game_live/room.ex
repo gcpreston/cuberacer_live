@@ -8,10 +8,12 @@ defmodule CuberacerLiveWeb.GameLive.Room do
   alias CuberacerLiveWeb.{Presence, Endpoint}
 
   @impl true
-  def mount(%{"id" => session_id}, %{"user_token" => user_token}, socket)
+  def mount(%{"id" => session_id} = params, %{"user_token" => user_token}, socket)
       when not is_nil(user_token) do
     session = Sessions.get_session(session_id)
     user = Accounts.get_user_by_session_token(user_token)
+    spectating = params["spectating"] || false
+    meta = %{spectating: spectating}
 
     socket =
       cond do
@@ -28,8 +30,12 @@ defmodule CuberacerLiveWeb.GameLive.Room do
           push_navigate_to_room_join(socket, session)
 
         true ->
-          track_and_subscribe(socket, user, session)
-          socket_pipeline(socket, user, session)
+          if connected?(socket) do
+            track_presence(session, user, meta)
+            subscribe_to_pubsubs(session)
+          end
+
+          socket_pipeline(socket, user, session, spectating)
       end
 
     {:ok, socket, temporary_assigns: [past_rounds: [], room_messages: []]}
@@ -53,16 +59,18 @@ defmodule CuberacerLiveWeb.GameLive.Room do
     |> push_navigate(to: ~p"/lobby/join/#{session.id}")
   end
 
-  defp track_and_subscribe(socket, user, session) do
-    if connected?(socket) do
-      track_presence(session.id, user.id)
-      Endpoint.subscribe(pubsub_topic(session.id))
-      Sessions.subscribe(session.id)
-      Messaging.subscribe(session.id)
-    end
+  defp track_presence(session, user, meta) do
+    topic = room_server_topic(session.id)
+    Presence.track(self(), topic, user.id, meta)
   end
 
-  defp socket_pipeline(socket, current_user, session) do
+  defp subscribe_to_pubsubs(session) do
+    Endpoint.subscribe(pubsub_topic(session.id))
+    Sessions.subscribe(session.id)
+    Messaging.subscribe(session.id)
+  end
+
+  defp socket_pipeline(socket, current_user, session, spectating) do
     socket
     |> assign(:session, session)
     |> assign(:current_user, current_user)
@@ -73,7 +81,7 @@ defmodule CuberacerLiveWeb.GameLive.Room do
     |> fetch_stats()
     |> fetch_room_messages()
     |> initialize_time_entry()
-    |> initialize_spectating()
+    |> initialize_spectating(spectating)
   end
 
   ## Socket populators
@@ -114,8 +122,8 @@ defmodule CuberacerLiveWeb.GameLive.Room do
     assign(socket, time_entry: :timer)
   end
 
-  defp initialize_spectating(socket) do
-    assign(socket, spectating: false)
+  defp initialize_spectating(socket, spectating) do
+    assign(socket, spectating: spectating)
   end
 
   ## LiveView handlers
@@ -298,11 +306,6 @@ defmodule CuberacerLiveWeb.GameLive.Room do
 
   defp room_server_topic(session_id) do
     "#{inspect(RoomServer)}:#{session_id}"
-  end
-
-  defp track_presence(session_id, user_id) do
-    topic = room_server_topic(session_id)
-    Presence.track(self(), topic, user_id, %{})
   end
 
   defp scramble_text_size(scramble) do
