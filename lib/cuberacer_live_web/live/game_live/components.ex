@@ -133,6 +133,8 @@ defmodule CuberacerLiveWeb.GameLive.Components do
 
   def times_table(assigns) do
     # Taps into 'room' Alpine data
+    assigns = assign(assigns, :participants_with_index, Enum.with_index(assigns.participants))
+
     ~H"""
     <table
       id="times-table"
@@ -141,7 +143,7 @@ defmodule CuberacerLiveWeb.GameLive.Components do
     >
       <thead class="bg-gray-50 sticky top-0">
         <tr class="flex">
-          <%= for {{user_id, entry}, i} <- Enum.with_index(@participants) do %>
+          <%= for {{user_id, entry}, i} <- @participants_with_index do %>
             <th
               scope="col"
               id={"header-cell-user-#{user_id}"}
@@ -167,7 +169,7 @@ defmodule CuberacerLiveWeb.GameLive.Components do
       </thead>
       <tbody id="times-table-body" class="bg-white" x-show="bottomBarShow" phx-update="prepend">
         <tr id={"round-#{@current_round.id}"} class="flex t_round-row" title={@current_round.scramble}>
-          <%= for {{user_id, entry}, i} <- Enum.with_index(@participants) do %>
+          <%= for {{user_id, entry}, i} <- @participants_with_index do %>
             <td
               id={"round-#{@current_round.id}-solve-user-#{user_id}"}
               class="w-28 border-b px-2 py-4 whitespace-nowrap"
@@ -189,7 +191,7 @@ defmodule CuberacerLiveWeb.GameLive.Components do
         </tr>
         <%= for round <- @past_rounds do %>
           <tr id={"round-#{round.id}"} class="flex t_round-row" title={round.scramble}>
-            <%= for {{user_id, data}, i} <- Enum.with_index(@participants) do %>
+            <%= for {{user_id, data}, i} <- @participants_with_index do %>
               <td
                 id={"round-#{round.id}-solve-user-#{user_id}"}
                 class="w-28 border-b px-2 py-4 whitespace-nowrap"
