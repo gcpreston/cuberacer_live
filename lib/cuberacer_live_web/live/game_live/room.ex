@@ -12,7 +12,7 @@ defmodule CuberacerLiveWeb.GameLive.Room do
       when not is_nil(user_token) do
     session = Sessions.get_session(session_id)
     user = Accounts.get_user_by_session_token(user_token)
-    spectating = params["spectating"] || false
+    spectating = (params["spectating"] == "true") || false
     meta = %{spectating: spectating}
 
     socket =
@@ -328,5 +328,9 @@ defmodule CuberacerLiveWeb.GameLive.Room do
       {sec, _rest} = Float.parse(input)
       trunc(sec * 1000)
     end
+  end
+
+  defp has_participants?(participant_data) do
+    !Enum.empty?(ParticipantData.non_spectators(participant_data))
   end
 end

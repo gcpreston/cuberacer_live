@@ -117,6 +117,34 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       assert html =~ "hello world!"
       assert html =~ "sup guys"
     end
+
+    test "can set spectating", %{conn: conn1, user: user1, session: session} do
+      conn1 = log_in_user(conn1, user1)
+      user2 = user_fixture()
+      conn2 = Phoenix.ConnTest.build_conn() |> log_in_user(user2)
+
+      {:ok, lv1, html1} = live(conn1, ~p"/rooms/#{session.id}")
+      {:ok, lv2, html2} = live(conn2, ~p"/rooms/#{session.id}?spectating=true")
+
+      refute html1 =~ "Spectating"
+      assert html2 =~ "Spectating"
+      refute lv1 |> element("#header-cell-user-#{user2.id}") |> has_element?()
+      refute lv2 |> element("#header-cell-user-#{user2.id}") |> has_element?()
+    end
+
+    test "can set not spectating", %{conn: conn1, user: user1, session: session} do
+      conn1 = log_in_user(conn1, user1)
+      user2 = user_fixture()
+      conn2 = Phoenix.ConnTest.build_conn() |> log_in_user(user2)
+
+      {:ok, lv1, html1} = live(conn1, ~p"/rooms/#{session.id}")
+      {:ok, lv2, html2} = live(conn2, ~p"/rooms/#{session.id}?spectating=false")
+
+      refute html1 =~ "Spectating"
+      refute html2 =~ "Spectating"
+      assert lv1 |> element("#header-cell-user-#{user2.id}") |> has_element?()
+      assert lv2 |> element("#header-cell-user-#{user2.id}") |> has_element?()
+    end
   end
 
   describe "interface" do
@@ -687,6 +715,23 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
              |> element(~s{[id^="room-message-"]:nth-child(2) span:nth-child(2)})
              |> render() =~ "second message"
     end
+
+    test "toggle-spectate toggles spectating mode", %{conn: conn1, user: user1, session: session} do
+      conn1 = log_in_user(conn1, user1)
+      user2 = user_fixture()
+      conn2 = Phoenix.ConnTest.build_conn() |> log_in_user(user2)
+
+      {:ok, lv1, _html1} = live(conn1, ~p"/rooms/#{session.id}")
+      {:ok, lv2, html2} = live(conn2, ~p"/rooms/#{session.id}")
+
+      refute html2 =~ "Spectating"
+      assert lv1 |> element("#header-cell-user-#{user2.id}") |> has_element?()
+      assert lv2 |> element("#header-cell-user-#{user2.id}") |> has_element?()
+
+      assert render_click(lv2, "toggle-spectate") =~ "Spectating"
+      refute lv1 |> element("#header-cell-user-#{user2.id}") |> has_element?()
+      refute lv2 |> element("#header-cell-user-#{user2.id}") |> has_element?()
+    end
   end
 
   describe "Sessions events" do
@@ -801,6 +846,29 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       html = render(lv)
       assert html =~ "1 participant"
       refute html =~ other_user.username
+    end
+
+    test "loads previous rounds when joining as spectator", %{conn: conn1, user: user1, session: session} do
+      conn1 = log_in_user(conn1, user1)
+      user2 = user_fixture()
+      conn2 = Phoenix.ConnTest.build_conn() |> log_in_user(user2)
+
+      round1 = Sessions.get_current_round!(session)
+      Sessions.create_solve(session, user2, 5660, "OK")
+      Sessions.create_round(session)
+
+      {:ok, lv1, _html1} = live(conn1, ~p"/rooms/#{session.id}")
+      {:ok, lv2, html2} = live(conn2, ~p"/rooms/#{session.id}?spectating=true")
+
+      assert html2 =~ "Spectating"
+      refute lv1 |> element("#header-cell-user-#{user2.id}") |> has_element?()
+      refute lv2 |> element("#header-cell-user-#{user2.id}") |> has_element?()
+
+      refute render_click(lv2, "toggle-spectate") =~ "Spectating"
+      assert lv1 |> element("#header-cell-user-#{user2.id}") |> has_element?()
+      assert lv2 |> element("#header-cell-user-#{user2.id}") |> has_element?()
+      assert lv1 |> element("#t_cell-round-#{round1.id}-user-#{user2.id}") |> has_element?()
+      assert lv2 |> element("#t_cell-round-#{round1.id}-user-#{user2.id}") |> has_element?()
     end
   end
 
