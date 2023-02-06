@@ -19,7 +19,7 @@ defmodule CuberacerLive.MixProject do
   def application do
     [
       mod: {CuberacerLive.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:logger, :runtime_tools, :ssl]
     ]
   end
 
@@ -52,7 +52,6 @@ defmodule CuberacerLive.MixProject do
       {:jason, "~> 1.2"},
       {:plug_cowboy, "~> 2.5"},
       {:whisk, "~> 0.1.0"},
-      {:distillery, "~> 2.1"},
       {:finch, "~> 0.10.2"},
       {:inflex, "~> 2.1"},
       {:hashids, "~>2.0"}

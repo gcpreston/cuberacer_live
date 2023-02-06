@@ -10,24 +10,13 @@ import Config
 # which you should run after static files are built and
 # before starting your production server.
 config :cuberacer_live, CuberacerLiveWeb.Endpoint,
-  server: true,
-  load_from_system_env: true,
   http: [port: {:system, "PORT"}],
-  secret_key_base: "${SECRET_KEY_BASE}",
-  url: [host: "live.cuberacer.io", port: 443],
-  force_ssl: [rewrite_on: [:x_forwarded_proto]],
+  url: [host: "cuberacer.io", port: 443, scheme: "https"],
   cache_static_manifest: "priv/static/cache_manifest.json"
 
-config :cuberacer_live, CuberacerLive.Repo,
-  adapter: Ecto.Adapters.Postgres,
-  url: "${DATABASE_URL}",
-  database: "",
-  ssl: true,
-  pool_size: 2
-
 config :cuberacer_live, CuberacerLive.Mailer,
-  adapter: Swoosh.Adapters.Sendgrid,
-  api_key: "${SENDGRID_API_KEY}"
+  adapter: Swoosh.Adapters.Sendinblue,
+  api_key: {:system, "SENDINBLUE_API_KEY"}
 
 config :cuberacer_live, :new_round_debounce_ms, :timer.seconds(2)
 config :cuberacer_live, :empty_room_timeout_ms, :timer.seconds(30)
