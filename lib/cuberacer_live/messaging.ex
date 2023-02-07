@@ -26,7 +26,12 @@ defmodule CuberacerLive.Messaging do
 
   """
   def list_room_messages(%Session{id: session_id}) do
-    query = from m in RoomMessage, where: m.session_id == ^session_id, preload: :user
+    query =
+      from m in RoomMessage,
+        where: m.session_id == ^session_id,
+        order_by: [asc: m.id],
+        preload: :user
+
     Repo.all(query)
   end
 
