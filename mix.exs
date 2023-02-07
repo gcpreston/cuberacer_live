@@ -51,7 +51,7 @@ defmodule CuberacerLive.MixProject do
       {:gettext, "~> 0.18"},
       {:jason, "~> 1.2"},
       {:plug_cowboy, "~> 2.5"},
-      {:whisk, "~> 0.1.0"},
+      {:whisk, "~> 0.2.0"},
       {:finch, "~> 0.10.2"},
       {:inflex, "~> 2.1"},
       {:hashids, "~>2.0"}

@@ -47,5 +47,5 @@
   "telemetry_poller": {:hex, :telemetry_poller, "1.0.0", "db91bb424e07f2bb6e73926fcafbfcbcb295f0193e0a00e825e589a0a47e8453", [:rebar3], [{:telemetry, "~> 1.0", [hex: :telemetry, repo: "hexpm", optional: false]}], "hexpm", "b3a24eafd66c3f42da30fc3ca7dda1e9d546c12250a2d60d7b81d264fbec4f6e"},
   "websock": {:hex, :websock, "0.4.3", "184ac396bdcd3dfceb5b74c17d221af659dd559a95b1b92041ecb51c9b728093", [:mix], [], "hexpm", "5e4dd85f305f43fd3d3e25d70bec4a45228dfed60f0f3b072d8eddff335539cf"},
   "websock_adapter": {:hex, :websock_adapter, "0.4.5", "30038a3715067f51a9580562c05a3a8d501126030336ffc6edb53bf57d6d2d26", [:mix], [{:bandit, "~> 0.6", [hex: :bandit, repo: "hexpm", optional: true]}, {:plug, "~> 1.14", [hex: :plug, repo: "hexpm", optional: false]}, {:plug_cowboy, "~> 2.6", [hex: :plug_cowboy, repo: "hexpm", optional: true]}, {:websock, "~> 0.4", [hex: :websock, repo: "hexpm", optional: false]}], "hexpm", "1d9812dc7e703c205049426fd4fe0852a247a825f91b099e53dc96f68bafe4c8"},
-  "whisk": {:hex, :whisk, "0.1.0", "24c079af8c56138765f35057d44e765b8d0f57b4ed55deee35be3619bb37b5fd", [:mix], [], "hexpm", "f0ed53d46aee193813ad99c428ada8b3609ac91e5ce7a6710c80d9cc4da11fc2"},
+  "whisk": {:hex, :whisk, "0.2.0", "6c5bc335eb11d3c52bf50c535c76fac35b7428804c62dbab1fa702449ec1bf4d", [:mix], [], "hexpm", "aca1bbdb60a0f10ef7fc1d9c982af09e7b3fc0f1a022a23578822b90888cdaa7"},
 }

@@ -7,20 +7,7 @@ defmodule CuberacerLive.Sessions.Session do
     field :password, :string, virtual: true, redact: true
     field :hashed_password, :string, redact: true
 
-    field :puzzle_type, Ecto.Enum,
-      values: [
-        :"2x2",
-        :"3x3",
-        :"4x4",
-        :"5x5",
-        :"6x6",
-        :"7x7",
-        :Megaminx,
-        :Pyraminx,
-        :"Square-1",
-        :Skewb,
-        :Clock
-      ]
+    field :puzzle_type, Ecto.Enum, values: Whisk.puzzle_types()
 
     belongs_to :host, CuberacerLive.Accounts.User
     has_many :rounds, CuberacerLive.Sessions.Round
