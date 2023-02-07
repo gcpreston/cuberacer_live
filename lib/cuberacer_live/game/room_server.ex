@@ -113,7 +113,7 @@ defmodule CuberacerLive.RoomServer do
         {:send_message, %User{} = user, message},
         %{session: session} = state
       ) do
-    {:ok, _message} = Messaging.create_room_message(session, user, message)
+    Messaging.create_room_message(session, user, message)
     {:noreply, state}
   end
 
