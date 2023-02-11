@@ -13,7 +13,7 @@ defmodule CuberacerLive.RoomServer do
 
   @lobby_server_topic inspect(CuberacerLive.LobbyServer)
 
-  defstruct [:session, participant_data: %{}, timeout_ref: nil]
+  defstruct [:session, participant_data: %{}, timeout_ref: nil, empty_round_flag: true]
 
   ## API
 
@@ -74,9 +74,13 @@ defmodule CuberacerLive.RoomServer do
 
   @impl true
   def handle_call(:create_round, _from, %{session: session} = state) do
-    case Sessions.create_round_debounced(session) do
-      {:ok, round} -> {:reply, round.scramble, state}
-      error -> {:reply, error, state}
+    if state.empty_round_flag do
+      {:reply, {:error, :empty_round}, state}
+    else
+      case Sessions.create_round_debounced(session) do
+        {:ok, round} -> {:reply, round.scramble, %{state | empty_round_flag: true}}
+        error -> {:reply, error, state}
+      end
     end
   end
 
@@ -86,7 +90,7 @@ defmodule CuberacerLive.RoomServer do
         %{session: session} = state
       ) do
     new_entry = ParticipantDataEntry.set_solving(state.participant_data[user.id], false)
-    new_state = put_in(state.participant_data[user.id], new_entry)
+    new_state = %{put_in(state.participant_data[user.id], new_entry) | empty_round_flag: false}
     {:ok, solve} = Sessions.create_solve(session, user, time, penalty)
     {:reply, solve, new_state}
   end
