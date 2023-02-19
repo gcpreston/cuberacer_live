@@ -294,6 +294,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
 
       :timer.sleep(new_round_debounce_ms())
 
+      render_hook(lv1, "timer-submit", time: 42)
       render_click(lv1, "new-round")
       render_click(lv2, "new-round")
 
