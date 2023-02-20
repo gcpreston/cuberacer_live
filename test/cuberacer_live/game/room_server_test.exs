@@ -53,15 +53,8 @@ defmodule CuberacerLive.RoomServerTest do
       })
 
       assert %Solve{} = RoomServer.create_solve(pid, user, 15341, :OK)
-      :timer.sleep(new_round_debounce_ms())
       assert is_binary(RoomServer.create_round(pid))
       assert {:error, :empty_round} = RoomServer.create_round(pid)
     end
-  end
-
-  ## Helpers
-
-  defp new_round_debounce_ms do
-    Application.get_env(:cuberacer_live, :new_round_debounce_ms)
   end
 end

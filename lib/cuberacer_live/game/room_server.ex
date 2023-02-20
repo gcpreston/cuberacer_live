@@ -77,7 +77,7 @@ defmodule CuberacerLive.RoomServer do
     if state.empty_round_flag do
       {:reply, {:error, :empty_round}, state}
     else
-      case Sessions.create_round_debounced(session) do
+      case Sessions.create_round(session) do
         {:ok, round} -> {:reply, round.scramble, %{state | empty_round_flag: true}}
         error -> {:reply, error, state}
       end

@@ -13,10 +13,6 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
 
   ## Helpers
 
-  defp new_round_debounce_ms do
-    Application.get_env(:cuberacer_live, :new_round_debounce_ms)
-  end
-
   defp empty_room_timeout_ms do
     Application.get_env(:cuberacer_live, :empty_room_timeout_ms)
   end
@@ -291,8 +287,6 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       num_rounds_before = Enum.count(Sessions.list_rounds_of_session(session))
 
       assert_html(html1, "tr.t_round-row", count: num_rounds_before)
-
-      :timer.sleep(new_round_debounce_ms())
 
       render_hook(lv1, "timer-submit", time: 42)
       render_click(lv1, "new-round")

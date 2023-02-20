@@ -392,32 +392,6 @@ defmodule CuberacerLive.Sessions do
   end
 
   @doc """
-  Creates a round. Does nothing if a round has just been created for the same session.
-
-  ## Examples
-
-      iex> create_round_debounced(%Session{})
-      {:ok, %Round{}}
-
-      iex> create_round_debounced(%Session{})
-      {:error, :too_soon}
-
-      iex> create_round_debounced(%Session{}, scramble: 42)
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def create_round_debounced(%Session{} = session, scramble \\ nil) do
-    current_round = get_current_round!(session)
-
-    if NaiveDateTime.diff(NaiveDateTime.utc_now(), current_round.inserted_at, :millisecond) <
-         new_round_debounce_ms() do
-      {:error, :too_soon}
-    else
-      create_round(session, scramble)
-    end
-  end
-
-  @doc """
   Deletes a round.
 
   ## Examples
@@ -696,10 +670,6 @@ defmodule CuberacerLive.Sessions do
       padded_seconds = String.pad_leading("#{seconds}", 2, "0")
       "#{minutes}:#{padded_seconds}.#{padded_milliseconds}"
     end
-  end
-
-  defp new_round_debounce_ms do
-    Application.get_env(:cuberacer_live, :new_round_debounce_ms)
   end
 
   ## Notify subscribers
