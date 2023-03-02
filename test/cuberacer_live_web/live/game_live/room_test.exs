@@ -663,11 +663,11 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       num_messages_after = Enum.count(Messaging.list_room_messages(session))
 
       assert view
-             |> element(~s{[id^="room-message-"] span:first-child()})
+             |> element(~s{[id^="room_messages-"] span:first-child()})
              |> render() =~ user.username
 
       assert view
-             |> element(~s{[id^="room-message-"] span:nth-child(2)})
+             |> element(~s{[id^="room_messages-"] span:nth-child(2)})
              |> render() =~ "hello world"
 
       assert num_messages_after == num_messages_before + 1
@@ -675,11 +675,11 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       render_click(view, "send-message", %{"message" => "second message"})
 
       assert view
-             |> element(~s{[id^="room-message-"]:nth-child(2) span:first-child()})
+             |> element(~s{[id^="room_messages-"]:nth-child(2) span:first-child()})
              |> render() =~ user.username
 
       assert view
-             |> element(~s{[id^="room-message-"]:nth-child(2) span:nth-child(2)})
+             |> element(~s{[id^="room_messages-"]:nth-child(2) span:nth-child(2)})
              |> render() =~ "second message"
     end
   end
@@ -725,11 +725,11 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       room_message = room_message_fixture(session: session, user: user)
 
       assert view
-             |> element("#room-message-#{room_message.id} span:first-child()")
+             |> element("#room_messages-#{room_message.id} span:first-child()")
              |> render() =~ user.username
 
       assert view
-             |> element("#room-message-#{room_message.id} span:nth-child(2)")
+             |> element("#room_messages-#{room_message.id} span:nth-child(2)")
              |> render() =~ room_message.message
     end
   end

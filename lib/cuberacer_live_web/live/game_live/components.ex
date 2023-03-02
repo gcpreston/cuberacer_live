@@ -97,9 +97,10 @@ defmodule CuberacerLiveWeb.GameLive.Components do
     }"
     >
       <div class="flex-1 flex flex-col-reverse overflow-auto">
-        <div id="room-messages" phx-update="append" class="divide-y">
-          <%= for room_message <- @room_messages do %>
+        <div id="room-messages" phx-update="stream" class="divide-y">
+          <%= for {id, room_message} <- @room_messages do %>
             <.chat_message
+              id={id}
               room_message={CuberacerLive.Repo.preload(room_message, :user)}
               color_seed={@color_seed}
             />
