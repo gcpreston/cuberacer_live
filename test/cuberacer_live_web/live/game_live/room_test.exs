@@ -437,7 +437,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
 
       lv
       |> element("#keyboard-input")
-      |> render_submit(%{"keyboard_input" => %{"time" => "1:5.12"}})
+      |> render_submit(%{"time" => "1:5.12"})
 
       num_solves_after = Enum.count(Sessions.list_solves_of_session(session))
 

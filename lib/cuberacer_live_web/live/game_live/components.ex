@@ -55,7 +55,7 @@ defmodule CuberacerLiveWeb.GameLive.Components do
 
   def keyboard_input(assigns) do
     ~H"""
-    <.form :let={f} id="keyboard-input" for={:keyboard_input} phx-submit="keyboard-submit">
+    <.form :let={f} id="keyboard-input" for={%{}} phx-submit="keyboard-submit">
       <div>
         <%= text_input(f, :time,
           class: "w-72 mx-auto border border-gray-400 rounded-md bg-gray-50",
