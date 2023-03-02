@@ -159,7 +159,7 @@ defmodule CuberacerLiveWeb.GameLive.Room do
      |> fetch_stats()}
   end
 
-  def handle_event("keyboard-submit", %{"keyboard_input" => %{"time" => time}}, socket) do
+  def handle_event("keyboard-submit", %{"time" => time}, socket) do
     time_pattern = ~r/^(\d{1,2}:)?\d{1,2}(\.\d{0,3})?$/
 
     if Regex.match?(time_pattern, time) && !socket.assigns.current_solve do

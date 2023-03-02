@@ -11,7 +11,7 @@
     <span class="rounded bg-orange-300 text-orange-900 text-sm font-medium px-1 py-0.5">
       Unconfirmed
     </span>
-    <.form :let={resend_confirm} for={:user} action={~p"/users/confirm"} class="inline">
+    <.form :let={resend_confirm} for={%{}} as={:user} action={~p"/users/confirm"} class="inline">
       <%= hidden_input(resend_confirm, :email, value: @conn.assigns.current_user.email) %>
       <%= submit("Resend confirmation email", class: "text-blue-500 hover:underline") %>
     </.form>
