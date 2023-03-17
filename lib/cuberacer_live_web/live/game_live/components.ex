@@ -38,12 +38,13 @@ defmodule CuberacerLiveWeb.GameLive.Components do
     """
   end
 
+  attr :id, :string, default: "timer", doc: "The HTML ID for the timer div."
   attr :current_solve, :any, required: true, doc: "See Sessions.get_current_solve/2."
 
   def timer(assigns) do
     ~H"""
     <div
-      id="timer"
+      id={@id}
       x-init={
         if @current_solve, do: "presetTime(#{@current_solve.time})", else: "hasCurrentSolve = false"
       }
@@ -64,6 +65,20 @@ defmodule CuberacerLiveWeb.GameLive.Components do
         ) %>
       </div>
     </.form>
+    """
+  end
+
+  def stackmat_display(assigns) do
+    # Taps into 'timer' Alpine data
+    ~H"""
+    <div class="flex gap-10 justify-center">
+      <svg width="40" height="40">
+        <circle cx="20" cy="20" r="20" x-bind:fill="leftHandColor" />
+      </svg>
+      <svg width="40" height="40">
+        <circle cx="20" cy="20" r="20" x-bind:fill="rightHandColor" />
+      </svg>
+    </div>
     """
   end
 

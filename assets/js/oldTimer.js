@@ -2,7 +2,24 @@
  * Timer state, for Alpine x-data directive.
  */
 
-import { Stackmat } from 'stackmat';
+/**
+ * IDEA
+ * - What does LiveView need from the timer?
+ *   - current clock number
+ *   - timer state (preparing, ready, etc)
+ * - Timer must be able to submit events to LiveView (done via global hook)
+ *
+ * Shared things between timer and stackmat
+ * - hasCurrentSolve
+ * - clock (but not interval)
+ * - ready (but not its logic)
+ *
+ * ---------
+ *
+ * Ok here's how it's going to work
+ * - One Alpine component which essentially controls the visuals
+ * - Plain JS objects controlling logic for different timing methods
+ */
 
 const READY_HOLD_TIME_MS = 500;
 const PREPARING_COLOR = 'text-red-500';
@@ -16,6 +33,9 @@ export default () => ({
   readyTimeout: null,
   ready: false,
   stackmatListener: null,
+  leftHandDown: false,
+  rightHandDown: false,
+  stackmatRunning: false,
   timeEntry: TIME_ENTRY_METHODS[0],
   hasCurrentSolve: null, // shadows assign has_current_solve?
 
@@ -101,43 +121,71 @@ export default () => ({
   },
 
   handlePointDown() {
-    if (!this.$store.inputFocused && !this.hasCurrentSolve) { // allow timer stuff (+ stopping time)
-      if (this.isRunning) { // running
-        this.stopTime();
-      } else if (!this.isPreparing) { // not preparing -> start preparing
-        this.setPreparing();
+    if (this.timeEntry === 'timer') {
+      if (!this.$store.inputFocused && !this.hasCurrentSolve) { // allow timer stuff (+ stopping time)
+        if (this.isRunning) { // running
+          this.stopTimer();
+        } else if (!this.isPreparing) { // not preparing -> start preparing
+          this.setPreparing();
+        }
       }
+    } else if (this.timeEntry === 'stackmat') {
+      this.stackmatListener.eventManager.receivePacket({
+        isValid: true,
+        status: 'C',
+        timeInMilliseconds: 0,
+        timeAsString: '0',
+        isLeftHandDown: true,
+        isRightHandDown: true,
+        areBothHandsDown: true
+      });
     }
   },
 
   handlePointUp() {
-    if (!this.$store.inputFocused) { // allow starting time
-      if (this.isReady) { // ready
-        this.startTime();
-      } else { // let go before ready
-        this.unsetPreparing();
+    if (this.timeEntry === 'timer') {
+      if (!this.$store.inputFocused) { // allow starting time
+        if (this.isReady) { // ready
+          this.startTimer();
+        } else { // let go before ready
+          this.unsetPreparing();
+        }
       }
+    } else if (this.timeEntry === 'stackmat') {
+      this.stackmatListener.eventManager.receivePacket({
+        isValid: true,
+        status: 'I',
+        timeInMilliseconds: 0,
+        timeAsString: '0',
+        isLeftHandDown: false,
+        isRightHandDown: false,
+        areBothHandsDown: false
+      });
     }
   },
 
-  startTime() {
+  startTimer() {
     if (!this.interval) {
       this.ready = false;
       this.offset = Date.now();
-      this.interval = setInterval(this.updateTime.bind(this), 10);
+      this.interval = setInterval(this.updateTimer.bind(this), 10);
       window.timerHook.startSolving();
     }
   },
 
-  updateTime() {
+  updateTimer() {
     const now = Date.now();
     const delta = now - this.offset;
     this.offset = now;
 
-    this.clock += delta;
+    this.updateClock(this.clock + delta);
   },
 
-  stopTime() {
+  updateClock(newClock) {
+    this.clock = newClock;
+  },
+
+  stopTimer() {
     if (this.interval) {
       clearInterval(this.interval);
       this.interval = null;
@@ -146,45 +194,11 @@ export default () => ({
   },
 
   resetTime() {
-    if (!this.interval) {
-      this.clock = 0;
-    }
+    this.clock = 0;
   },
 
   presetTime(clock) {
     this.clock = clock;
     this.hasCurrentSolve = true;
-  },
-
-  initStackmatListener() {
-    const stackmat = new Stackmat();
-
-    stackmat.on('ready', () => {
-      this.setPreparing();
-    });
-
-    stackmat.on('unready', () => {
-      this.unsetPreparing();
-    });
-
-    stackmat.on('starting', () => {
-      this.setReady();
-    });
-
-    stackmat.on('started', () => {
-      console.log('Timer started');
-      this.startTime();
-    });
-
-    stackmat.on('stopped', (packet) => {
-      console.log('Timer stopped at: ' + packet.timeAsString);
-      this.stopTime();
-    });
-
-    stackmat.on('reset', () => {
-      this.resetTime();
-    });
-
-    this.stackmatListener = stackmat;
-  },
+  }
 });

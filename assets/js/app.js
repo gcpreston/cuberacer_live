@@ -5,11 +5,11 @@
 // AlpineJS
 import Alpine from 'alpinejs';
 import howTo from './howTo';
-import timer from './timer';
+import timerState from './timerState';
 import room from './room';
 
 Alpine.data('howTo', howTo);
-Alpine.data('timer', timer);
+Alpine.data('timer', timerState);
 Alpine.data('room', room);
 
 Alpine.store('inputFocused', false);
