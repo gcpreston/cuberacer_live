@@ -1,4 +1,5 @@
-import Stopwatch from "./stopwatch";
+import Stopwatch from './stopwatch';
+import StackmatTimer from './stackmat';
 
 const PREPARING_COLOR = 'text-red-500';
 const READY_COLOR = 'text-green-400';
@@ -18,11 +19,13 @@ export default () => ({
   state: TIMER_STATES.Neutral,
   clock: 0,
   timers:{
-    stopwatch: null
+    stopwatch: null,
+    stackmat: null
   },
 
   init() {
     this.timers.stopwatch = new Stopwatch(this);
+    this.timers.stackmat = new StackmatTimer(this);
   },
 
   get formattedTime() {

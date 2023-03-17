@@ -1,48 +1,46 @@
-/**
- * Stackmat state, for Alpine x-data directive.
- */
-
 import { Stackmat, PacketStatus } from 'stackmat';
+import { TIMER_STATES } from './timerState';
 
-export default () => ({
-
+export default class StackmatTimer {
+  constructor(timerState) {
+    this.timerState = timerState;
+  }
 
   get leftHandColor() {
-    if (this.ready) {
+    if (this.timerState.state === TIMER_STATES.Ready) {
       return 'green';
     } else if (this.leftHandDown) {
       return 'red';
     } else {
       return 'gray';
     }
-  },
+  }
 
   get rightHandColor() {
-    if (this.ready) {
+    if (this.timerState.state === TIMER_STATES.Ready) {
       return 'green';
     } else if (this.rightHandDown) {
       return 'red';
     } else {
       return 'gray';
     }
-  },
+  }
 
   stackmatStarted() {
-    this.ready = false;
-    this.stackmatRunning = true;
-  },
+    this.timerState.setState(TIMER_STATES.Solving);
+  }
 
   stackmatStopped(time) {
-    this.stackmatRunning = false;
+    this.timerState.setState(TIMER_STATES.Solved);
     window.timerHook.submitTime(time);
-  },
+  }
 
   initStackmatListener() {
     const stackmat = new Stackmat();
 
     stackmat.on('packetReceived', (packet) => {
       if (packet.status === PacketStatus.RUNNING) {
-        this.updateClock(packet.timeInMilliseconds);
+        this.timerState.updateClock(packet.timeInMilliseconds);
       }
     });
 
@@ -63,7 +61,7 @@ export default () => ({
     });
 
     stackmat.on('starting', () => {
-      this.setReady();
+      this.timerState.setState(TIMER_STATES.Ready);
     });
 
     stackmat.on('started', () => {
@@ -77,9 +75,10 @@ export default () => ({
     });
 
     stackmat.on('reset', () => {
-      this.resetTime();
+      this.timerState.resetTime();
+      this.timerState.setState(TIMER_STATES.Neutral);
     });
 
     this.stackmatListener = stackmat;
   }
-});
+}
