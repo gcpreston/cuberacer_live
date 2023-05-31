@@ -3,7 +3,6 @@ defmodule CuberacerLive.LobbyServer do
 
   alias CuberacerLive.{RoomCache, RoomServer}
 
-  @topic inspect(__MODULE__)
   @game_lobby_topic "lobby"
 
   defstruct rooms: %{}
@@ -31,9 +30,6 @@ defmodule CuberacerLive.LobbyServer do
         {session_id, %{participant_count: participant_count}}
       end
       |> Enum.into(%{})
-
-    # Subscribe to changes
-    subscribe_to_pubsub()
 
     {:ok, %__MODULE__{rooms: rooms_state}}
   end
@@ -79,11 +75,5 @@ defmodule CuberacerLive.LobbyServer do
       end)
 
     {:reply, counts, state}
-  end
-
-  ## Helpers
-
-  defp subscribe_to_pubsub do
-    Phoenix.PubSub.subscribe(CuberacerLive.PubSub, @topic)
   end
 end
