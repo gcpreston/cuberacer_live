@@ -11,8 +11,6 @@ defmodule CuberacerLive.RoomServer do
   alias CuberacerLive.Accounts.User
   alias CuberacerLive.ParticipantDataEntry
 
-  @lobby_server_topic inspect(CuberacerLive.LobbyServer)
-
   defstruct [:session, participant_data: %{}, timeout_ref: nil, empty_round_flag: true]
 
   ## API
@@ -199,7 +197,7 @@ defmodule CuberacerLive.RoomServer do
   end
 
   defp notify_lobby_server(event, result) do
-    Phoenix.PubSub.broadcast!(CuberacerLive.PubSub, @lobby_server_topic, {event, result})
+    send(CuberacerLive.LobbyServer, {event, result})
   end
 
   defp game_room_topic(session_id) do

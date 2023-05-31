@@ -32,7 +32,7 @@ defmodule CuberacerLiveWeb.GameLive.Room do
           socket_pipeline(socket, user, session)
       end
 
-    {:ok, socket, temporary_assigns: [past_rounds: [], room_messages: []]}
+    {:ok, socket, temporary_assigns: [past_rounds: []]}
   end
 
   def mount(_params, _session, socket) do
@@ -106,7 +106,7 @@ defmodule CuberacerLiveWeb.GameLive.Room do
 
   defp fetch_room_messages(socket) do
     room_messages = Messaging.list_room_messages(socket.assigns.session)
-    assign(socket, room_messages: room_messages)
+    stream(socket, :room_messages, room_messages)
   end
 
   defp initialize_time_entry(socket) do
@@ -270,7 +270,7 @@ defmodule CuberacerLiveWeb.GameLive.Room do
      else
        socket
      end
-     |> update(:room_messages, fn msgs -> [room_message | msgs] end)}
+     |> stream_insert(:room_messages, room_message)}
   end
 
   ## Helpers

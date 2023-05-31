@@ -72,20 +72,24 @@ defmodule CuberacerLiveWeb.CoreComponents do
     "pink-600"
   ]
 
+  attr :id, :string, required: false
   attr :room_message, :any, required: true, doc: "The Messaging.RoomMessage to display."
   attr :color_seed, :any, required: true
 
   def chat_message(assigns) do
+    assigns =
+      if assigns[:id] do
+        assigns
+      else
+        assign(assigns, :id, "room_messages-#{assigns.room_message.id}")
+      end
+
     ~H"""
-    <div
-      id={"room-message-#{@room_message.id}"}
-      class="px-2 t_room-message"
-      title={format_datetime(@room_message.inserted_at)}
-    >
-      <span class={"font-medium #{user_chat_color(@room_message.user_id, @color_seed)} t_room-message-username"}>
+    <div id={@id} class="px-2 t_room-message" title={format_datetime(@room_message.inserted_at)}>
+      <span class={"font-medium #{user_chat_color(@room_message.user_id, @color_seed)} t_room_messages-username"}>
         <%= "#{@room_message.user.username}: " %>
       </span>
-      <span class="t_room-message-content">
+      <span class="t_room_messages-content">
         <%= @room_message.message %>
       </span>
     </div>
