@@ -58,6 +58,36 @@ defmodule CuberacerLiveWeb.CoreComponents do
     |> JS.hide(to: "#modal-content", transition: "fade-out-scale")
   end
 
+  slot :inner_block
+
+  def table_header(assigns) do
+    ~H"""
+    <div class="bg-gray-50 sticky top-0">
+      <div>
+        <div class="border-y px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+          <div class="inline-flex max-w-full">
+            <span class="flex-1 truncate">
+              <%= render_slot(@inner_block) %>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+    """
+  end
+
+  slot :inner_block
+
+  def table_cell(assigns) do
+    ~H"""
+    <div class="border-b px-2 py-4 whitespace-nowrap">
+      <div class="text-sm font-medium text-center text-gray-900">
+        <%= render_slot(@inner_block) %>
+      </div>
+    </div>
+    """
+  end
+
   # Ensure that the safelist in tailwind.config.js is synchronized
   # with this list.
   @chat_username_colors [

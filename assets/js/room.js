@@ -77,7 +77,7 @@ export default () => ({
   usersPerPage: 4,
 
   get numUsersPages() {
-    return Math.ceil(this.numPresentUsers / this.usersPerPage)
+    return Math.ceil(this.numPresentUsers / this.usersPerPage);
   },
 
   get displayStartEnd() {
@@ -153,13 +153,16 @@ export default () => ({
     const timesTableEl = document.querySelector('#times-table');
     const timesTableWidth = (timesTableEl.clientWidth) / fontSize;
 
-    const cellEl = document.querySelector('#times-table th:not(.hidden)');
-    const cellWidth = (cellEl.clientWidth) / fontSize;
+    const cellEl = document.querySelector('#times-table .js_user-column:not(.hidden)');
 
-    this.usersPerPage = Math.floor(timesTableWidth / cellWidth);
+    if (cellEl) {
+      const cellWidth = (cellEl.clientWidth) / fontSize;
 
-    if (this.numUsersPages > 0 && this.usersPage > this.numUsersPages) {
-      this.usersPage = this.numUsersPages;
+      this.usersPerPage = Math.max(1, Math.floor(timesTableWidth / cellWidth));
+
+      if (this.numUsersPages > 0 && this.usersPage > this.numUsersPages) {
+        this.usersPage = this.numUsersPages;
+      }
     }
   }
 });

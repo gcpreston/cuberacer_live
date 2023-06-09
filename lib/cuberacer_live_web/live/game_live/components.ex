@@ -1,10 +1,7 @@
 defmodule CuberacerLiveWeb.GameLive.Components do
   use CuberacerLiveWeb, :component
 
-  alias CuberacerLive.ParticipantDataEntry
   alias CuberacerLive.Sessions
-  alias CuberacerLive.Sessions.Round
-  alias CuberacerLive.Accounts.User
 
   attr :participant_count, :integer, required: true
   attr :session, :any, required: true, doc: "The Sessions.Session to display."
@@ -128,92 +125,40 @@ defmodule CuberacerLiveWeb.GameLive.Components do
     """
   end
 
-  attr :participant_data, :list, required: true, doc: "See RoomServer.participant_data_entry/1."
-  attr :current_round, :any, required: true, doc: "The current Sessions.Round for this session."
-  attr :past_rounds, :list, required: true, doc: "The previous Sessions.Rounds for this session."
+  attr :participant_data, :any, required: true
+
+  attr :rounds, :list,
+    required: true,
+    doc: "A list of all rounds in the session. Must have solved preloaded."
 
   def times_table(assigns) do
     # Taps into 'room' Alpine data
     ~H"""
-    <table
-      id="times-table"
-      class="table-fixed w-full border-separate [border-spacing:0]"
-      x-init="calibratePagination()"
-    >
-      <thead class="bg-gray-50 sticky top-0">
-        <tr class="flex">
-          <%= for {{user_id, entry}, i} <- Enum.with_index(@participant_data) do %>
-            <th
-              scope="col"
-              id={"header-cell-user-#{user_id}"}
-              class="w-28 border-y px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider flex"
-              x-bind:class={"{ 'hidden': !isColShown(#{i}) }"}
-            >
-              <div class="inline-flex max-w-full">
-                <span class="flex-1 truncate">
-                  <.link href={~p"/users/#{user_id}"} target="_blank">
-                    <%= entry.user.username %>
-                  </.link>
-                </span>
-                <%= if ParticipantDataEntry.get_time_entry(entry) == :keyboard do %>
-                  <span class="text-center pl-1">
-                    <i class="fas fa-keyboard" title="This player is using keyboard entry"></i>
-                  </span>
-                <% end %>
-              </div>
-            </th>
-          <% end %>
-          <th class="flex-1 border-y"></th>
-        </tr>
-      </thead>
-      <tbody id="times-table-body" class="bg-white" x-show="bottomBarShow" phx-update="prepend">
-        <tr id={"round-#{@current_round.id}"} class="flex t_round-row" title={@current_round.scramble}>
-          <%= for {{user_id, entry}, i} <- Enum.with_index(@participant_data) do %>
-            <td
-              id={"round-#{@current_round.id}-solve-user-#{user_id}"}
-              class="w-28 border-b px-2 py-4 whitespace-nowrap"
-              x-show={"isColShown(#{i})"}
-            >
-              <div
-                id={"t_cell-round-#{@current_round.id}-user-#{user_id}"}
-                class="text-sm font-medium text-center text-gray-900"
-              >
-                <%= if ParticipantDataEntry.get_solving(entry) do %>
-                  Solving...
-                <% else %>
-                  <%= user_solve_for_round(entry.user, @current_round) |> Sessions.display_solve() %>
-                <% end %>
-              </div>
-            </td>
-          <% end %>
-          <td class="flex-1 border-b"></td>
-        </tr>
-        <%= for round <- @past_rounds do %>
-          <tr id={"round-#{round.id}"} class="flex t_round-row" title={round.scramble}>
-            <%= for {{user_id, data}, i} <- Enum.with_index(@participant_data) do %>
-              <td
-                id={"round-#{round.id}-solve-user-#{user_id}"}
-                class="w-28 border-b px-2 py-4 whitespace-nowrap"
-                x-show={"isColShown(#{i})"}
-              >
-                <div
-                  id={"t_cell-round-#{round.id}-user-#{user_id}"}
-                  class="text-sm font-medium text-center text-gray-900"
-                >
-                  <%= user_solve_for_round(data.user, round) |> Sessions.display_solve() %>
-                </div>
-              </td>
-            <% end %>
-            <td class="flex-1 border-b"></td>
-          </tr>
-        <% end %>
-      </tbody>
-    </table>
-    """
-  end
+    <div class="flex flex-row justify-start" id="times-table" x-init="calibratePagination()">
+      <div
+        :for={{{_user_id, entry}, i} <- Enum.with_index(@participant_data)}
+        class="flex-none js_user-column"
+        x-bind:class={"{ 'hidden': !isColShown(#{i}) }"}
+      >
+        <.live_component
+          id={"participant-component-#{entry.user.id}"}
+          module={CuberacerLiveWeb.GameLive.ParticipantComponent}
+          participant_data_entry={entry}
+          rounds={@rounds}
+        />
+      </div>
 
-  defp user_solve_for_round(%User{} = user, %Round{} = round) do
-    Enum.find(round.solves, fn solve -> solve.user_id == user.id end)
+      <div class="w-24 flex-1">
+        <.table_header />
+
+        <div class="bg-white">
+          <div :for={_round <- @rounds}>
+            <.table_cell>&nbsp</.table_cell>
+          </div>
+        </div>
+      </div>
+    </div>
+    """
   end
 
   attr :ao5, :float, required: true

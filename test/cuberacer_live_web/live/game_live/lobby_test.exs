@@ -158,7 +158,7 @@ defmodule CuberacerLive.GameLive.LobbyTest do
     end
 
     @tag :ensure_presence_shutdown
-    test "create room modal creates a new room with an initial round", %{conn: conn} do
+    test "create room modal creates a new room with an initial round", %{user: user, conn: conn} do
       {:ok, lv, html} = live(conn, ~p"/lobby/new")
 
       refute_html(html, ".t_room-card")
@@ -182,10 +182,10 @@ defmodule CuberacerLive.GameLive.LobbyTest do
 
       assert_redirect(lv)
 
-      {:ok, _room_lv, html} = follow_redirect(result, conn)
+      {:ok, room_lv, _html} = follow_redirect(result, conn)
 
-      html
-      |> assert_html(".t_round-row", count: 1)
+      render(room_lv)
+      |> assert_html("#user-#{user.id}-rounds > div", count: 1)
       |> assert_html(".t_scramble")
     end
 
@@ -221,7 +221,7 @@ defmodule CuberacerLive.GameLive.LobbyTest do
       assert lv2 |> element(".t_room-card") |> render() =~ "fa-lock"
     end
 
-    test "only shows join room modal for unauthorized users", %{conn: conn1} do
+    test "only shows join room modal for unauthorized users", %{user: user1, conn: conn1} do
       user2 = user_fixture()
       conn2 = build_conn() |> log_in_user(user2)
 
@@ -252,10 +252,10 @@ defmodule CuberacerLive.GameLive.LobbyTest do
 
       assert_redirect(lv1)
 
-      {:ok, _room_lv1, html1} = follow_redirect(result, conn1)
+      {:ok, room_lv1, _html1} = follow_redirect(result, conn1)
 
-      html1
-      |> assert_html(".t_round-row", count: 1)
+      render(room_lv1)
+      |> assert_html("#user-#{user1.id}-rounds > div", count: 1)
       |> assert_html(".t_scramble")
 
       # Other user needs to enter password
@@ -278,10 +278,10 @@ defmodule CuberacerLive.GameLive.LobbyTest do
 
       assert_redirect(lv2)
 
-      {:ok, _room_lv2, html2} = follow_redirect(result, conn2)
+      {:ok, room_lv2, _html2} = follow_redirect(result, conn2)
 
-      html2
-      |> assert_html(".t_round-row", count: 1)
+      render(room_lv2)
+      |> assert_html("#user-#{user2.id}-rounds > div", count: 1)
       |> assert_html(".t_scramble")
     end
 

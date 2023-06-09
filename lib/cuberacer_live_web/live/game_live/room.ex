@@ -4,7 +4,7 @@ defmodule CuberacerLiveWeb.GameLive.Room do
   import CuberacerLive.Repo, only: [preload: 2]
   import CuberacerLiveWeb.GameLive.Components
 
-  alias CuberacerLive.{RoomServer, Sessions, Accounts, Messaging}
+  alias CuberacerLive.{RoomServer, Sessions, Accounts, Messaging, Events}
   alias CuberacerLiveWeb.{Presence, Endpoint}
 
   @impl true
@@ -32,7 +32,7 @@ defmodule CuberacerLiveWeb.GameLive.Room do
           socket_pipeline(socket, user, session)
       end
 
-    {:ok, socket, temporary_assigns: [past_rounds: []]}
+    {:ok, socket}
   end
 
   def mount(_params, _session, socket) do
@@ -83,8 +83,8 @@ defmodule CuberacerLiveWeb.GameLive.Room do
   end
 
   defp fetch_rounds(socket) do
-    [current_round | past_rounds] = Sessions.list_rounds_of_session(socket.assigns.session, :desc)
-    assign(socket, current_round: current_round, past_rounds: past_rounds)
+    rounds = Sessions.list_rounds_of_session(socket.assigns.session, :desc)
+    assign(socket, all_rounds: rounds)
   end
 
   defp fetch_current_solve(socket) do
@@ -249,9 +249,16 @@ defmodule CuberacerLiveWeb.GameLive.Room do
 
     socket =
       socket
-      |> update(:past_rounds, fn rounds -> [socket.assigns.current_round | rounds] end)
-      |> assign(:current_round, round)
       |> assign(:current_solve, nil)
+      |> update(:all_rounds, fn rounds -> [round | rounds] end)
+
+    for user_id <- Map.keys(socket.assigns.participant_data) do
+      send_update(
+        CuberacerLiveWeb.GameLive.ParticipantComponent,
+        id: "participant-component-#{user_id}",
+        event: %Events.RoundCreated{round: round}
+      )
+    end
 
     {:noreply, socket}
   end
@@ -265,8 +272,14 @@ defmodule CuberacerLiveWeb.GameLive.Room do
 
     socket =
       socket
-      |> assign(:current_round, current_round)
       |> fetch_participant_data()
+      |> update(:all_rounds, fn rounds -> [current_round | tl(rounds)] end)
+
+    send_update(
+      CuberacerLiveWeb.GameLive.ParticipantComponent,
+      id: "participant-component-#{solve.user_id}",
+      event: %Events.SolveCreated{solve: solve}
+    )
 
     {:noreply, socket}
   end

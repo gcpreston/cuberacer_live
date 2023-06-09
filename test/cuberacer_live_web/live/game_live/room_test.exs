@@ -125,7 +125,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       assert {:ok, lv, _html} = live(conn, ~p"/rooms/#{session.id}")
 
       render(lv)
-      |> assert_html("th a", text: user.username)
+      |> assert_html("a", text: user.username)
       |> assert_html("#t_cell-round-#{round.id}-user-#{user.id}",
         text: Sessions.display_solve(solve)
       )
@@ -217,12 +217,12 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       {:ok, lv1, _html1} = live(conn1, ~p"/rooms/#{session.id}")
 
       assert lv1
-             |> element("#header-cell-user-#{user2.id}")
+             |> element("#t_header-user-#{user2.id}")
              |> render() =~
                ~s(<i class="fas fa-keyboard" title="This player is using keyboard entry"></i>)
 
       assert lv2
-             |> element("#header-cell-user-#{user2.id}")
+             |> element("#t_header-user-#{user2.id}")
              |> render() =~
                ~s(<i class="fas fa-keyboard" title="This player is using keyboard entry"></i>)
 
@@ -230,12 +230,12 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       {:ok, lv1, _html1} = live(conn1, ~p"/rooms/#{session.id}")
 
       assert lv1
-             |> element("#header-cell-user-#{user2.id}")
+             |> element("#t_header-user-#{user2.id}")
              |> render() =~
                ~s(<i class="fas fa-keyboard" title="This player is using keyboard entry"></i>)
 
       assert lv2
-             |> element("#header-cell-user-#{user2.id}")
+             |> element("#t_header-user-#{user2.id}")
              |> render() =~
                ~s(<i class="fas fa-keyboard" title="This player is using keyboard entry"></i>)
     end
@@ -275,6 +275,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
     setup [:authenticate]
 
     test "new-round creates a new round and handles race condition", %{
+      user: user,
       conn: conn,
       session: session
     } do
@@ -282,11 +283,12 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       conn2 = Phoenix.ConnTest.build_conn() |> log_in_user(user2)
       {:ok, lv2, _html2} = live(conn2, ~p"/rooms/#{session.id}")
 
-      {:ok, lv1, html1} = live(conn, ~p"/rooms/#{session.id}")
+      {:ok, lv1, _html1} = live(conn, ~p"/rooms/#{session.id}")
 
       num_rounds_before = Enum.count(Sessions.list_rounds_of_session(session))
 
-      assert_html(html1, "tr.t_round-row", count: num_rounds_before)
+      render(lv1)
+      |> assert_html("#user-#{user.id}-rounds > div", count: num_rounds_before)
 
       render_hook(lv1, "timer-submit", time: 42)
       render_click(lv1, "new-round")
@@ -297,7 +299,7 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       assert num_rounds_after == num_rounds_before + 1
 
       render(lv1)
-      |> assert_html("tr.t_round-row", count: num_rounds_after)
+      |> assert_html("#user-#{user.id}-rounds > div", count: num_rounds_after)
       |> assert_html(".t_scramble", count: 1)
     end
 
@@ -687,12 +689,14 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
   describe "Sessions events" do
     setup [:authenticate]
 
-    test "reacts to round created", %{conn: conn, session: session} do
-      {:ok, view, html} = live(conn, ~p"/rooms/#{session.id}")
+    test "reacts to round created", %{user: user, conn: conn, session: session} do
+      {:ok, lv, _html} = live(conn, ~p"/rooms/#{session.id}")
 
       num_rounds_before = Enum.count(Sessions.list_rounds_of_session(session))
 
-      assert_html(html, "tr.t_round-row", count: num_rounds_before)
+      html = render(lv)
+      assert html =~ "1 participant"
+      assert_html(html, "#user-#{user.id}-rounds > div", count: num_rounds_before)
 
       {:ok, round} = Sessions.create_round(session)
 
@@ -700,8 +704,8 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
 
       assert num_rounds_after == num_rounds_before + 1
 
-      render(view)
-      |> assert_html("tr.t_round-row", count: num_rounds_after)
+      render(lv)
+      |> assert_html("#user-#{user.id}-rounds > div", count: num_rounds_after)
       |> assert_html(".t_scramble", text: round.scramble)
     end
 
