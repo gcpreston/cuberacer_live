@@ -77,7 +77,7 @@ defmodule CuberacerLiveWeb.GameLive.Components do
     """
   end
 
-  attr :room_messages, :list, required: true, doc: "See Messaging.list_room_messages/1."
+  attr :room_messages_stream, :any, required: true
   attr :color_seed, :any, required: true
 
   def chat(assigns) do
@@ -98,7 +98,7 @@ defmodule CuberacerLiveWeb.GameLive.Components do
     >
       <div class="flex-1 flex flex-col-reverse overflow-auto">
         <div id="room-messages" phx-update="stream" class="divide-y">
-          <%= for {id, room_message} <- @room_messages do %>
+          <%= for {id, room_message} <- @room_messages_stream do %>
             <.chat_message
               id={id}
               room_message={CuberacerLive.Repo.preload(room_message, :user)}

@@ -114,6 +114,6 @@
     class="w-full sm:w-80 shrink-0 h-full"
     x-bind:class="{ 'hidden': !(chatSidebarShow || mobileChatOpen) }"
   >
-    <.chat room_messages={@streams.room_messages} color_seed={@socket.id} />
+    <.chat room_messages_stream={@streams.room_messages} color_seed={@socket.id} />
   </div>
 </div>
