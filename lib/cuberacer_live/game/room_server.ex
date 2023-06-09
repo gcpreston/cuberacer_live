@@ -124,11 +124,13 @@ defmodule CuberacerLive.RoomServer do
         %Phoenix.Socket.Broadcast{event: "presence_diff", payload: payload},
         state
       ) do
-    joins_participant_data =
+    joins_participant_data_entries =
       Accounts.get_users(Map.keys(payload.joins))
-      |> Map.new(fn user ->
-        {user.id, ParticipantDataEntry.new(user)}
-      end)
+      |> Enum.map(fn user -> ParticipantDataEntry.new(user) end)
+
+    joins_participant_map =
+      joins_participant_data_entries
+      |> Map.new(fn entry -> {entry.user.id, entry} end)
 
     leaves_user_ids =
       Enum.map(Map.keys(payload.leaves), fn id_str ->
@@ -136,11 +138,14 @@ defmodule CuberacerLive.RoomServer do
         user_id
       end)
 
+    leaves_participant_data_entries =
+      Enum.map(leaves_user_ids, fn user_id -> state.participant_data[user_id] end)
+
     new_participant_data =
       Map.filter(state.participant_data, fn {user_id, _data} ->
         not Enum.member?(leaves_user_ids, user_id)
       end)
-      |> Map.merge(joins_participant_data)
+      |> Map.merge(joins_participant_map)
 
     new_state = %{state | participant_data: new_participant_data}
 
@@ -159,7 +164,10 @@ defmodule CuberacerLive.RoomServer do
         new_state |> cancel_empty_room_timeout()
       end
 
-    {:noreply, new_state, {:continue, {:tell_game_room_to_fetch, :participants}}}
+    {:noreply, new_state,
+     {:continue,
+      {:notify_game_room,
+       {:presence, joins_participant_data_entries, leaves_participant_data_entries}}}}
   end
 
   def handle_info({:solving, user_id}, state) do
@@ -185,6 +193,16 @@ defmodule CuberacerLive.RoomServer do
       CuberacerLive.PubSub,
       game_room_topic(state.session.id),
       {:fetch, data}
+    )
+
+    {:noreply, state}
+  end
+
+  def handle_continue({:notify_game_room, {:presence, joins, leaves}}, state) do
+    Phoenix.PubSub.broadcast!(
+      CuberacerLive.PubSub,
+      game_room_topic(state.session.id),
+      {:presence, joins, leaves}
     )
 
     {:noreply, state}

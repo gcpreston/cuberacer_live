@@ -209,8 +209,18 @@ defmodule CuberacerLiveWeb.GameLive.Room do
     {:noreply, socket |> fetch_participant_data()}
   end
 
-  def handle_info({:fetch, :participants}, socket) do
-    {:noreply, socket |> fetch_participant_data() |> fetch_rounds()}
+  def handle_info({:presence, joins, leaves}, socket) do
+    new_socket =
+      Enum.reduce(joins, socket, fn entry, socket ->
+        update(socket, :participant_data, fn pd -> Map.put(pd, entry.user.id, entry) end)
+      end)
+
+    new_socket =
+      Enum.reduce(leaves, new_socket, fn entry, socket ->
+        update(socket, :participant_data, fn pd -> Map.delete(pd, entry.user.id) end)
+      end)
+
+    {:noreply, new_socket}
   end
 
   def handle_info({:set_time_entry, _user_id, _method}, socket) do
