@@ -1,8 +1,7 @@
 defmodule CuberacerLive.RoomServerTest do
   use CuberacerLive.DataCase, async: false
 
-  alias CuberacerLive.RoomServer
-  alias CuberacerLive.{Sessions, Messaging}
+  alias CuberacerLive.{Events, RoomServer, Sessions, Messaging}
   alias CuberacerLive.Messaging.RoomMessage
   alias CuberacerLive.Sessions.Solve
 
@@ -22,13 +21,16 @@ defmodule CuberacerLive.RoomServerTest do
     test "sends a valid message", %{user: user, pid: pid} do
       RoomServer.send_message(pid, user, "hello world!")
 
-      assert_receive {Messaging, [:room_message, :created], %RoomMessage{message: "hello world!"}}
+      assert_receive {Messaging,
+                      %Events.RoomMessageCreated{
+                        room_message: %RoomMessage{message: "hello world!"}
+                      }}
     end
 
     test "does not send an invalid message", %{user: user, pid: pid} do
       RoomServer.send_message(pid, user, "")
 
-      refute_receive {Messaging, [:room_message, :created], _message}
+      refute_receive {Messaging, %Events.RoomMessageCreated{room_message: _message}}
     end
   end
 

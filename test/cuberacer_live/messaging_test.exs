@@ -1,7 +1,7 @@
 defmodule CuberacerLive.MessagingTest do
   use CuberacerLive.DataCase
 
-  alias CuberacerLive.Messaging
+  alias CuberacerLive.{Messaging, Events}
 
   describe "room_messages" do
     alias CuberacerLive.Messaging.RoomMessage
@@ -52,7 +52,7 @@ defmodule CuberacerLive.MessagingTest do
       Messaging.subscribe(session.id)
       {:ok, room_message} = Messaging.create_room_message(session, user, "some message")
 
-      assert_receive {Messaging, [:room_message, :created], ^room_message}
+      assert_receive {Messaging, %Events.RoomMessageCreated{room_message: ^room_message}}
     end
 
     test "create_room_message/3 only broadcasts to room topic" do

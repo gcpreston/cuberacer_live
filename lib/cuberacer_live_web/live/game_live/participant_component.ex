@@ -77,6 +77,10 @@ defmodule CuberacerLiveWeb.GameLive.ParticipantComponent do
     {:ok, stream_insert(socket, :user_rounds, UserRound.from_solve(solve))}
   end
 
+  def update(%{event: %Events.SolveUpdated{solve: solve}}, socket) do
+    {:ok, stream_insert(socket, :user_rounds, UserRound.from_solve(solve))}
+  end
+
   def update(%{event: %Events.RoundCreated{round: round}}, socket) do
     {:ok,
      stream_insert(socket, :user_rounds, UserRound.from_round(round, socket.assigns.entry.user),
