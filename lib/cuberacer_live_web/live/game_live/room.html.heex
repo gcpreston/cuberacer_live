@@ -47,7 +47,7 @@
       </div>
 
       <div class="mt-3 mb-9 mx-auto text-center">
-        <div class={"#{scramble_text_size(hd(@all_rounds).scramble)} #{if @current_solve, do: "text-gray-300", else: "text-gray-900"}"}>
+        <div class={"t_scramble-container #{scramble_text_size(hd(@all_rounds).scramble)} #{if @current_solve, do: "text-gray-300", else: "text-gray-900"}"}>
           <span class="t_scramble"><%= hd(@all_rounds).scramble %></span>
         </div>
         <div class="text-6xl my-4">

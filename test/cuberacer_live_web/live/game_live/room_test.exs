@@ -352,6 +352,51 @@ defmodule CuberacerLiveWeb.GameLive.RoomTest do
       assert render(view) =~ Sessions.display_solve(newest_solve)
     end
 
+    test "timer-submit does not create a new solve if one already exists", %{
+      conn: conn,
+      session: session
+    } do
+      {:ok, view, _html} = live(conn, ~p"/rooms/#{session.id}")
+
+      render_hook(view, "timer-submit", time: 42)
+
+      num_solves_before = Enum.count(Sessions.list_solves_of_session(session))
+      render_hook(view, "timer-submit", time: 43)
+      num_solves_after = Enum.count(Sessions.list_solves_of_session(session))
+
+      newest_solve_query =
+        from s in Solve,
+          join: r in assoc(s, :round),
+          where: r.session_id == ^session.id,
+          order_by: [desc: s.inserted_at],
+          limit: 1
+
+      newest_solve = Repo.one(newest_solve_query)
+
+      assert num_solves_after == num_solves_before
+      assert newest_solve.time == 42
+      assert render(view) =~ Sessions.display_solve(newest_solve)
+    end
+
+    test "timer-submit registers a current solve across multiple windows", %{
+      conn: conn,
+      session: session
+    } do
+      {:ok, lv1, html1} = live(conn, ~p"/rooms/#{session.id}")
+      {:ok, lv2, html2} = live(conn, ~p"/rooms/#{session.id}")
+
+      Enum.each([html1, html2], fn html ->
+        assert_html(html, ".t_scramble-container.text-gray-900")
+      end)
+
+      html1 = render_hook(lv1, "timer-submit", time: 42)
+      html2 = render(lv2)
+
+      Enum.each([html1, html2], fn html ->
+        assert_html(html, ".t_scramble-container.text-gray-300")
+      end)
+    end
+
     test "timer-submit updates current stats", %{
       conn: conn,
       user: user,
