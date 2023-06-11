@@ -39,7 +39,12 @@ defmodule CuberacerLiveWeb.GameLive.ParticipantComponent do
         </span>
       </.table_header>
 
-      <div id={"user-#{@entry.user.id}-rounds"} class="bg-white" phx-update="stream">
+      <div
+        id={"user-#{@entry.user.id}-rounds"}
+        class="bg-white"
+        phx-update="stream"
+        x-show="bottomBarShow"
+      >
         <div :for={{dom_id, user_round} <- @streams.user_rounds} id={dom_id}>
           <.table_cell>
             <span id={"t_cell-round-#{user_round.round_id}-user-#{user_round.user_id}"}>

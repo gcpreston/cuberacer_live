@@ -151,7 +151,7 @@ defmodule CuberacerLiveWeb.GameLive.Components do
       <div class="w-24 flex-1">
         <.table_header />
 
-        <div class="bg-white">
+        <div class="bg-white" x-show="bottomBarShow">
           <div :for={_round <- @rounds}>
             <.table_cell>&nbsp</.table_cell>
           </div>
