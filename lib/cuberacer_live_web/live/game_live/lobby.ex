@@ -100,7 +100,7 @@ defmodule CuberacerLiveWeb.GameLive.Lobby do
     {:noreply, fetch_rooms(socket)}
   end
 
-  def handle_info({Sessions, [:session | _], _}, socket) do
+  def handle_info({Sessions, %_event{session: _session}}, socket) do
     {:noreply, fetch_rooms(socket)}
   end
 

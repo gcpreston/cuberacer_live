@@ -53,8 +53,7 @@ defmodule CuberacerLive.MixProject do
       {:plug_cowboy, "~> 2.5"},
       {:whisk, "~> 0.2.0"},
       {:finch, "~> 0.10.2"},
-      {:inflex, "~> 2.1"},
-      {:hashids, "~>2.0"}
+      {:inflex, "~> 2.1"}
     ]
   end
 

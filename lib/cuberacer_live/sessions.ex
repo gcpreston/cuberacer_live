@@ -18,6 +18,7 @@ defmodule CuberacerLive.Sessions do
   alias CuberacerLive.Sessions.{Session, Round, Solve}
   alias CuberacerLive.Accounts
   alias CuberacerLive.Accounts.User
+  alias CuberacerLive.Events
 
   @topic inspect(__MODULE__)
 
@@ -392,23 +393,6 @@ defmodule CuberacerLive.Sessions do
   end
 
   @doc """
-  Deletes a round.
-
-  ## Examples
-
-      iex> delete_round(round)
-      {:ok, %Round{}}
-
-      iex> delete_round(round)
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def delete_round(%Round{} = round) do
-    Repo.delete(round)
-    |> notify_subscribers([:round, :deleted])
-  end
-
-  @doc """
   Returns the list of solves.
 
   ## Examples
@@ -551,23 +535,6 @@ defmodule CuberacerLive.Sessions do
   end
 
   @doc """
-  Deletes a solve.
-
-  ## Examples
-
-      iex> delete_solve(solve)
-      {:ok, %Solve{}}
-
-      iex> delete_solve(solve)
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def delete_solve(%Solve{} = solve) do
-    Repo.delete(solve)
-    |> notify_subscribers([:solve, :deleted])
-  end
-
-  @doc """
   Return a string of a solve time in seconds and penalty.
 
   Accepts `nil` as well, returning a placeholder value.
@@ -676,37 +643,50 @@ defmodule CuberacerLive.Sessions do
   # - on session create/update, notify overall topic as well as session topic
   # - on round/solve create/update, notify only the session topic
 
-  defp notify_subscribers({:ok, %Session{} = result}, [:session, _action] = event) do
-    Phoenix.PubSub.broadcast(CuberacerLive.PubSub, @topic, {__MODULE__, event, result})
+  defp notify_subscribers({:ok, %Session{} = result}, [:session, action]) do
+    event =
+      case action do
+        :created -> %Events.SessionCreated{session: result}
+        :updated -> %Events.SessionUpdated{session: result}
+        :deleted -> %Events.SessionDeleted{session: result}
+      end
+
+    Phoenix.PubSub.broadcast(CuberacerLive.PubSub, @topic, {__MODULE__, event})
 
     Phoenix.PubSub.broadcast(
       CuberacerLive.PubSub,
       @topic <> "#{result.id}",
-      {__MODULE__, event, result}
+      {__MODULE__, event}
     )
 
     {:ok, result}
   end
 
-  defp notify_subscribers({:ok, %Round{} = result}, [:round, _action] = event) do
+  defp notify_subscribers({:ok, %Round{} = result}, [:round, :created]) do
     session_id = result.session_id
 
     Phoenix.PubSub.broadcast(
       CuberacerLive.PubSub,
       @topic <> "#{session_id}",
-      {__MODULE__, event, result}
+      {__MODULE__, %Events.RoundCreated{round: result}}
     )
 
     {:ok, result}
   end
 
-  defp notify_subscribers({:ok, %Solve{} = result}, [:solve, _action] = event) do
+  defp notify_subscribers({:ok, %Solve{} = result}, [:solve, action]) do
     preloaded_solve = Repo.preload(result, :round)
+
+    event =
+      case action do
+        :created -> %Events.SolveCreated{solve: preloaded_solve}
+        :updated -> %Events.SolveUpdated{solve: preloaded_solve}
+      end
 
     Phoenix.PubSub.broadcast(
       CuberacerLive.PubSub,
       @topic <> "#{preloaded_solve.round.session_id}",
-      {__MODULE__, event, preloaded_solve}
+      {__MODULE__, event}
     )
 
     {:ok, preloaded_solve}

@@ -26,12 +26,6 @@ config :cuberacer_live, CuberacerLiveWeb.Endpoint,
 # at the `config/runtime.exs`.
 config :cuberacer_live, CuberacerLive.Mailer, adapter: Swoosh.Adapters.Local
 
-# Configures Hashids
-# TODO: Figure out what to do about salt
-config :cuberacer_live, :hashids_config,
-  salt: "not very secret",
-  min_len: 6
-
 # Swoosh API client is needed for adapters other than SMTP.
 config :swoosh, :api_client, false
 

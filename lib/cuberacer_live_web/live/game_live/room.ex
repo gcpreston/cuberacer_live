@@ -4,7 +4,7 @@ defmodule CuberacerLiveWeb.GameLive.Room do
   import CuberacerLive.Repo, only: [preload: 2]
   import CuberacerLiveWeb.GameLive.Components
 
-  alias CuberacerLive.{RoomServer, Sessions, Accounts, Messaging}
+  alias CuberacerLive.{RoomServer, Sessions, Accounts, Messaging, Events}
   alias CuberacerLiveWeb.{Presence, Endpoint}
 
   @impl true
@@ -32,7 +32,7 @@ defmodule CuberacerLiveWeb.GameLive.Room do
           socket_pipeline(socket, user, session)
       end
 
-    {:ok, socket, temporary_assigns: [past_rounds: []]}
+    {:ok, socket}
   end
 
   def mount(_params, _session, socket) do
@@ -83,8 +83,8 @@ defmodule CuberacerLiveWeb.GameLive.Room do
   end
 
   defp fetch_rounds(socket) do
-    [current_round | past_rounds] = Sessions.list_rounds_of_session(socket.assigns.session, :desc)
-    assign(socket, current_round: current_round, past_rounds: past_rounds)
+    rounds = Sessions.list_rounds_of_session(socket.assigns.session, :desc)
+    assign(socket, all_rounds: rounds)
   end
 
   defp fetch_current_solve(socket) do
@@ -209,19 +209,29 @@ defmodule CuberacerLiveWeb.GameLive.Room do
     {:noreply, socket |> fetch_participant_data()}
   end
 
-  def handle_info({:fetch, :participants}, socket) do
-    {:noreply, socket |> fetch_participant_data() |> fetch_rounds()}
+  def handle_info({:presence, joins, leaves}, socket) do
+    new_socket =
+      Enum.reduce(joins, socket, fn entry, socket ->
+        update(socket, :participant_data, fn pd -> Map.put(pd, entry.user.id, entry) end)
+      end)
+
+    new_socket =
+      Enum.reduce(leaves, new_socket, fn entry, socket ->
+        update(socket, :participant_data, fn pd -> Map.delete(pd, entry.user.id) end)
+      end)
+
+    {:noreply, new_socket}
   end
 
   def handle_info({:set_time_entry, _user_id, _method}, socket) do
     {:noreply, socket |> fetch_participant_data()}
   end
 
-  def handle_info({Sessions, [:session, :updated], session}, socket) do
+  def handle_info({Sessions, %Events.SessionUpdated{session: session}}, socket) do
     {:noreply, assign(socket, session: session)}
   end
 
-  def handle_info({Sessions, [:session, :deleted], _session}, socket) do
+  def handle_info({Sessions, %Events.SessionDeleted{}}, socket) do
     {:noreply,
      socket
      |> put_flash(:info, "Session was deleted")
@@ -234,34 +244,43 @@ defmodule CuberacerLiveWeb.GameLive.Room do
   # fetching the solve... having a preload wrapper in the context seems
   # like a solution just for show
 
-  def handle_info({Sessions, [:round, :created], round}, socket) do
+  def handle_info({Sessions, %Events.RoundCreated{round: round}}, socket) do
     round = preload(round, :solves)
 
     socket =
       socket
-      |> update(:past_rounds, fn rounds -> [socket.assigns.current_round | rounds] end)
-      |> assign(:current_round, round)
       |> assign(:current_solve, nil)
+      |> update(:all_rounds, fn rounds -> [round | rounds] end)
+
+    for user_id <- Map.keys(socket.assigns.participant_data) do
+      send_update(
+        CuberacerLiveWeb.GameLive.ParticipantComponent,
+        id: "participant-component-#{user_id}",
+        event: %Events.RoundCreated{round: round}
+      )
+    end
 
     {:noreply, socket}
   end
 
-  def handle_info({Sessions, [:solve, _action], solve}, socket) do
-    # The round preload should do nothing because notify_subscribers for solves
-    # already handles it.
-    # It will stay though in order to not rely on that function's implementation.
-    solve = preload(solve, :round)
-    current_round = preload(solve.round, :solves)
+  def handle_info({Sessions, %_event{solve: solve} = event}, socket) do
+    updated_round = Sessions.get_round!(solve.round_id) |> preload(:solves)
 
     socket =
       socket
-      |> assign(:current_round, current_round)
       |> fetch_participant_data()
+      |> update(:all_rounds, fn rounds -> find_and_update(rounds, updated_round) end)
+
+    send_update(
+      CuberacerLiveWeb.GameLive.ParticipantComponent,
+      id: "participant-component-#{solve.user_id}",
+      event: event
+    )
 
     {:noreply, socket}
   end
 
-  def handle_info({Messaging, [:room_message, _], room_message}, socket) do
+  def handle_info({Messaging, %Events.RoomMessageCreated{room_message: room_message}}, socket) do
     room_message = preload(room_message, :user)
 
     {:noreply,
@@ -307,6 +326,18 @@ defmodule CuberacerLiveWeb.GameLive.Room do
     else
       {sec, _rest} = Float.parse(input)
       trunc(sec * 1000)
+    end
+  end
+
+  defp find_and_update([], _item) do
+    []
+  end
+
+  defp find_and_update([item | rest], %{id: updated_item_id} = updated_item) do
+    if item.id == updated_item_id do
+      [updated_item | rest]
+    else
+      [item | find_and_update(rest, updated_item)]
     end
   end
 end

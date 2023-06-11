@@ -6,6 +6,7 @@ defmodule CuberacerLive.Messaging do
   import Ecto.Query, warn: false
   alias CuberacerLive.Repo
 
+  alias CuberacerLive.Events
   alias CuberacerLive.Messaging.RoomMessage
   alias CuberacerLive.Sessions.Session
   alias CuberacerLive.Accounts.User
@@ -72,11 +73,11 @@ defmodule CuberacerLive.Messaging do
     |> notify_subscribers([:room_message, :created])
   end
 
-  defp notify_subscribers({:ok, %RoomMessage{} = result}, [:room_message, _action] = event) do
+  defp notify_subscribers({:ok, %RoomMessage{} = result}, [:room_message, :created]) do
     Phoenix.PubSub.broadcast(
       CuberacerLive.PubSub,
       @topic <> "#{result.session_id}",
-      {__MODULE__, event, result}
+      {__MODULE__, %Events.RoomMessageCreated{room_message: result}}
     )
 
     {:ok, result}
