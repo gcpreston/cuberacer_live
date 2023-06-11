@@ -44,10 +44,10 @@ export default () => ({
   },
 
   handlePointDown() {
-    if (!this.$store.inputFocused && !this.hasCurrentSolve) {
+    if (!this.$store.inputFocused) {
       if (this.interval) {
         this.stopTime();
-      } else if (!this.readyTimeout) {
+      } else if (!this.readyTimeout && !this.hasCurrentSolve) {
         this.readyTimeout = setTimeout(() => {
           this.resetTime();
           this.ready = true;

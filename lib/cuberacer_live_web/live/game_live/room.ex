@@ -88,8 +88,9 @@ defmodule CuberacerLiveWeb.GameLive.Room do
   end
 
   defp fetch_current_solve(socket) do
-    %{session: session, current_user: user} = socket.assigns
-    current_solve = Sessions.get_current_solve(session, user)
+    %{current_user: user, all_rounds: rounds} = socket.assigns
+    current_round = hd(rounds)
+    current_solve = Enum.find(current_round.solves, fn solve -> solve.user_id == user.id end)
     assign(socket, current_solve: current_solve)
   end
 
@@ -145,18 +146,22 @@ defmodule CuberacerLiveWeb.GameLive.Room do
   end
 
   def handle_event("timer-submit", %{"time" => time}, socket) do
-    solve =
-      RoomServer.create_solve(
-        socket.assigns.room_server_pid,
-        socket.assigns.current_user,
-        time,
-        :OK
-      )
+    if socket.assigns.current_solve == nil do
+      solve =
+        RoomServer.create_solve(
+          socket.assigns.room_server_pid,
+          socket.assigns.current_user,
+          time,
+          :OK
+        )
 
-    {:noreply,
-     socket
-     |> assign(:current_solve, solve)
-     |> fetch_stats()}
+      {:noreply,
+       socket
+       |> assign(:current_solve, solve)
+       |> fetch_stats()}
+    else
+      {:noreply, socket}
+    end
   end
 
   def handle_event("keyboard-submit", %{"time" => time}, socket) do
@@ -270,6 +275,7 @@ defmodule CuberacerLiveWeb.GameLive.Room do
       socket
       |> fetch_participant_data()
       |> update(:all_rounds, fn rounds -> find_and_update(rounds, updated_round) end)
+      |> maybe_assign_current_solve(updated_round)
 
     send_update(
       CuberacerLiveWeb.GameLive.ParticipantComponent,
@@ -338,6 +344,14 @@ defmodule CuberacerLiveWeb.GameLive.Room do
       [updated_item | rest]
     else
       [item | find_and_update(rest, updated_item)]
+    end
+  end
+
+  defp maybe_assign_current_solve(socket, updated_round) do
+    if updated_round.id == hd(socket.assigns.all_rounds).id do
+      fetch_current_solve(socket)
+    else
+      socket
     end
   end
 end
