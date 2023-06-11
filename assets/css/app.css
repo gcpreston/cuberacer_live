@@ -9,7 +9,7 @@ html, body {
   @apply h-full overflow-hidden;
 }
 
-.phx-connected {
+.phx-loading, .phx-connected {
   @apply h-full;
 }
 
