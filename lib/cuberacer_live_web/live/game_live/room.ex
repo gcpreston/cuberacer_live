@@ -4,6 +4,7 @@ defmodule CuberacerLiveWeb.GameLive.Room do
   import CuberacerLive.Repo, only: [preload: 2]
   import CuberacerLiveWeb.GameLive.Components
 
+  alias CuberacerLive.ParticipantDataEntry
   alias CuberacerLive.{RoomServer, Sessions, Accounts, Messaging, Events}
   alias CuberacerLiveWeb.{Presence, Endpoint}
 
@@ -55,8 +56,13 @@ defmodule CuberacerLiveWeb.GameLive.Room do
 
   defp track_and_subscribe(socket, user, session) do
     if connected?(socket) do
-      track_presence(session.id, user.id)
-      Endpoint.subscribe(pubsub_topic(session.id))
+      # Presence
+      presence_topic = room_presence_topic(session.id)
+      Endpoint.subscribe(presence_topic)
+      Presence.track(self(), presence_topic, user.id, %{time_entry: :timer, solving: false})
+
+      # Application events
+      Endpoint.subscribe(game_room_topic(session.id))
       Sessions.subscribe(session.id)
       Messaging.subscribe(session.id)
     end
@@ -124,21 +130,15 @@ defmodule CuberacerLiveWeb.GameLive.Room do
   end
 
   def handle_event("solving", _value, socket) do
-    Phoenix.PubSub.broadcast!(
-      CuberacerLive.PubSub,
-      room_server_topic(socket.assigns.session.id),
-      {:solving, socket.assigns.current_user.id}
-    )
-
+    send(socket.assigns.room_server_pid, {:solving, socket.assigns.current_user.id})
     {:noreply, socket}
   end
 
   def handle_event("toggle-timer", _value, socket) do
     new_entry_method = if socket.assigns.time_entry == :timer, do: :keyboard, else: :timer
 
-    Phoenix.PubSub.broadcast!(
-      CuberacerLive.PubSub,
-      room_server_topic(socket.assigns.session.id),
+    send(
+      socket.assigns.room_server_pid,
       {:set_time_entry, socket.assigns.current_user.id, new_entry_method}
     )
 
@@ -214,22 +214,17 @@ defmodule CuberacerLiveWeb.GameLive.Room do
     {:noreply, socket |> fetch_participant_data()}
   end
 
-  def handle_info({:presence, joins, leaves}, socket) do
-    new_socket =
-      Enum.reduce(joins, socket, fn entry, socket ->
-        update(socket, :participant_data, fn pd -> Map.put(pd, entry.user.id, entry) end)
-      end)
-
-    new_socket =
-      Enum.reduce(leaves, new_socket, fn entry, socket ->
-        update(socket, :participant_data, fn pd -> Map.delete(pd, entry.user.id) end)
-      end)
-
-    {:noreply, new_socket}
+  def handle_info({CuberacerLive.PresenceClient, {:join, user_data}}, socket) do
+    entry = ParticipantDataEntry.new(user_data.user)
+    {:noreply, update(socket, :participant_data, fn pd -> Map.put(pd, entry.user.id, entry) end)}
   end
 
-  def handle_info({:set_time_entry, _user_id, _method}, socket) do
-    {:noreply, socket |> fetch_participant_data()}
+  def handle_info({CuberacerLive.PresenceClient, {:leave, user_data}}, socket) do
+    {:noreply, update(socket, :participant_data, fn pd -> Map.delete(pd, user_data.user.id) end)}
+  end
+
+  def handle_info(%Phoenix.Socket.Broadcast{event: "presence_diff"}, socket) do
+    {:noreply, socket}
   end
 
   def handle_info({Sessions, %Events.SessionUpdated{session: session}}, socket) do
@@ -300,17 +295,12 @@ defmodule CuberacerLiveWeb.GameLive.Room do
 
   ## Helpers
 
-  defp pubsub_topic(session_id) do
+  defp game_room_topic(session_id) do
     "room:#{session_id}"
   end
 
-  defp room_server_topic(session_id) do
-    "#{inspect(RoomServer)}:#{session_id}"
-  end
-
-  defp track_presence(session_id, user_id) do
-    topic = room_server_topic(session_id)
-    Presence.track(self(), topic, user_id, %{})
+  defp room_presence_topic(session_id) do
+    "room_presence:#{session_id}"
   end
 
   defp scramble_text_size(scramble) do

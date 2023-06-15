@@ -63,7 +63,7 @@ defmodule CuberacerLive.LobbyServer do
 
   @impl true
   def handle_continue(:tell_game_lobby_to_fetch, state) do
-    Phoenix.PubSub.broadcast!(CuberacerLive.PubSub, @game_lobby_topic, :fetch)
+    Phoenix.PubSub.local_broadcast(CuberacerLive.PubSub, @game_lobby_topic, :fetch)
     {:noreply, state}
   end
 

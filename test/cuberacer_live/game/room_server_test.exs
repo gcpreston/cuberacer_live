@@ -1,6 +1,7 @@
 defmodule CuberacerLive.RoomServerTest do
   use CuberacerLive.DataCase, async: false
 
+  alias CuberacerLive.ParticipantDataEntry
   alias CuberacerLive.{Events, RoomServer, Sessions, Messaging}
   alias CuberacerLive.Messaging.RoomMessage
   alias CuberacerLive.Sessions.Solve
@@ -49,10 +50,7 @@ defmodule CuberacerLive.RoomServerTest do
     test "allows creation of new round after a solve is submitted", %{pid: pid} do
       user = user_fixture()
 
-      send(pid, %Phoenix.Socket.Broadcast{
-        event: "presence_diff",
-        payload: %{joins: %{user.id => user}, leaves: %{}}
-      })
+      send(pid, {CuberacerLive.PresenceClient, {:join, ParticipantDataEntry.new(user)}})
 
       assert %Solve{} = RoomServer.create_solve(pid, user, 15341, :OK)
       assert is_binary(RoomServer.create_round(pid))
