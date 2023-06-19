@@ -221,9 +221,16 @@ defmodule CuberacerLiveWeb.GameLive.Room do
     {:noreply, update(socket, :participant_data, fn pd -> Map.put(pd, user_id, new_entry) end)}
   end
 
-  def handle_info({:set_time_entry, user_id, method}, socket) do
-    new_entry = ParticipantDataEntry.set_time_entry(socket.assigns.participant_data[user_id], method)
-    {:noreply, update(socket, :participant_data, fn pd -> Map.put(pd, user_id, new_entry) end)}
+  def handle_info({:set_time_entry, user_id, new_method}, socket) do
+    new_entry =
+      ParticipantDataEntry.set_time_entry(socket.assigns.participant_data[user_id], new_method)
+
+    {:noreply,
+     socket
+     |> update(:participant_data, fn pd -> Map.put(pd, user_id, new_entry) end)
+     |> update(:time_entry, fn old_method ->
+       if user_id == socket.assigns.current_user.id, do: new_method, else: old_method
+     end)}
   end
 
   def handle_info({CuberacerLive.PresenceClient, {:join, user_data}}, socket) do
