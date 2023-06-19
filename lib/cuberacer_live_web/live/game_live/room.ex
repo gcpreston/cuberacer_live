@@ -56,13 +56,13 @@ defmodule CuberacerLiveWeb.GameLive.Room do
 
   defp track_and_subscribe(socket, user, session) do
     if connected?(socket) do
+      topic = game_room_topic(session.id)
+      Endpoint.subscribe(topic)
+
       # Presence
-      presence_topic = room_presence_topic(session.id)
-      Endpoint.subscribe(presence_topic)
-      Presence.track(self(), presence_topic, user.id, %{time_entry: :timer, solving: false})
+      Presence.track(self(), topic, user.id, %{})
 
       # Application events
-      Endpoint.subscribe(game_room_topic(session.id))
       Sessions.subscribe(session.id)
       Messaging.subscribe(session.id)
     end
@@ -130,15 +130,21 @@ defmodule CuberacerLiveWeb.GameLive.Room do
   end
 
   def handle_event("solving", _value, socket) do
-    send(socket.assigns.room_server_pid, {:solving, socket.assigns.current_user.id})
+    Phoenix.PubSub.broadcast(
+      CuberacerLive.PubSub,
+      game_room_topic(socket.assigns.session.id),
+      {:solving, socket.assigns.current_user.id}
+    )
+
     {:noreply, socket}
   end
 
   def handle_event("toggle-timer", _value, socket) do
     new_entry_method = if socket.assigns.time_entry == :timer, do: :keyboard, else: :timer
 
-    send(
-      socket.assigns.room_server_pid,
+    Phoenix.PubSub.broadcast(
+      CuberacerLive.PubSub,
+      game_room_topic(socket.assigns.session.id),
       {:set_time_entry, socket.assigns.current_user.id, new_entry_method}
     )
 
@@ -210,8 +216,21 @@ defmodule CuberacerLiveWeb.GameLive.Room do
   ## PubSub handlers
 
   @impl true
-  def handle_info({:fetch, :participant_data}, socket) do
-    {:noreply, socket |> fetch_participant_data()}
+  def handle_info({:solving, user_id}, socket) do
+    new_entry = ParticipantDataEntry.set_solving(socket.assigns.participant_data[user_id], true)
+    {:noreply, update(socket, :participant_data, fn pd -> Map.put(pd, user_id, new_entry) end)}
+  end
+
+  def handle_info({:set_time_entry, user_id, new_method}, socket) do
+    new_entry =
+      ParticipantDataEntry.set_time_entry(socket.assigns.participant_data[user_id], new_method)
+
+    {:noreply,
+     socket
+     |> update(:participant_data, fn pd -> Map.put(pd, user_id, new_entry) end)
+     |> update(:time_entry, fn old_method ->
+       if user_id == socket.assigns.current_user.id, do: new_method, else: old_method
+     end)}
   end
 
   def handle_info({CuberacerLive.PresenceClient, {:join, user_data}}, socket) do
@@ -297,10 +316,6 @@ defmodule CuberacerLiveWeb.GameLive.Room do
 
   defp game_room_topic(session_id) do
     "room:#{session_id}"
-  end
-
-  defp room_presence_topic(session_id) do
-    "room_presence:#{session_id}"
   end
 
   defp scramble_text_size(scramble) do

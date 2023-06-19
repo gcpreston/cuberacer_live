@@ -120,7 +120,7 @@ defmodule CuberacerLive.RoomServer do
   end
 
   @impl true
-  def handle_info({CuberacerLive.PresenceClient, {:join, user_data}} = event, state) do
+  def handle_info({CuberacerLive.PresenceClient, {:join, user_data}}, state) do
     user = user_data.user
 
     new_participant_data =
@@ -144,10 +144,10 @@ defmodule CuberacerLive.RoomServer do
         new_state |> cancel_empty_room_timeout()
       end
 
-    {:noreply, new_state, {:continue, {:notify_game_room, event}}}
+    {:noreply, new_state}
   end
 
-  def handle_info({CuberacerLive.PresenceClient, {:leave, user_data}} = event, state) do
+  def handle_info({CuberacerLive.PresenceClient, {:leave, user_data}}, state) do
     new_participant_data =
       Map.filter(state.participant_data, fn {user_id, _data} ->
         user_id != user_data.user.id
@@ -170,7 +170,7 @@ defmodule CuberacerLive.RoomServer do
         new_state |> cancel_empty_room_timeout()
       end
 
-    {:noreply, new_state, {:continue, {:notify_game_room, event}}}
+    {:noreply, new_state}
   end
 
   def handle_info(%Phoenix.Socket.Broadcast{event: "presence_diff"}, state) do
@@ -179,30 +179,17 @@ defmodule CuberacerLive.RoomServer do
 
   def handle_info({:solving, user_id}, state) do
     new_entry = ParticipantDataEntry.set_solving(state.participant_data[user_id], true)
-    new_state = put_in(state.participant_data[user_id], new_entry)
-    {:noreply, new_state, {:continue, {:notify_game_room, {:fetch, :participant_data}}}}
+    {:noreply, put_in(state.participant_data[user_id], new_entry)}
   end
 
   def handle_info({:set_time_entry, user_id, method}, state) do
     new_entry = ParticipantDataEntry.set_time_entry(state.participant_data[user_id], method)
-    new_state = put_in(state.participant_data[user_id], new_entry)
-    {:noreply, new_state, {:continue, {:notify_game_room, {:fetch, :participant_data}}}}
+    {:noreply, put_in(state.participant_data[user_id], new_entry)}
   end
 
   def handle_info(:timeout, state) do
     Logger.info("Room #{state.session.id} timed out")
     {:stop, :normal, state}
-  end
-
-  @impl true
-  def handle_continue({:notify_game_room, event}, state) do
-    Phoenix.PubSub.local_broadcast(
-      CuberacerLive.PubSub,
-      game_room_topic(state.session.id),
-      event
-    )
-
-    {:noreply, state}
   end
 
   ## Helpers
@@ -219,13 +206,8 @@ defmodule CuberacerLive.RoomServer do
     "room:#{session_id}"
   end
 
-  defp room_presence_topic(session_id) do
-    "room_presence:#{session_id}"
-  end
-
   defp subscribe_to_pubsub(session_id) do
-    topic = room_presence_topic(session_id)
-    CuberacerLiveWeb.Endpoint.subscribe(topic)
+    Phoenix.PubSub.subscribe(CuberacerLive.PubSub, game_room_topic(session_id))
   end
 
   defp global_name(%Session{} = session) do
