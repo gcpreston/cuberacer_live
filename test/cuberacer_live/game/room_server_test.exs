@@ -57,4 +57,39 @@ defmodule CuberacerLive.RoomServerTest do
       assert {:error, :empty_round} = RoomServer.create_round(pid)
     end
   end
+
+  describe "pubsub events" do
+    setup do
+      session = session_fixture()
+      user = user_fixture()
+      {:ok, pid} = RoomServer.start_link(session)
+      send(pid, {CuberacerLive.PresenceClient, {:join, ParticipantDataEntry.new(user)}})
+
+      %{session: session, user: user, pid: pid}
+    end
+
+    test "handles solving events", %{session: session, user: user, pid: pid} do
+      participant_data = RoomServer.get_participant_data(pid)
+      refute ParticipantDataEntry.get_solving(participant_data[user.id])
+
+      Phoenix.PubSub.broadcast(CuberacerLive.PubSub, "room:#{session.id}", {:solving, user.id})
+
+      participant_data = RoomServer.get_participant_data(pid)
+      assert ParticipantDataEntry.get_solving(participant_data[user.id])
+    end
+
+    test "handles set_time_entry events", %{session: session, user: user, pid: pid} do
+      participant_data = RoomServer.get_participant_data(pid)
+      assert ParticipantDataEntry.get_time_entry(participant_data[user.id]) == :timer
+
+      Phoenix.PubSub.broadcast(
+        CuberacerLive.PubSub,
+        "room:#{session.id}",
+        {:set_time_entry, user.id, :keyboard}
+      )
+
+      participant_data = RoomServer.get_participant_data(pid)
+      assert ParticipantDataEntry.get_time_entry(participant_data[user.id]) == :keyboard
+    end
+  end
 end
