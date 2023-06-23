@@ -5,13 +5,14 @@ defmodule CuberacerLiveWeb.RoomLive do
   import CuberacerLiveWeb.Components
 
   alias CuberacerLive.ParticipantDataEntry
-  alias CuberacerLive.{RoomServer, Sessions, Accounts, Messaging, Events}
+  alias CuberacerLive.{Sessions, Accounts, Messaging, Events}
   alias CuberacerLiveWeb.{Presence, Endpoint}
+  alias CuberacerLive.Room
 
   @impl true
   def mount(%{"id" => session_id}, %{"user_token" => user_token}, socket)
       when not is_nil(user_token) do
-    session = Sessions.get_session(session_id)
+    session = Room.get_session(session_id)
     user = Accounts.get_user_by_session_token(user_token)
 
     socket =
@@ -22,7 +23,7 @@ defmodule CuberacerLiveWeb.RoomLive do
         session == nil ->
           push_navigate_to_lobby(socket, "Unknown room")
 
-        !RoomServer.whereis(session.id) ->
+        !Room.alive?(session.id) ->
           push_navigate_to_lobby(socket, "Room has terminated")
 
         !Accounts.user_authorized_for_room?(user, session) ->
@@ -56,15 +57,8 @@ defmodule CuberacerLiveWeb.RoomLive do
 
   defp track_and_subscribe(socket, user, session) do
     if connected?(socket) do
-      topic = game_room_topic(session.id)
-      Endpoint.subscribe(topic)
-
-      # Presence
-      Presence.track(self(), topic, user.id, %{})
-
-      # Application events
-      Sessions.subscribe(session.id)
-      Messaging.subscribe(session.id)
+      Presence.track(self(), Room.game_room_topic(session.id), user.id, %{})
+      Room.subscribe(session.id)
     end
   end
 
@@ -72,7 +66,6 @@ defmodule CuberacerLiveWeb.RoomLive do
     socket
     |> assign(:session, session)
     |> assign(:current_user, current_user)
-    |> fetch_room_server_pid(session.id)
     |> fetch_participant_data()
     |> fetch_rounds()
     |> fetch_current_solve()
@@ -83,13 +76,8 @@ defmodule CuberacerLiveWeb.RoomLive do
 
   ## Socket populators
 
-  defp fetch_room_server_pid(socket, session_id) do
-    pid = RoomServer.whereis(session_id)
-    assign(socket, :room_server_pid, pid)
-  end
-
   defp fetch_rounds(socket) do
-    rounds = Sessions.list_rounds_of_session(socket.assigns.session, :desc)
+    rounds = Room.list_rounds_of_session(socket.assigns.session, :desc)
     assign(socket, all_rounds: rounds)
   end
 
@@ -102,17 +90,17 @@ defmodule CuberacerLiveWeb.RoomLive do
 
   defp fetch_stats(socket) do
     %{session: session, current_user: user} = socket.assigns
-    stats = Sessions.current_stats(session, user)
+    stats = Room.current_stats(session, user)
     assign(socket, stats: stats)
   end
 
   defp fetch_participant_data(socket) do
-    participant_data = RoomServer.get_participant_data(socket.assigns.room_server_pid)
+    participant_data = Room.get_participant_data(socket.assigns.session.id)
     assign(socket, :participant_data, participant_data)
   end
 
   defp fetch_room_messages(socket) do
-    room_messages = Messaging.list_room_messages(socket.assigns.session)
+    room_messages = Room.list_room_messages(socket.assigns.session)
     stream(socket, :room_messages, room_messages)
   end
 
@@ -124,28 +112,23 @@ defmodule CuberacerLiveWeb.RoomLive do
 
   @impl true
   def handle_event("new-round", _value, socket) do
-    RoomServer.create_round(socket.assigns.room_server_pid)
+    Room.create_round(socket.assigns.session.id)
 
     {:noreply, socket}
   end
 
   def handle_event("solving", _value, socket) do
-    Phoenix.PubSub.broadcast(
-      CuberacerLive.PubSub,
-      game_room_topic(socket.assigns.session.id),
-      {:solving, socket.assigns.current_user.id}
-    )
-
+    Room.solving(socket.assigns.session.id, socket.assigns.current_user.id)
     {:noreply, socket}
   end
 
   def handle_event("toggle-timer", _value, socket) do
     new_entry_method = if socket.assigns.time_entry == :timer, do: :keyboard, else: :timer
 
-    Phoenix.PubSub.broadcast(
-      CuberacerLive.PubSub,
-      game_room_topic(socket.assigns.session.id),
-      {:set_time_entry, socket.assigns.current_user.id, new_entry_method}
+    Room.set_time_entry(
+      socket.assigns.session.id,
+      socket.assigns.current_user.id,
+      new_entry_method
     )
 
     {:noreply, assign(socket, :time_entry, new_entry_method)}
@@ -154,8 +137,8 @@ defmodule CuberacerLiveWeb.RoomLive do
   def handle_event("timer-submit", %{"time" => time}, socket) do
     if socket.assigns.current_solve == nil do
       solve =
-        RoomServer.create_solve(
-          socket.assigns.room_server_pid,
+        Room.create_solve(
+          socket.assigns.session.id,
           socket.assigns.current_user,
           time,
           :OK
@@ -177,8 +160,8 @@ defmodule CuberacerLiveWeb.RoomLive do
       ms = keyboard_input_to_ms(time)
 
       solve =
-        RoomServer.create_solve(
-          socket.assigns.room_server_pid,
+        Room.create_solve(
+          socket.assigns.session.id,
           socket.assigns.current_user,
           ms,
           :OK
@@ -194,8 +177,8 @@ defmodule CuberacerLiveWeb.RoomLive do
   end
 
   def handle_event("change-penalty", %{"penalty" => penalty}, socket) do
-    RoomServer.change_penalty(
-      socket.assigns.room_server_pid,
+    Room.change_penalty(
+      socket.assigns.session.id,
       socket.assigns.current_user,
       penalty
     )
@@ -204,7 +187,7 @@ defmodule CuberacerLiveWeb.RoomLive do
   end
 
   def handle_event("send-message", %{"message" => message}, socket) do
-    RoomServer.send_message(socket.assigns.room_server_pid, socket.assigns.current_user, message)
+    Room.send_message(socket.assigns.session, socket.assigns.current_user, message)
 
     {:noreply, socket}
   end
@@ -216,12 +199,15 @@ defmodule CuberacerLiveWeb.RoomLive do
   ## PubSub handlers
 
   @impl true
-  def handle_info({:solving, user_id}, socket) do
+  def handle_info({Room, %Events.Solving{user_id: user_id}}, socket) do
     new_entry = ParticipantDataEntry.set_solving(socket.assigns.participant_data[user_id], true)
     {:noreply, update(socket, :participant_data, fn pd -> Map.put(pd, user_id, new_entry) end)}
   end
 
-  def handle_info({:set_time_entry, user_id, new_method}, socket) do
+  def handle_info(
+        {Room, %Events.TimeEntryMethodSet{user_id: user_id, entry_method: new_method}},
+        socket
+      ) do
     new_entry =
       ParticipantDataEntry.set_time_entry(socket.assigns.participant_data[user_id], new_method)
 
@@ -283,7 +269,7 @@ defmodule CuberacerLiveWeb.RoomLive do
   end
 
   def handle_info({Sessions, %_event{solve: solve} = event}, socket) do
-    updated_round = Sessions.get_round!(solve.round_id) |> preload(:solves)
+    updated_round = Room.get_round!(solve.round_id) |> preload(:solves)
 
     socket =
       socket

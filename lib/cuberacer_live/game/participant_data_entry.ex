@@ -3,6 +3,14 @@ defmodule CuberacerLive.ParticipantDataEntry do
 
   @type time_entry_method() :: :timer | :keyboard
 
+  @type t :: %__MODULE__{
+          user: User.t(),
+          meta: %{
+            solving: boolean(),
+            time_entry: time_entry_method()
+          }
+        }
+
   defstruct user: nil, meta: %{solving: false, time_entry: :timer}
 
   @spec new(%User{}) :: %__MODULE__{}

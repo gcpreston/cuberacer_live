@@ -10,6 +10,8 @@ defmodule CuberacerLive.RoomServer do
   alias CuberacerLive.Sessions.Session
   alias CuberacerLive.Accounts.User
   alias CuberacerLive.ParticipantDataEntry
+  alias CuberacerLive.Events
+  alias CuberacerLive.Room
 
   defstruct [:session, participant_data: %{}, timeout_ref: nil, empty_round_flag: true]
 
@@ -177,12 +179,15 @@ defmodule CuberacerLive.RoomServer do
     {:noreply, state}
   end
 
-  def handle_info({:solving, user_id}, state) do
+  def handle_info({Room, %Events.Solving{user_id: user_id}}, state) do
     new_entry = ParticipantDataEntry.set_solving(state.participant_data[user_id], true)
     {:noreply, put_in(state.participant_data[user_id], new_entry)}
   end
 
-  def handle_info({:set_time_entry, user_id, method}, state) do
+  def handle_info(
+        {Room, %Events.TimeEntryMethodSet{user_id: user_id, entry_method: method}},
+        state
+      ) do
     new_entry = ParticipantDataEntry.set_time_entry(state.participant_data[user_id], method)
     {:noreply, put_in(state.participant_data[user_id], new_entry)}
   end
@@ -202,12 +207,8 @@ defmodule CuberacerLive.RoomServer do
     send(CuberacerLive.LobbyServer, {event, result})
   end
 
-  defp game_room_topic(session_id) do
-    "room:#{session_id}"
-  end
-
   defp subscribe_to_pubsub(session_id) do
-    Phoenix.PubSub.subscribe(CuberacerLive.PubSub, game_room_topic(session_id))
+    Phoenix.PubSub.subscribe(CuberacerLive.PubSub, Room.game_room_topic(session_id))
   end
 
   defp global_name(%Session{} = session) do

@@ -2,7 +2,7 @@ defmodule CuberacerLive.RoomServerTest do
   use CuberacerLive.DataCase, async: false
 
   alias CuberacerLive.ParticipantDataEntry
-  alias CuberacerLive.{Events, RoomServer, Sessions, Messaging}
+  alias CuberacerLive.{Events, RoomServer, Sessions, Messaging, Room}
   alias CuberacerLive.Messaging.RoomMessage
   alias CuberacerLive.Sessions.Solve
 
@@ -72,7 +72,11 @@ defmodule CuberacerLive.RoomServerTest do
       participant_data = RoomServer.get_participant_data(pid)
       refute ParticipantDataEntry.get_solving(participant_data[user.id])
 
-      Phoenix.PubSub.broadcast(CuberacerLive.PubSub, "room:#{session.id}", {:solving, user.id})
+      Phoenix.PubSub.broadcast(
+        CuberacerLive.PubSub,
+        Room.game_room_topic(session.id),
+        {Room, %Events.Solving{user_id: user.id}}
+      )
 
       participant_data = RoomServer.get_participant_data(pid)
       assert ParticipantDataEntry.get_solving(participant_data[user.id])
@@ -84,8 +88,8 @@ defmodule CuberacerLive.RoomServerTest do
 
       Phoenix.PubSub.broadcast(
         CuberacerLive.PubSub,
-        "room:#{session.id}",
-        {:set_time_entry, user.id, :keyboard}
+        Room.game_room_topic(session.id),
+        {Room, %Events.TimeEntryMethodSet{user_id: user.id, entry_method: :keyboard}}
       )
 
       participant_data = RoomServer.get_participant_data(pid)

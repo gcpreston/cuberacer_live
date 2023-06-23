@@ -30,4 +30,12 @@ defmodule CuberacerLive.Events do
   defmodule SessionDeleted do
     defstruct session: nil
   end
+
+  defmodule TimeEntryMethodSet do
+    defstruct user_id: nil, entry_method: nil
+  end
+
+  defmodule Solving do
+    defstruct user_id: nil
+  end
 end
