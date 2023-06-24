@@ -1,8 +1,8 @@
-defmodule CuberacerLiveWeb.GameLive.Room do
+defmodule CuberacerLiveWeb.RoomLive do
   use CuberacerLiveWeb, :live_view
 
   import CuberacerLive.Repo, only: [preload: 2]
-  import CuberacerLiveWeb.GameLive.Components
+  import CuberacerLiveWeb.Components
 
   alias CuberacerLive.ParticipantDataEntry
   alias CuberacerLive.{RoomServer, Sessions, Accounts, Messaging, Events}
@@ -273,7 +273,7 @@ defmodule CuberacerLiveWeb.GameLive.Room do
 
     for user_id <- Map.keys(socket.assigns.participant_data) do
       send_update(
-        CuberacerLiveWeb.GameLive.ParticipantComponent,
+        CuberacerLiveWeb.ParticipantComponent,
         id: "participant-component-#{user_id}",
         event: %Events.RoundCreated{round: round}
       )
@@ -292,7 +292,7 @@ defmodule CuberacerLiveWeb.GameLive.Room do
       |> maybe_assign_current_solve(updated_round)
 
     send_update(
-      CuberacerLiveWeb.GameLive.ParticipantComponent,
+      CuberacerLiveWeb.ParticipantComponent,
       id: "participant-component-#{solve.user_id}",
       event: event
     )

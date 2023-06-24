@@ -2,7 +2,7 @@
   <% :new -> %>
     <.modal return_to={~p"/lobby"}>
       <.live_component
-        module={CuberacerLiveWeb.GameLive.CreateRoomForm}
+        module={CuberacerLiveWeb.CreateRoomForm}
         id={@session.id || :new}
         title={@page_title}
         action={@live_action}
@@ -14,7 +14,7 @@
   <% :join -> %>
     <.modal return_to={~p"/lobby"}>
       <.live_component
-        module={CuberacerLiveWeb.GameLive.JoinRoomForm}
+        module={CuberacerLiveWeb.JoinRoomForm}
         id={@session.id}
         title={@page_title}
         action={@live_action}

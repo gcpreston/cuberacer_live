@@ -1,4 +1,4 @@
-defmodule CuberacerLive.GameLive.LobbyTest do
+defmodule CuberacerLive.LobbyLiveTest do
   use CuberacerLiveWeb.ConnCase
   @moduletag ensure_presence_shutdown: true
 
