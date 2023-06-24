@@ -122,7 +122,7 @@ defmodule CuberacerLive.RoomServer do
   end
 
   @impl true
-  def handle_info({CuberacerLive.PresenceClient, {:join, user_data}}, state) do
+  def handle_info({CuberacerLive.PresenceClient, %Events.JoinRoom{user_data: user_data}}, state) do
     user = user_data.user
 
     new_participant_data =
@@ -149,7 +149,7 @@ defmodule CuberacerLive.RoomServer do
     {:noreply, new_state}
   end
 
-  def handle_info({CuberacerLive.PresenceClient, {:leave, user_data}}, state) do
+  def handle_info({CuberacerLive.PresenceClient, %Events.LeaveRoom{user_data: user_data}}, state) do
     new_participant_data =
       Map.filter(state.participant_data, fn {user_id, _data} ->
         user_id != user_data.user.id

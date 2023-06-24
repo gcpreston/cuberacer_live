@@ -38,4 +38,12 @@ defmodule CuberacerLive.Events do
   defmodule Solving do
     defstruct user_id: nil
   end
+
+  defmodule JoinRoom do
+    defstruct user_data: nil
+  end
+
+  defmodule LeaveRoom do
+    defstruct user_data: nil
+  end
 end

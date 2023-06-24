@@ -6,7 +6,7 @@ defmodule CuberacerLiveWeb.RoomLive do
 
   alias CuberacerLive.ParticipantDataEntry
   alias CuberacerLive.{Sessions, Accounts, Messaging, Events}
-  alias CuberacerLiveWeb.{Presence, Endpoint}
+  alias CuberacerLiveWeb.Presence
   alias CuberacerLive.Room
 
   @impl true
@@ -219,12 +219,12 @@ defmodule CuberacerLiveWeb.RoomLive do
      end)}
   end
 
-  def handle_info({CuberacerLive.PresenceClient, {:join, user_data}}, socket) do
+  def handle_info({CuberacerLive.PresenceClient, %Events.JoinRoom{user_data: user_data}}, socket) do
     entry = ParticipantDataEntry.new(user_data.user)
     {:noreply, update(socket, :participant_data, fn pd -> Map.put(pd, entry.user.id, entry) end)}
   end
 
-  def handle_info({CuberacerLive.PresenceClient, {:leave, user_data}}, socket) do
+  def handle_info({CuberacerLive.PresenceClient, %Events.LeaveRoom{user_data: user_data}}, socket) do
     {:noreply, update(socket, :participant_data, fn pd -> Map.delete(pd, user_data.user.id) end)}
   end
 
@@ -299,10 +299,6 @@ defmodule CuberacerLiveWeb.RoomLive do
   end
 
   ## Helpers
-
-  defp game_room_topic(session_id) do
-    "room:#{session_id}"
-  end
 
   defp scramble_text_size(scramble) do
     len = String.length(scramble)

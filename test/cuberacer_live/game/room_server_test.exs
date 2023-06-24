@@ -50,7 +50,7 @@ defmodule CuberacerLive.RoomServerTest do
     test "allows creation of new round after a solve is submitted", %{pid: pid} do
       user = user_fixture()
 
-      send(pid, {CuberacerLive.PresenceClient, {:join, ParticipantDataEntry.new(user)}})
+      send(pid, {CuberacerLive.PresenceClient, %Events.JoinRoom{user_data: %{user: user}}})
 
       assert %Solve{} = RoomServer.create_solve(pid, user, 15341, :OK)
       assert is_binary(RoomServer.create_round(pid))
@@ -63,7 +63,7 @@ defmodule CuberacerLive.RoomServerTest do
       session = session_fixture()
       user = user_fixture()
       {:ok, pid} = RoomServer.start_link(session)
-      send(pid, {CuberacerLive.PresenceClient, {:join, ParticipantDataEntry.new(user)}})
+      send(pid, {CuberacerLive.PresenceClient, %Events.JoinRoom{user_data: %{user: user}}})
 
       %{session: session, user: user, pid: pid}
     end
