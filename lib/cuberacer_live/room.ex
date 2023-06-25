@@ -7,6 +7,7 @@ defmodule CuberacerLive.Room do
   alias CuberacerLive.RoomServer
   alias CuberacerLive.{Sessions, Messaging}
   alias CuberacerLive.ParticipantDataEntry
+  alias CuberacerLive.Presence
 
   @type time_entry_method :: :timer | :keyboard
   @type user_id :: integer()
@@ -18,8 +19,8 @@ defmodule CuberacerLive.Room do
     Phoenix.PubSub.subscribe(CuberacerLive.PubSub, game_room_topic(session_id))
   end
 
-  def game_room_topic(session_id) do
-    "room:#{session_id}"
+  def track_presence(pid, session_id, user_id) do
+    Presence.track(pid, game_room_topic(session_id), user_id, %{})
   end
 
   @spec set_time_entry(integer(), integer(), time_entry_method()) :: :ok
@@ -83,4 +84,8 @@ defmodule CuberacerLive.Room do
   defdelegate current_stats(session, user), to: Sessions
   defdelegate get_round!(round_id), to: Sessions
   defdelegate get_session(session_id), to: Sessions
+
+  defp game_room_topic(session_id) do
+    "room:#{session_id}"
+  end
 end

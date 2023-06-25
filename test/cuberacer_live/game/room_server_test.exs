@@ -74,7 +74,7 @@ defmodule CuberacerLive.RoomServerTest do
 
       Phoenix.PubSub.broadcast(
         CuberacerLive.PubSub,
-        Room.game_room_topic(session.id),
+        "room:#{session.id}",
         {Room, %Events.Solving{user_id: user.id}}
       )
 
@@ -88,7 +88,7 @@ defmodule CuberacerLive.RoomServerTest do
 
       Phoenix.PubSub.broadcast(
         CuberacerLive.PubSub,
-        Room.game_room_topic(session.id),
+        "room:#{session.id}",
         {Room, %Events.TimeEntryMethodSet{user_id: user.id, entry_method: :keyboard}}
       )
 

@@ -6,7 +6,7 @@ defmodule CuberacerLiveWeb.RoomLive do
 
   alias CuberacerLive.ParticipantDataEntry
   alias CuberacerLive.{Sessions, Accounts, Messaging, Events}
-  alias CuberacerLiveWeb.Presence
+  alias CuberacerLive.Presence
   alias CuberacerLive.Room
 
   @impl true
@@ -57,7 +57,7 @@ defmodule CuberacerLiveWeb.RoomLive do
 
   defp track_and_subscribe(socket, user, session) do
     if connected?(socket) do
-      Presence.track(self(), Room.game_room_topic(session.id), user.id, %{})
+      Room.track_presence(self(), session.id, user.id)
       Room.subscribe(session.id)
     end
   end

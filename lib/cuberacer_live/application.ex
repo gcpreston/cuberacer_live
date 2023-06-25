@@ -14,7 +14,7 @@ defmodule CuberacerLive.Application do
       CuberacerLiveWeb.Telemetry,
       # Start the PubSub system
       {Phoenix.PubSub, name: CuberacerLive.PubSub},
-      CuberacerLiveWeb.Presence,
+      CuberacerLive.Presence,
       # Start the Endpoint (http/https)
       CuberacerLiveWeb.Endpoint,
       # Start Finch for the Mailer API client

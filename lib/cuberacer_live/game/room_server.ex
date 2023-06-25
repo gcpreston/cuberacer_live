@@ -192,6 +192,27 @@ defmodule CuberacerLive.RoomServer do
     {:noreply, put_in(state.participant_data[user_id], new_entry)}
   end
 
+  def handle_info(
+        {Sessions, %Events.SolveCreated{solve: %{user_id: user_id, round_id: round_id}}},
+        %{current_round_id: current_round_id} = state
+      ) do
+    old_entry = state.participant_data[user_id]
+
+    new_state =
+      if old_entry && round_id == current_round_id do
+        new_entry = ParticipantDataEntry.set_solving(state.participant_data[user_id], false)
+        %{put_in(state.participant_data[user_id], new_entry) | empty_round_flag: false}
+      else
+        state
+      end
+
+    {:noreply, new_state}
+  end
+
+  def handle_info({_module, _event}, state) do
+    {:noreply, state}
+  end
+
   def handle_info(:timeout, state) do
     Logger.info("Room #{state.session.id} timed out")
     {:stop, :normal, state}
@@ -208,7 +229,7 @@ defmodule CuberacerLive.RoomServer do
   end
 
   defp subscribe_to_pubsub(session_id) do
-    Phoenix.PubSub.subscribe(CuberacerLive.PubSub, Room.game_room_topic(session_id))
+    Room.subscribe(session_id)
   end
 
   defp global_name(%Session{} = session) do

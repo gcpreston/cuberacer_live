@@ -4,7 +4,7 @@ defmodule CuberacerLiveWeb.LobbyLive do
   import CuberacerLiveWeb.Components
 
   alias CuberacerLiveWeb.Endpoint
-  alias CuberacerLiveWeb.Presence
+  alias CuberacerLive.Presence
   alias CuberacerLive.{LobbyServer, Sessions, Accounts}
   alias CuberacerLive.Sessions.Session
 
