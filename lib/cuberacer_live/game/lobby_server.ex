@@ -24,8 +24,8 @@ defmodule CuberacerLive.LobbyServer do
     # Get current presence counts
     rooms_state =
       for session_id <- RoomCache.list_room_ids() do
-        pid = RoomServer.whereis(session_id)
-        participant_count = RoomServer.get_participant_count(pid)
+        name = RoomServer.global_name(session_id)
+        participant_count = RoomServer.get_participant_count(name)
 
         {session_id, %{participant_count: participant_count}}
       end

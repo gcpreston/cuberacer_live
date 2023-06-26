@@ -6,14 +6,19 @@ defmodule CuberacerLive.RoomServer do
 
   require Logger
 
-  alias CuberacerLive.{Sessions, Messaging}
-  alias CuberacerLive.Sessions.Session
-  alias CuberacerLive.Accounts.User
+  alias CuberacerLive.Sessions
+  alias CuberacerLive.Sessions.{Session, Round}
   alias CuberacerLive.ParticipantDataEntry
   alias CuberacerLive.Events
   alias CuberacerLive.Room
 
-  defstruct [:session, participant_data: %{}, timeout_ref: nil, empty_round_flag: true]
+  defstruct [
+    :session,
+    participant_data: %{},
+    timeout_ref: nil,
+    empty_round_flag: true,
+    current_round_id: nil
+  ]
 
   ## API
 
@@ -27,24 +32,16 @@ defmodule CuberacerLive.RoomServer do
     end
   end
 
-  def start_link(%Session{} = session) do
-    GenServer.start_link(__MODULE__, session, name: global_name(session))
+  def global_name(session_id) do
+    {:global, {__MODULE__, session_id}}
+  end
+
+  def start_link({%Session{} = session, %Round{} = round}) do
+    GenServer.start_link(__MODULE__, {session, round}, name: global_name(session.id))
   end
 
   def create_round(room_server) do
     GenServer.call(room_server, :create_round)
-  end
-
-  def create_solve(room_server, %User{} = user, time, penalty) do
-    GenServer.call(room_server, {:create_solve, user, time, penalty})
-  end
-
-  def change_penalty(room_server, %User{} = user, penalty) do
-    GenServer.call(room_server, {:change_penalty, user, penalty})
-  end
-
-  def send_message(room_server, %User{} = user, message) do
-    GenServer.cast(room_server, {:send_message, user, message})
   end
 
   def get_participant_count(room_server) do
@@ -58,12 +55,12 @@ defmodule CuberacerLive.RoomServer do
   ## Callbacks
 
   @impl true
-  def init(%Session{} = session) do
+  def init({%Session{} = session, %Round{id: round_id}}) do
     Logger.info("Creating room for session #{session.id}")
-    subscribe_to_pubsub(session.id)
+    subscribe_to_pubsub(session)
     notify_lobby_server(:room_created, session.id)
 
-    {:ok, %__MODULE__{session: session} |> set_empty_room_timeout()}
+    {:ok, %__MODULE__{session: session, current_round_id: round_id} |> set_empty_room_timeout()}
   end
 
   @impl true
@@ -77,30 +74,16 @@ defmodule CuberacerLive.RoomServer do
     if state.empty_round_flag do
       {:reply, {:error, :empty_round}, state}
     else
-      case Sessions.create_round(session) do
-        {:ok, round} -> {:reply, round.scramble, %{state | empty_round_flag: true}}
-        error -> {:reply, error, state}
-      end
+      result = Sessions.create_round(session)
+
+      new_state =
+        case result do
+          {:ok, round} -> %{state | empty_round_flag: true, current_round_id: round.id}
+          _error -> state
+        end
+
+      {:reply, result, new_state}
     end
-  end
-
-  def handle_call(
-        {:create_solve, %User{} = user, time, penalty},
-        _from,
-        %{session: session} = state
-      ) do
-    new_entry = ParticipantDataEntry.set_solving(state.participant_data[user.id], false)
-    new_state = %{put_in(state.participant_data[user.id], new_entry) | empty_round_flag: false}
-    {:ok, solve} = Sessions.create_solve(session, user, time, penalty)
-    {:reply, solve, new_state}
-  end
-
-  def handle_call({:change_penalty, %User{} = user, penalty}, _from, %{session: session} = state) do
-    if solve = Sessions.get_current_solve(session, user) do
-      Sessions.change_penalty(solve, penalty)
-    end
-
-    {:reply, :ok, state}
   end
 
   def handle_call(:get_participant_count, _from, state) do
@@ -110,15 +93,6 @@ defmodule CuberacerLive.RoomServer do
 
   def handle_call(:get_participant_data, _from, state) do
     {:reply, state.participant_data, state}
-  end
-
-  @impl true
-  def handle_cast(
-        {:send_message, %User{} = user, message},
-        %{session: session} = state
-      ) do
-    Messaging.create_room_message(session, user, message)
-    {:noreply, state}
   end
 
   @impl true
@@ -228,12 +202,8 @@ defmodule CuberacerLive.RoomServer do
     send(CuberacerLive.LobbyServer, {event, result})
   end
 
-  defp subscribe_to_pubsub(session_id) do
-    Room.subscribe(session_id)
-  end
-
-  defp global_name(%Session{} = session) do
-    {:global, {__MODULE__, session.id}}
+  defp subscribe_to_pubsub(session) do
+    Room.subscribe(session)
   end
 
   defp set_empty_room_timeout(%{timeout_ref: nil} = state) do

@@ -23,8 +23,8 @@ defmodule CuberacerLive.RoomCache do
 
   def create_room(name, puzzle_type, password \\ nil, host \\ nil) do
     case Sessions.create_session_and_round(name, puzzle_type, password, host) do
-      {:ok, session, _round} ->
-        {:ok, pid} = DynamicSupervisor.start_child(__MODULE__, {RoomServer, session})
+      {:ok, session, round} ->
+        {:ok, pid} = DynamicSupervisor.start_child(__MODULE__, {RoomServer, {session, round}})
         {:ok, pid, session}
 
       err ->

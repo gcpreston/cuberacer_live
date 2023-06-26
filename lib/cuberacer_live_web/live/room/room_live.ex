@@ -6,7 +6,6 @@ defmodule CuberacerLiveWeb.RoomLive do
 
   alias CuberacerLive.ParticipantDataEntry
   alias CuberacerLive.{Sessions, Accounts, Messaging, Events}
-  alias CuberacerLive.Presence
   alias CuberacerLive.Room
 
   @impl true
@@ -23,7 +22,7 @@ defmodule CuberacerLiveWeb.RoomLive do
         session == nil ->
           push_navigate_to_lobby(socket, "Unknown room")
 
-        !Room.alive?(session.id) ->
+        !Room.alive?(session) ->
           push_navigate_to_lobby(socket, "Room has terminated")
 
         !Accounts.user_authorized_for_room?(user, session) ->
@@ -57,8 +56,8 @@ defmodule CuberacerLiveWeb.RoomLive do
 
   defp track_and_subscribe(socket, user, session) do
     if connected?(socket) do
-      Room.track_presence(self(), session.id, user.id)
-      Room.subscribe(session.id)
+      Room.track_presence(self(), session, user)
+      Room.subscribe(session)
     end
   end
 
@@ -95,7 +94,7 @@ defmodule CuberacerLiveWeb.RoomLive do
   end
 
   defp fetch_participant_data(socket) do
-    participant_data = Room.get_participant_data(socket.assigns.session.id)
+    participant_data = Room.get_participant_data(socket.assigns.session)
     assign(socket, :participant_data, participant_data)
   end
 
@@ -112,33 +111,28 @@ defmodule CuberacerLiveWeb.RoomLive do
 
   @impl true
   def handle_event("new-round", _value, socket) do
-    Room.create_round(socket.assigns.session.id)
+    Room.create_round(socket.assigns.session)
 
     {:noreply, socket}
   end
 
   def handle_event("solving", _value, socket) do
-    Room.solving(socket.assigns.session.id, socket.assigns.current_user.id)
+    Room.solving(socket.assigns.session, socket.assigns.current_user)
     {:noreply, socket}
   end
 
   def handle_event("toggle-timer", _value, socket) do
     new_entry_method = if socket.assigns.time_entry == :timer, do: :keyboard, else: :timer
-
-    Room.set_time_entry(
-      socket.assigns.session.id,
-      socket.assigns.current_user.id,
-      new_entry_method
-    )
+    Room.set_time_entry(socket.assigns.session, socket.assigns.current_user, new_entry_method)
 
     {:noreply, assign(socket, :time_entry, new_entry_method)}
   end
 
   def handle_event("timer-submit", %{"time" => time}, socket) do
     if socket.assigns.current_solve == nil do
-      solve =
+      {:ok, solve} =
         Room.create_solve(
-          socket.assigns.session.id,
+          socket.assigns.session,
           socket.assigns.current_user,
           time,
           :OK
@@ -159,9 +153,9 @@ defmodule CuberacerLiveWeb.RoomLive do
     if Regex.match?(time_pattern, time) && !socket.assigns.current_solve do
       ms = keyboard_input_to_ms(time)
 
-      solve =
+      {:ok, solve} =
         Room.create_solve(
-          socket.assigns.session.id,
+          socket.assigns.session,
           socket.assigns.current_user,
           ms,
           :OK
@@ -178,7 +172,7 @@ defmodule CuberacerLiveWeb.RoomLive do
 
   def handle_event("change-penalty", %{"penalty" => penalty}, socket) do
     Room.change_penalty(
-      socket.assigns.session.id,
+      socket.assigns.session,
       socket.assigns.current_user,
       penalty
     )
