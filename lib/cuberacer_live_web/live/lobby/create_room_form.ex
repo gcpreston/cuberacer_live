@@ -1,4 +1,4 @@
-defmodule CuberacerLiveWeb.GameLive.CreateRoomForm do
+defmodule CuberacerLiveWeb.CreateRoomForm do
   use CuberacerLiveWeb, :live_component
 
   alias CuberacerLive.RoomCache

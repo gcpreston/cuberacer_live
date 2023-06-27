@@ -1,4 +1,4 @@
-defmodule CuberacerLiveWeb.GameLive.Components do
+defmodule CuberacerLiveWeb.Components do
   use CuberacerLiveWeb, :component
 
   alias CuberacerLive.Sessions
@@ -142,7 +142,7 @@ defmodule CuberacerLiveWeb.GameLive.Components do
       >
         <.live_component
           id={"participant-component-#{entry.user.id}"}
-          module={CuberacerLiveWeb.GameLive.ParticipantComponent}
+          module={CuberacerLiveWeb.ParticipantComponent}
           participant_data_entry={entry}
           rounds={@rounds}
         />

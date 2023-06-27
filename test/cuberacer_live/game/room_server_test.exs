@@ -2,68 +2,62 @@ defmodule CuberacerLive.RoomServerTest do
   use CuberacerLive.DataCase, async: false
 
   alias CuberacerLive.ParticipantDataEntry
-  alias CuberacerLive.{Events, RoomServer, Sessions, Messaging}
-  alias CuberacerLive.Messaging.RoomMessage
-  alias CuberacerLive.Sessions.Solve
+  alias CuberacerLive.{Events, RoomCache, RoomServer, Room}
 
   import CuberacerLive.SessionsFixtures
   import CuberacerLive.AccountsFixtures
 
-  describe "send_message" do
-    setup do
-      session = session_fixture()
-      user = user_fixture()
-      Messaging.subscribe(session.id)
-      {:ok, pid} = RoomServer.start_link(session)
+  describe "get_participant_data/1" do
+    test "retrieves participant data" do
+      {:ok, pid, _session} = RoomCache.create_room("test room", :"3x3")
+      user1 = user_fixture()
+      send(pid, {CuberacerLive.PresenceClient, %Events.JoinRoom{user_data: %{user: user1}}})
 
-      %{user: user, pid: pid}
-    end
+      data = RoomServer.get_participant_data(pid)
+      assert [user1.id] == Map.keys(data)
+      assert ParticipantDataEntry.new(user1) == data[user1.id]
 
-    test "sends a valid message", %{user: user, pid: pid} do
-      RoomServer.send_message(pid, user, "hello world!")
+      user2 = user_fixture()
+      send(pid, {CuberacerLive.PresenceClient, %Events.JoinRoom{user_data: %{user: user2}}})
+      data = RoomServer.get_participant_data(pid)
+      assert MapSet.new([user1.id, user2.id]) == MapSet.new(Map.keys(data))
+      assert ParticipantDataEntry.new(user2) == data[user2.id]
 
-      assert_receive {Messaging,
-                      %Events.RoomMessageCreated{
-                        room_message: %RoomMessage{message: "hello world!"}
-                      }}
-    end
+      send(pid, {Room, %Events.TimeEntryMethodSet{user_id: user1.id, entry_method: :keyboard}})
+      send(pid, {Room, %Events.Solving{user_id: user2.id}})
+      data = RoomServer.get_participant_data(pid)
+      assert ParticipantDataEntry.get_time_entry(data[user1.id]) == :keyboard
+      assert ParticipantDataEntry.get_solving(data[user2.id])
 
-    test "does not send an invalid message", %{user: user, pid: pid} do
-      RoomServer.send_message(pid, user, "")
-
-      refute_receive {Messaging, %Events.RoomMessageCreated{room_message: _message}}
+      send(pid, {CuberacerLive.PresenceClient, %Events.LeaveRoom{user_data: %{user: user2}}})
+      data = RoomServer.get_participant_data(pid)
+      assert [user1.id] == Map.keys(data)
     end
   end
 
-  describe "create_round" do
-    setup do
-      {:ok, session, _round} = Sessions.create_session_and_round("test", :"3x3")
-      {:ok, pid} = RoomServer.start_link(session)
+  describe "get_participant_count/1" do
+    test "retrieves participant count" do
+      {:ok, pid, _session} = RoomCache.create_room("test room", :"3x3")
+      user1 = user_fixture()
+      send(pid, {CuberacerLive.PresenceClient, %Events.JoinRoom{user_data: %{user: user1}}})
+      assert RoomServer.get_participant_count(pid) == 1
 
-      %{pid: pid}
-    end
+      user2 = user_fixture()
+      send(pid, {CuberacerLive.PresenceClient, %Events.JoinRoom{user_data: %{user: user2}}})
+      assert RoomServer.get_participant_count(pid) == 2
 
-    test "does not allow creation of new round at start", %{pid: pid} do
-      assert {:error, :empty_round} = RoomServer.create_round(pid)
-    end
-
-    test "allows creation of new round after a solve is submitted", %{pid: pid} do
-      user = user_fixture()
-
-      send(pid, {CuberacerLive.PresenceClient, {:join, ParticipantDataEntry.new(user)}})
-
-      assert %Solve{} = RoomServer.create_solve(pid, user, 15341, :OK)
-      assert is_binary(RoomServer.create_round(pid))
-      assert {:error, :empty_round} = RoomServer.create_round(pid)
+      send(pid, {CuberacerLive.PresenceClient, %Events.LeaveRoom{user_data: %{user: user1}}})
+      assert RoomServer.get_participant_count(pid) == 1
     end
   end
 
   describe "pubsub events" do
     setup do
       session = session_fixture()
+      round = round_fixture()
       user = user_fixture()
-      {:ok, pid} = RoomServer.start_link(session)
-      send(pid, {CuberacerLive.PresenceClient, {:join, ParticipantDataEntry.new(user)}})
+      {:ok, pid} = RoomServer.start_link({session, round})
+      send(pid, {CuberacerLive.PresenceClient, %Events.JoinRoom{user_data: %{user: user}}})
 
       %{session: session, user: user, pid: pid}
     end
@@ -72,7 +66,11 @@ defmodule CuberacerLive.RoomServerTest do
       participant_data = RoomServer.get_participant_data(pid)
       refute ParticipantDataEntry.get_solving(participant_data[user.id])
 
-      Phoenix.PubSub.broadcast(CuberacerLive.PubSub, "room:#{session.id}", {:solving, user.id})
+      Phoenix.PubSub.broadcast(
+        CuberacerLive.PubSub,
+        "room:#{session.id}",
+        {Room, %Events.Solving{user_id: user.id}}
+      )
 
       participant_data = RoomServer.get_participant_data(pid)
       assert ParticipantDataEntry.get_solving(participant_data[user.id])
@@ -85,7 +83,7 @@ defmodule CuberacerLive.RoomServerTest do
       Phoenix.PubSub.broadcast(
         CuberacerLive.PubSub,
         "room:#{session.id}",
-        {:set_time_entry, user.id, :keyboard}
+        {Room, %Events.TimeEntryMethodSet{user_id: user.id, entry_method: :keyboard}}
       )
 
       participant_data = RoomServer.get_participant_data(pid)

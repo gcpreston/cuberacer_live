@@ -1,4 +1,4 @@
-defmodule CuberacerLiveWeb.GameLive.ParticipantComponent do
+defmodule CuberacerLiveWeb.ParticipantComponent do
   use CuberacerLiveWeb, :live_component
 
   alias CuberacerLive.{Sessions, Events, ParticipantDataEntry}

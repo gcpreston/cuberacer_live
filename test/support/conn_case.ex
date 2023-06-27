@@ -46,7 +46,7 @@ defmodule CuberacerLiveWeb.ConnCase do
       on_exit(fn ->
         :timer.sleep(@presence_shutdown_timer_ms)
 
-        for pid <- CuberacerLiveWeb.Presence.fetchers_pids() do
+        for pid <- CuberacerLive.Presence.fetchers_pids() do
           ref = Process.monitor(pid)
           assert_receive {:DOWN, ^ref, _, _, _}, 1000
         end

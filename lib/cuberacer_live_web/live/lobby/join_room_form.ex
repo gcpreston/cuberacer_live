@@ -1,4 +1,4 @@
-defmodule CuberacerLiveWeb.GameLive.JoinRoomForm do
+defmodule CuberacerLiveWeb.JoinRoomForm do
   use CuberacerLiveWeb, :live_component
 
   alias CuberacerLive.{Accounts, Sessions}

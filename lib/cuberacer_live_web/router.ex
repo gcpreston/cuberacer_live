@@ -94,10 +94,10 @@ defmodule CuberacerLiveWeb.Router do
   scope "/", CuberacerLiveWeb do
     pipe_through [:browser_with_navbar, :require_authenticated_user]
 
-    live "/lobby", GameLive.Lobby, :index
-    live "/lobby/new", GameLive.Lobby, :new
-    live "/lobby/join/:id", GameLive.Lobby, :join
-    live "/rooms/:id", GameLive.Room, :show
+    live "/lobby", LobbyLive, :index
+    live "/lobby/new", LobbyLive, :new
+    live "/lobby/join/:id", LobbyLive, :join
+    live "/rooms/:id", RoomLive, :show
 
     get "/users/settings", UserSettingsController, :edit
     put "/users/settings", UserSettingsController, :update

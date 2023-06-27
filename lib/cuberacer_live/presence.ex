@@ -1,9 +1,10 @@
-defmodule CuberacerLiveWeb.Presence do
+defmodule CuberacerLive.Presence do
   use Phoenix.Presence,
     otp_app: :cuberacer_live,
     pubsub_server: CuberacerLive.PubSub
 
   alias CuberacerLive.Accounts
+  alias CuberacerLive.Events
 
   def init(_opts) do
     {:ok, %{}}
@@ -20,7 +21,7 @@ defmodule CuberacerLiveWeb.Presence do
   def handle_metas(topic, %{joins: joins, leaves: leaves}, presences, state) do
     for {user_id, presence} <- joins do
       user_data = %{user: presence.user, metas: Map.fetch!(presences, user_id)}
-      msg = {CuberacerLive.PresenceClient, {:join, user_data}}
+      msg = {CuberacerLive.PresenceClient, %Events.JoinRoom{user_data: user_data}}
       Phoenix.PubSub.local_broadcast(CuberacerLive.PubSub, topic, msg)
     end
 
@@ -34,7 +35,7 @@ defmodule CuberacerLiveWeb.Presence do
       # only broadcast leave if a user has left on all windows/devices
       if metas == [] do
         user_data = %{user: presence.user, metas: metas}
-        msg = {CuberacerLive.PresenceClient, {:leave, user_data}}
+        msg = {CuberacerLive.PresenceClient, %Events.LeaveRoom{user_data: user_data}}
         Phoenix.PubSub.local_broadcast(CuberacerLive.PubSub, topic, msg)
       end
     end
