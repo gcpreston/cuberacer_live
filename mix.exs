@@ -45,15 +45,17 @@ defmodule CuberacerLive.MixProject do
       {:floki, ">= 0.30.0", only: :test},
       {:phoenix_live_dashboard, "~> 0.8"},
       {:esbuild, "~> 0.3", runtime: Mix.env() == :dev},
-      {:swoosh, "~> 1.3"},
+      {:swoosh, "~> 1.15"},
       {:telemetry_metrics, "~> 0.6"},
       {:telemetry_poller, "~> 1.0"},
       {:gettext, "~> 0.20"},
-      {:jason, "~> 1.2"},
+      {:jason, "~> 1.4"},
       {:plug_cowboy, "~> 2.5"},
       {:whisk, "~> 0.2.0"},
       {:finch, "~> 0.10.2"},
-      {:inflex, "~> 2.1"}
+      {:inflex, "~> 2.1"},
+      {:absinthe_plug, "~> 1.5"},
+      {:dataloader, "~> 2.0"}
     ]
   end
 
