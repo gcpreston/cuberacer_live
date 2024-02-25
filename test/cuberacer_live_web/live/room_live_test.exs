@@ -840,7 +840,7 @@ defmodule CuberacerLiveWeb.RoomLiveTest do
 
       other_session = session_fixture()
       _other_session_round = round_fixture(session: other_session)
-      live_redirect(other_lv, to: "/#{other_session.id}")
+      live_redirect(other_lv, to: "/rooms/#{other_session.id}")
 
       html = render(lv)
       assert html =~ "1 participant"

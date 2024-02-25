@@ -75,7 +75,7 @@ defmodule CuberacerLiveWeb.ParticipantComponent do
      socket
      |> assign(:entry, entry)
      |> assign(:current_round, current_round)
-     |> stream(:user_rounds, user_rounds)}
+     |> stream(:user_rounds, user_rounds, at: 0)}
   end
 
   def update(%{event: %Events.SolveCreated{solve: solve}}, socket) do
@@ -88,8 +88,6 @@ defmodule CuberacerLiveWeb.ParticipantComponent do
 
   def update(%{event: %Events.RoundCreated{round: round}}, socket) do
     {:ok,
-     stream_insert(socket, :user_rounds, UserRound.from_round(round, socket.assigns.entry.user),
-       at: 0
-     )}
+     stream_insert(socket, :user_rounds, UserRound.from_round(round, socket.assigns.entry.user))}
   end
 end
