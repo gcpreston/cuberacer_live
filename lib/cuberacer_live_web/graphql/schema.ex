@@ -14,6 +14,15 @@ defmodule CuberacerLiveWeb.GraphQL.Schema do
     end
   end
 
+  mutation do
+    @desc "Create a round"
+    field :create_round, type: :round do
+      arg :session_id, non_null(:id)
+
+      resolve &Resolvers.Sessions.create_round/3
+    end
+
+
   alias CuberacerLive.Sessions.Solve
   alias CuberacerLive.Sessions.Round
   alias CuberacerLive.Accounts.User
