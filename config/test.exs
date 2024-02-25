@@ -29,7 +29,7 @@ config :cuberacer_live, CuberacerLive.Mailer, adapter: Swoosh.Adapters.Test
 config :cuberacer_live, :empty_room_timeout_ms, 150
 
 # Print only warnings and errors during test
-config :logger, level: :warn
+config :logger, level: :warning
 
 # Initialize plugs at runtime for faster test compilation
 config :phoenix, :plug_init_mode, :runtime
