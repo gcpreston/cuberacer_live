@@ -1,10 +1,25 @@
 defmodule CuberacerLiveWeb.GraphQL.Resolvers.Sessions do
   alias CuberacerLive.Sessions
 
+  # TODO: Require authentication by default, and handle gracefully
+
   def find_session(_parent, %{id: id}, _resolution) do
     case Sessions.get_session(id) do
       nil -> {:error, "Session not found"}
       session -> {:ok, session}
+    end
+  end
+
+  def create_solve(
+        _parent,
+        %{session_id: session_id, time: time, penalty: penalty},
+        %{context: %{current_user: user}}
+      ) do
+    with session when not is_nil(session) <- Sessions.get_session(session_id),
+         {:ok, solve} <- Sessions.create_solve(session, user, time, penalty) do
+      {:ok, solve}
+    else
+      _ -> {:error, "Invalid solve data"}
     end
   end
 

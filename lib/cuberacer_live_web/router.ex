@@ -23,8 +23,8 @@ defmodule CuberacerLiveWeb.Router do
     plug :fetch_current_user
   end
 
-  pipeline :api do
-    plug :accepts, ["json"]
+  pipeline :graphql do
+    plug CuberacerLiveWeb.GraphQL.Context
   end
 
   # Other scopes may use custom stacks.
@@ -113,7 +113,7 @@ defmodule CuberacerLiveWeb.Router do
   ## API routes
 
   scope "/api" do
-    pipe_through :api
+    pipe_through :graphql
 
     forward "/graphiql", Absinthe.Plug.GraphiQL, schema: CuberacerLiveWeb.GraphQL.Schema
     forward "/", Absinthe.Plug, schema: CuberacerLiveWeb.GraphQL.Schema

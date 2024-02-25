@@ -3,7 +3,6 @@ defmodule CuberacerLiveWeb.GraphQL.Schema do
   import_types CuberacerLiveWeb.GraphQL.Schema.SessionTypes
   import_types CuberacerLiveWeb.GraphQL.Schema.AccountsTypes
 
-  alias Absinthe.Phase.Document.Arguments.Data
   alias CuberacerLiveWeb.GraphQL.Resolvers
 
   query do
@@ -22,6 +21,15 @@ defmodule CuberacerLiveWeb.GraphQL.Schema do
       resolve &Resolvers.Sessions.create_round/3
     end
 
+    @desc "Create a solve"
+    field :create_solve, type: :solve do
+      arg :session_id, non_null(:id)
+      arg :time, non_null(:integer)
+      arg :penalty, non_null(:string)
+
+      resolve &Resolvers.Sessions.create_solve/3
+    end
+  end
 
   alias CuberacerLive.Sessions.Solve
   alias CuberacerLive.Sessions.Round

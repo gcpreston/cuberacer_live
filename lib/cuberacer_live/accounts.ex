@@ -331,6 +331,25 @@ defmodule CuberacerLive.Accounts do
     :ok
   end
 
+  ## Bearer
+
+  @doc """
+  Generates a hashed bearer token.
+  """
+  def generate_user_bearer_token(user) do
+    {encoded_token, user_token} = UserToken.build_email_token(user, "bearer")
+    Repo.insert!(user_token)
+    encoded_token
+  end
+
+  @doc """
+  Gets the user with the given bearer token.
+  """
+  def get_user_by_bearer_token(token) do
+    {:ok, query} = UserToken.verify_email_token_query(token, "bearer")
+    Repo.one(query)
+  end
+
   ## Rooms
 
   # TODO: Not sure if this stuff really belongs here.
