@@ -14,6 +14,14 @@ defmodule CuberacerLive.Sessions.Solve do
     timestamps()
   end
 
+  def data() do
+    Dataloader.Ecto.new(CuberacerLive.Repo, query: &query/2)
+  end
+
+  def query(queryable, _params) do
+    queryable
+  end
+
   @doc """
   Changeset for creating a solve.
   """

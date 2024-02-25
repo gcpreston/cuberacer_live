@@ -109,4 +109,13 @@ defmodule CuberacerLiveWeb.Router do
     get "/rounds/:id", RoundController, :show
     get "/solves/:id", SolveController, :show
   end
+
+  ## API routes
+
+  scope "/api" do
+    pipe_through :api
+
+    forward "/graphiql", Absinthe.Plug.GraphiQL, schema: CuberacerLiveWeb.GraphQL.Schema
+    forward "/", Absinthe.Plug, schema: CuberacerLiveWeb.GraphQL.Schema
+  end
 end
