@@ -54,8 +54,9 @@ defmodule CuberacerLive.MixProject do
       {:whisk, "~> 0.2.0"},
       {:finch, "~> 0.10.2"},
       {:inflex, "~> 2.1"},
+      {:dataloader, "~> 2.0"},
       {:absinthe_plug, "~> 1.5"},
-      {:dataloader, "~> 2.0"}
+      {:absinthe_phoenix, "~> 2.0"}
     ]
   end
 

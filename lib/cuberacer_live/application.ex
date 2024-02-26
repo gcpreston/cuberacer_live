@@ -17,6 +17,8 @@ defmodule CuberacerLive.Application do
       CuberacerLive.Presence,
       # Start the Endpoint (http/https)
       CuberacerLiveWeb.Endpoint,
+      # Start the Absinthe subscription server
+      {Absinthe.Subscription, CuberacerLiveWeb.Endpoint},
       # Start Finch for the Mailer API client
       {Finch, name: Swoosh.Finch},
       # Start a worker by calling: CuberacerLive.Worker.start_link(arg)
