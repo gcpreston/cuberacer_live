@@ -22,6 +22,8 @@ defmodule CuberacerLive.Sessions do
 
   @topic inspect(__MODULE__)
 
+  @base_topic "session"
+
   def subscribe do
     Phoenix.PubSub.subscribe(CuberacerLive.PubSub, @topic)
   end
@@ -389,7 +391,7 @@ defmodule CuberacerLive.Sessions do
     %Round{}
     |> Round.create_changeset(attrs)
     |> Repo.insert()
-    |> notify_subscribers([:round, :created])
+    |> build_and_publish_event(Events.RoundCreated)
   end
 
   @doc """
@@ -491,7 +493,7 @@ defmodule CuberacerLive.Sessions do
     %Solve{}
     |> Solve.create_changeset(attrs)
     |> Repo.insert()
-    |> notify_subscribers([:solve, :created])
+    |> build_and_publish_event(Events.SolveCreated)
   end
 
   @doc """
@@ -515,7 +517,7 @@ defmodule CuberacerLive.Sessions do
     %Solve{}
     |> Solve.create_changeset(attrs)
     |> Repo.insert()
-    |> notify_subscribers([:solve, :created])
+    |> build_and_publish_event(Events.SolveCreated)
   end
 
   @doc """
@@ -531,7 +533,7 @@ defmodule CuberacerLive.Sessions do
     solve
     |> Solve.penalty_changeset(%{penalty: penalty})
     |> Repo.update()
-    |> notify_subscribers([:solve, :updated])
+    |> build_and_publish_event(Events.SolveUpdated)
   end
 
   @doc """
@@ -643,6 +645,9 @@ defmodule CuberacerLive.Sessions do
   # - on session create/update, notify overall topic as well as session topic
   # - on round/solve create/update, notify only the session topic
 
+  # TODO: Can unify absithne notifications here
+  # - notify(topic, event, result)
+
   defp notify_subscribers({:ok, %Session{} = result}, [:session, action]) do
     event =
       case action do
@@ -693,4 +698,17 @@ defmodule CuberacerLive.Sessions do
   end
 
   defp notify_subscribers({:error, reason}, _event), do: {:error, reason}
+
+  defp build_and_publish_event(value, type) do
+    with event when not is_nil(event) <- build_event(value, type) do
+      Events.publish_event(event)
+    end
+
+    value
+  end
+
+  defp build_event({:ok, result}, Events.SolveCreated), do: %Events.SolveCreated{solve: result}
+  defp build_event({:ok, result}, Events.SolveUpdated), do: %Events.SolveUpdated{solve: result}
+  defp build_event({:ok, result}, Events.RoundCreated), do: %Events.RoundCreated{round: result}
+  defp build_event(_value, _type), do: nil
 end

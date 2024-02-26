@@ -1,14 +1,14 @@
 defmodule CuberacerLiveWeb.GraphQL.Resolvers.Sessions do
   alias CuberacerLive.Sessions
 
-  # TODO: Require authentication by default, and handle gracefully
-
   def find_session(_parent, %{id: id}, _resolution) do
     case Sessions.get_session(id) do
       nil -> {:error, "Session not found"}
       session -> {:ok, session}
     end
   end
+
+  # TODO: Use functions from the Room context here, to go through the genserver
 
   def create_solve(
         _parent,

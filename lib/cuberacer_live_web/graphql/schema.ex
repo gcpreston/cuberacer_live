@@ -31,6 +31,24 @@ defmodule CuberacerLiveWeb.GraphQL.Schema do
     end
   end
 
+  subscription do
+    field :round_created, :round do
+      arg :session_id, non_null(:id)
+
+      config fn %{session_id: id}, _resolution ->
+        {:ok, topic: "session:#{id}"}
+      end
+    end
+
+    field :solve_created, :solve do
+      arg :session_id, non_null(:id)
+
+      config fn %{session_id: id}, _resolution ->
+        {:ok, topic: "session:#{id}"}
+      end
+    end
+  end
+
   alias CuberacerLive.Sessions.Solve
   alias CuberacerLive.Sessions.Round
   alias CuberacerLive.Accounts.User
